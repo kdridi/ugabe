@@ -8,7 +8,6 @@ package jgbe;
  */
 
 import java.awt.AWTException;
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.ComponentOrientation;
 import java.awt.Container;
@@ -18,7 +17,6 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
-import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -53,6 +51,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
@@ -65,7 +64,6 @@ import java.util.zip.GZIPOutputStream;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
 import javax.swing.JApplet;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
@@ -78,788 +76,18 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
-import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
-import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.TransferHandler;
 import javax.swing.UIManager;
 
-class keyConfigDialog implements ComponentListener, ActionListener, KeyListener {
-	private JDialog dialog;
-	private JFrame owner;
-	ArrayList<JTextField> editboxes = new ArrayList<JTextField>();
-	JTextField tbox;
-	JLabel tlabel;
-	int nInputBoxen = -16;
-
-	int[] keyMap;
-	boolean[] keysup = new boolean[256];
-	boolean canChooseNextKey = true;
-
-	public keyConfigDialog(JFrame o, int[] km) {
-		owner = o;
-		keyMap = km;
-		JScrollPane scroll;
-		dialog = new JDialog(owner, "Key Bindings", true);
-		dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-		dialog.addWindowListener(new WindowAdapter() {
-			public void windowClosing(WindowEvent we) {
-				dialog.setVisible(false);
-			}
-		});
-		JPanel ppp;
-		JTabbedPane tabPane = new JTabbedPane();
-		JPanel player1Keys = new JPanel();
-		GridLayout player1KeysGL = new GridLayout(8, 2);
-		player1Keys.setLayout(player1KeysGL);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Up");
-		editboxes.add(tbox);
-		player1Keys.add(tlabel);
-		player1Keys.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Down");
-		editboxes.add(tbox);
-		player1Keys.add(tlabel);
-		player1Keys.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Left");
-		editboxes.add(tbox);
-		player1Keys.add(tlabel);
-		player1Keys.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Right");
-		editboxes.add(tbox);
-		player1Keys.add(tlabel);
-		player1Keys.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("A");
-		editboxes.add(tbox);
-		player1Keys.add(tlabel);
-		player1Keys.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("B");
-		editboxes.add(tbox);
-		player1Keys.add(tlabel);
-		player1Keys.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Start");
-		editboxes.add(tbox);
-		player1Keys.add(tlabel);
-		player1Keys.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Select");
-		editboxes.add(tbox);
-		player1Keys.add(tlabel);
-		player1Keys.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		ppp = new JPanel();
-		ppp.setLayout(new BorderLayout());
-		ppp.add(player1Keys, BorderLayout.NORTH);
-		ppp.add(new JPanel(), BorderLayout.SOUTH);
-		tabPane.add("Player 1", ppp);
-
-		JPanel player2Keys = new JPanel();
-		GridLayout player2KeysGL = new GridLayout(8, 2);
-		player2Keys.setLayout(player2KeysGL);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Up");
-		editboxes.add(tbox);
-		player2Keys.add(tlabel);
-		player2Keys.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Down");
-		editboxes.add(tbox);
-		player2Keys.add(tlabel);
-		player2Keys.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Left");
-		editboxes.add(tbox);
-		player2Keys.add(tlabel);
-		player2Keys.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Right");
-		editboxes.add(tbox);
-		player2Keys.add(tlabel);
-		player2Keys.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("A");
-		editboxes.add(tbox);
-		player2Keys.add(tlabel);
-		player2Keys.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("B");
-		editboxes.add(tbox);
-		player2Keys.add(tlabel);
-		player2Keys.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Start");
-		editboxes.add(tbox);
-		player2Keys.add(tlabel);
-		player2Keys.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Select");
-		editboxes.add(tbox);
-		player2Keys.add(tlabel);
-		player2Keys.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		ppp = new JPanel();
-		ppp.setLayout(new BorderLayout());
-		ppp.add(player2Keys, BorderLayout.NORTH);
-		ppp.add(new JPanel(), BorderLayout.SOUTH);
-		tabPane.add("Player 2", ppp);
-
-		JPanel shortCuts = new JPanel();
-		GridLayout shortCutsGL = new GridLayout(39, 2);
-		shortCuts.setLayout(shortCutsGL);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Configure Keybinds");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Open ROM");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Pause");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Reset Gameboy");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Exit Emulator");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Fullscreen");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Mix Frame");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Scale 1x");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Scale 2x");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Scale 3x");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Scale 4x");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Scale with Aspect");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Interpolate None");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Interpolate Nearest");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Interpolate BiLinear");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Interpolate BiCubic");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Increase FrameSkip");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Decrease FrameSkip");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Original Colors");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("GB Pocket/Light Colors");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Black and White Colors");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Greyscale Colors");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Custom Colors");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Save state");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Load state");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Save To Oldest State");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Toggle Sound on/off");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Toggle Soundchannel 1 on/off");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Toggle Soundchannel 2 on/off");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Toggle Soundchannel 3 on/off");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Toggle Soundchannel 4 on/off");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Open Cheat Code Editor");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Toggle Cheats on/off");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Emulation speed +25%");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Emulation speed -25%");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Emulation speed *125%");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Emulation speed *75%");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Emulation speed 100%");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		if (!(nInputBoxen++ < 39))
-			throw new Error("Assertion failed: " + "nInputBoxen++ < nrOfShortCuts");
-		tbox = new JTextField();
-		tlabel = new JLabel("Emulation speed Infinite%");
-		editboxes.add(tbox);
-		shortCuts.add(tlabel);
-		shortCuts.add(tbox);
-		tbox.addKeyListener(this);
-		tbox.addActionListener(this);
-		scroll = new JScrollPane(shortCuts);
-		scroll.setPreferredSize(new Dimension(10, 10));
-		tabPane.add("Shortcuts", scroll);
-
-		scroll = new JScrollPane(tabPane);
-		scroll.setPreferredSize(new Dimension(480, 320));
-		dialog.add(scroll);
-
-		int j = 0;
-		for (JTextField tf : editboxes) {
-			int keyCode = keyMap[j] & 0xff;
-			int keyModifiers = keyMap[j] >> 8;
-			tf.setText((keyModifiers > 0 ? KeyEvent.getKeyModifiersText(keyModifiers) + "+" : "") + KeyEvent.getKeyText(keyCode));
-			++j;
-		}
-
-		for (int i = 0; i < 256; ++i) {
-			keysup[i] = true;
-		}
-
-		dialog.addComponentListener(this);
-		dialog.addKeyListener(this);
-		dialog.setLocationRelativeTo(null);
-		dialog.setResizable(true);
-		dialog.pack();
-		Dimension d = owner.getSize();
-		Point p = new Point();
-		p.setLocation((owner.getLocation().getX() + (d.getWidth() / 2)) - (dialog.getWidth() / 2), (owner.getLocation().getY() + d.getHeight() / 2) - (dialog.getHeight() / 2));
-		dialog.setLocation(p);
-
-		dialog.addWindowListener(new WindowAdapter() {
-			public void windowOpened(WindowEvent e) {
-				((JTextField) editboxes.get(0)).requestFocus();
-			}
-		});
-	}
-
-	public int[] getKeyCodes() {
-		dialog.setVisible(true);
-		return null;
-	}
-
-	public void keyReleased(KeyEvent e) {
-		int keyCode = e.getKeyCode();
-		int keyModifiers = e.getModifiers();
-		int keyState = keyCode | (keyModifiers << 8);
-		int j = 0;
-
-		if (canChooseNextKey) {
-			for (JTextField tf : editboxes) {
-				if (tf.hasFocus()) {
-					tf.setText((keyModifiers > 0 ? KeyEvent.getKeyModifiersText(keyModifiers) + "+" : "") + KeyEvent.getKeyText(keyCode));
-					((JTextField) editboxes.get(Math.min(j + 1, editboxes.size() - 1))).requestFocus();
-					keyMap[j] = keyState;
-				}
-				++j;
-			}
-		}
-		keysup[keyCode] = true;
-		canChooseNextKey = true;
-		for (int i = 0; i < 256; ++i) {
-			canChooseNextKey = keysup[i] && canChooseNextKey;
-		}
-	}
-
-	public void keyPressed(KeyEvent e) {
-		keysup[e.getKeyCode()] = false;
-	}
-
-	public void keyTyped(KeyEvent e) {
-	}
-
-	public void componentHidden(ComponentEvent e) {
-	}
-
-	public void componentMoved(ComponentEvent e) {
-	}
-
-	public void componentShown(ComponentEvent e) {
-	}
-
-	public void componentResized(ComponentEvent e) {
-	}
-
-	public void actionPerformed(ActionEvent e) {
-	}
-}
-
-class GlobalExceptionCatcher implements Thread.UncaughtExceptionHandler {
-	GlobalExceptionCatcher() {
-	}
-
-	public void uncaughtException(Thread t, Throwable ee) {
-		final Throwable e = ee;
-		if ((swinggui.cpuRunner != null) && swinggui.cpuRunner.hasThread(t)) {
-
-			swinggui.cpuRunner = null;
-		} else
-			swinggui.pauseEmulation(false);
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				JFrame errMsg = new JFrame("Internal Error!");
-				errMsg.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-				JPanel iconAndText = new JPanel();
-				JPanel iconAndTextAndTextField = new JPanel();
-				BoxLayout bl;
-				bl = new BoxLayout(iconAndText, BoxLayout.X_AXIS);
-				iconAndText.setLayout(bl);
-				iconAndTextAndTextField.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
-				bl = new BoxLayout(iconAndTextAndTextField, BoxLayout.PAGE_AXIS);
-				iconAndTextAndTextField.setLayout(bl);
-				iconAndText.add(new JLabel(UIManager.getIcon("OptionPane.errorIcon")));
-				JPanel spacer = new JPanel();
-				iconAndText.add(spacer);
-				iconAndText.add(new JLabel("<HTML><BODY>" + "There was an error within the emulator itself, this should not happen.<BR>" + "Please go to `http://code.google.com/p/jgbe/issues/' and submit a bug report with<BR>" + "the full text of the error message (as shown in the textfield below), and<BR>" + "(if possible) the steps neccesary to reproduce the error. Doing so will help<BR>" + "us fix this bug and improve JGBE.<BR>" + "</BODY></HTML>"));
-				JTextArea tf = new JTextArea();
-				tf.setEditable(false);
-				iconAndTextAndTextField.add(iconAndText);
-				spacer = new JPanel();
-				bl = new BoxLayout(spacer, BoxLayout.X_AXIS);
-				spacer.setLayout(bl);
-				spacer.add(new JLabel("Error message:"));
-				spacer.add(new JPanel());
-				iconAndTextAndTextField.add(spacer);
-				tf.setBorder(BorderFactory.createLoweredBevelBorder());
-				iconAndTextAndTextField.add(new JScrollPane(tf));
-				String s = "Type of error: \"" + e.toString() + "\"\n" + "Stacktrace:\n";
-				StackTraceElement[] ste = e.getStackTrace();
-				for (int i = 0; i < ste.length; ++i)
-					s += ste[i] + "\n";
-				tf.setText(s);
-				errMsg.getContentPane().add(iconAndTextAndTextField);
-				errMsg.pack();
-				errMsg.setSize(new Dimension(640, 480));
-				Point p = new Point();
-				Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
-				p.setLocation((d.getWidth() / 2) - (errMsg.getWidth() / 2), (d.getHeight() / 2) - (errMsg.getHeight() / 2));
-				errMsg.setLocation(p);
-				errMsg.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-				errMsg.addWindowListener(new WindowAdapter() {
-					public void windowClosing(WindowEvent we) {
-						System.exit(-1);
-					}
-				});
-				errMsg.setVisible(true);
-			}
-		});
-	}
-}
-
-class MenuItemArray extends ArrayList<JMenuItem> {
-	public boolean add(JMenuItem b) {
-		return super.add(b);
-	}
-
-	public void add(JMenuItem b, int mnemonic) {
-		super.add(b);
-		b.setMnemonic(mnemonic);
-	}
-
-	public void remove(JMenuItem b) {
-		super.remove(b);
-	}
-
-	public void addActionListener(ActionListener l) {
-		for (JMenuItem ab : this)
-			ab.addActionListener(l);
-	}
-
-	public void addToMenu(JMenu m) {
-		for (JMenuItem ab : this)
-			m.add(ab);
-	}
-
-	public void addToMenu(JPopupMenu m) {
-		for (JMenuItem ab : this)
-			m.add(ab);
-	}
-
-	public boolean contains(Object b) {
-		return (b instanceof JMenuItem) && super.contains(b);
-	}
-
-	public JMenuItem get(int index) {
-		return (JMenuItem) super.get(index);
-	}
-}
-
-class MenuItemArrayGroup extends MenuItemArray {
-	private ButtonGroup grp = new ButtonGroup();
-
-	public boolean add(JMenuItem b) {
-		boolean bbb = super.add(b);
-		grp.add(b);
-		return bbb;
-	}
-
-	public void add(JMenuItem b, int mnemonic) {
-		super.add(b);
-		grp.add(b);
-	}
-
-	public void remove(JMenuItem b) {
-		super.remove(b);
-		grp.remove(b);
-	}
-
-	public int getSelectedIndex() {
-		int i = -1;
-		for (JMenuItem ab : this) {
-			++i;
-			if (ab.isSelected())
-				return i;
-		}
-		return -1;
-	}
-
-	public void setSelectedIndex(int index) {
-		int i = -1;
-		for (JMenuItem ab : this) {
-			++i;
-			ab.setSelected(i == index);
-		}
-	}
-}
-
 public final class swinggui extends JApplet implements ActionListener, ItemListener, KeyListener, ComponentListener, WindowListener, MouseMotionListener, FocusListener {
 	private IntVector saveStateOrder = new IntVector();
-	private static DrawingArea grfx;
+	private DrawingArea grfx = new DrawingArea();
 	private int lastmousex;
 	private int lastmousey;
 	private int lastmousecnt;
@@ -927,7 +155,7 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 
 	static CheatCodeEditor cheatcodes;
 	static AdvancedAudioPropertiesDialog advancedAudioPropertiesDialog;
-	static CPURunner cpuRunner;
+	CPURunner cpuRunner;
 
 	protected ColorSelector cs;
 
@@ -945,16 +173,69 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 		saveRCFiles();
 	}
 
+	class GlobalExceptionCatcher implements UncaughtExceptionHandler {
+		public void uncaughtException(Thread t, Throwable ee) {
+			final Throwable e = ee;
+			if ((cpuRunner != null) && cpuRunner.hasThread(t)) {
+				cpuRunner = null;
+			} else {
+				pauseEmulation(false);
+			}
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					JFrame errMsg = new JFrame("Internal Error!");
+					errMsg.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+					JPanel iconAndText = new JPanel();
+					JPanel iconAndTextAndTextField = new JPanel();
+					BoxLayout bl;
+					bl = new BoxLayout(iconAndText, BoxLayout.X_AXIS);
+					iconAndText.setLayout(bl);
+					iconAndTextAndTextField.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
+					bl = new BoxLayout(iconAndTextAndTextField, BoxLayout.PAGE_AXIS);
+					iconAndTextAndTextField.setLayout(bl);
+					iconAndText.add(new JLabel(UIManager.getIcon("OptionPane.errorIcon")));
+					JPanel spacer = new JPanel();
+					iconAndText.add(spacer);
+					iconAndText.add(new JLabel("<HTML><BODY>" + "There was an error within the emulator itself, this should not happen.<BR>" + "Please go to `http://code.google.com/p/jgbe/issues/' and submit a bug report with<BR>" + "the full text of the error message (as shown in the textfield below), and<BR>" + "(if possible) the steps neccesary to reproduce the error. Doing so will help<BR>" + "us fix this bug and improve JGBE.<BR>" + "</BODY></HTML>"));
+					JTextArea tf = new JTextArea();
+					tf.setEditable(false);
+					iconAndTextAndTextField.add(iconAndText);
+					spacer = new JPanel();
+					bl = new BoxLayout(spacer, BoxLayout.X_AXIS);
+					spacer.setLayout(bl);
+					spacer.add(new JLabel("Error message:"));
+					spacer.add(new JPanel());
+					iconAndTextAndTextField.add(spacer);
+					tf.setBorder(BorderFactory.createLoweredBevelBorder());
+					iconAndTextAndTextField.add(new JScrollPane(tf));
+					String s = "Type of error: \"" + e.toString() + "\"\n" + "Stacktrace:\n";
+					StackTraceElement[] ste = e.getStackTrace();
+					for (int i = 0; i < ste.length; ++i)
+						s += ste[i] + "\n";
+					tf.setText(s);
+					errMsg.getContentPane().add(iconAndTextAndTextField);
+					errMsg.pack();
+					errMsg.setSize(new Dimension(640, 480));
+					Point p = new Point();
+					Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
+					p.setLocation((d.getWidth() / 2) - (errMsg.getWidth() / 2), (d.getHeight() / 2) - (errMsg.getHeight() / 2));
+					errMsg.setLocation(p);
+					errMsg.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+					errMsg.addWindowListener(new WindowAdapter() {
+						public void windowClosing(WindowEvent we) {
+							System.exit(-1);
+						}
+					});
+					errMsg.setVisible(true);
+				}
+			});
+		}
+	}
+
 	public class DrawingArea extends JPanel implements IVideoListener {
 		private static final long serialVersionUID = 1L;
 
 		public int interpolation;
-		VideoController VC;
-
-		public DrawingArea(VideoController vc) {
-			super();
-			VC = vc;
-		}
 
 		Color ColorTextShadow = new Color(128, 128, 128);
 		Color ColorTextLight = new Color(255, 255, 255);
@@ -1347,7 +628,6 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 	}
 
 	public void addComponentsToPane(Container contentPane) {
-		grfx = new DrawingArea(cpu.videoController);
 		grfx.setFocusable(true);
 
 		if (System.getProperty("os.name").equals("Linux"))
@@ -1418,20 +698,17 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 	}
 
 	public class JavaCrossplatformnessIsAMyth extends TransferHandler {
+		private static final long serialVersionUID = 793656254418511854L;
+
 		private static final String URI_LIST = "uri-list";
 
 		public boolean canImport(JComponent comp, DataFlavor[] transferFlavors) {
-			for (int i = 0; i < transferFlavors.length; ++i) {
+			boolean result = false;
+			for (int i = 0; !result && i < transferFlavors.length; ++i) {
 				DataFlavor flavor = transferFlavors[i];
-
-				if (flavor.equals(DataFlavor.javaFileListFlavor)) {
-					return true;
-
-				} else if (URI_LIST.equals(flavor.getSubType())) {
-					return true;
-				}
+				result = flavor.equals(DataFlavor.javaFileListFlavor) || URI_LIST.equals(flavor.getSubType());
 			}
-			return false;
+			return result;
 		}
 
 		public boolean importData(JComponent comp, Transferable t) {
@@ -1652,7 +929,7 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 		saveConfig();
 	}
 
-	static public void pauseEmulation(boolean verbose) {
+	public void pauseEmulation(boolean verbose) {
 		if (cpuRunner != null) {
 			cpuRunner.suspend();
 			if (verbose)
@@ -1660,7 +937,7 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 		}
 	}
 
-	static public void resumeEmulation(boolean verbose) {
+	public void resumeEmulation(boolean verbose) {
 		if ((cpuRunner != null) && (cart != null)) {
 			cpuRunner.resume();
 			if (verbose)
