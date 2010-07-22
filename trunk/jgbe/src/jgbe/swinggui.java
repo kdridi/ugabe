@@ -98,7 +98,7 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 	private int fps;
 	private boolean isApplet;
 	private int selectedState = 0;
-	private int[] keyMap = new int[16 + 39];
+	private int[] keyStates = new int[KeyConfigurationDialog.KEY_STATES_LENGTH];
 	static ArrayList<String> osdLines = new ArrayList<String>();
 	ArrayList<String> rcFiles = new ArrayList<String>();
 	static int osdTimer = 1;
@@ -592,39 +592,39 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 	private void applyAccelerators() {
 		int keyMapIndex = 16;
 
-		menuitemConfigKeys.setAccelerator(KeyStroke.getKeyStroke(keyMap[keyMapIndex] & 0xff, keyMap[keyMapIndex++] >> 8));
-		menuitemOpenROM.setAccelerator(KeyStroke.getKeyStroke(keyMap[keyMapIndex] & 0xff, keyMap[keyMapIndex++] >> 8));
-		menuitemPause.setAccelerator(KeyStroke.getKeyStroke(keyMap[keyMapIndex] & 0xff, keyMap[keyMapIndex++] >> 8));
-		menuitemReset.setAccelerator(KeyStroke.getKeyStroke(keyMap[keyMapIndex] & 0xff, keyMap[keyMapIndex++] >> 8));
-		menuitemExit.setAccelerator(KeyStroke.getKeyStroke(keyMap[keyMapIndex] & 0xff, keyMap[keyMapIndex++] >> 8));
-		enableFullScreen.setAccelerator(KeyStroke.getKeyStroke(keyMap[keyMapIndex] & 0xff, keyMap[keyMapIndex++] >> 8));
-		menuitemMixFrame.setAccelerator(KeyStroke.getKeyStroke(keyMap[keyMapIndex] & 0xff, keyMap[keyMapIndex++] >> 8));
+		menuitemConfigKeys.setAccelerator(KeyStroke.getKeyStroke(keyStates[keyMapIndex] & 0xff, keyStates[keyMapIndex++] >> 8));
+		menuitemOpenROM.setAccelerator(KeyStroke.getKeyStroke(keyStates[keyMapIndex] & 0xff, keyStates[keyMapIndex++] >> 8));
+		menuitemPause.setAccelerator(KeyStroke.getKeyStroke(keyStates[keyMapIndex] & 0xff, keyStates[keyMapIndex++] >> 8));
+		menuitemReset.setAccelerator(KeyStroke.getKeyStroke(keyStates[keyMapIndex] & 0xff, keyStates[keyMapIndex++] >> 8));
+		menuitemExit.setAccelerator(KeyStroke.getKeyStroke(keyStates[keyMapIndex] & 0xff, keyStates[keyMapIndex++] >> 8));
+		enableFullScreen.setAccelerator(KeyStroke.getKeyStroke(keyStates[keyMapIndex] & 0xff, keyStates[keyMapIndex++] >> 8));
+		menuitemMixFrame.setAccelerator(KeyStroke.getKeyStroke(keyStates[keyMapIndex] & 0xff, keyStates[keyMapIndex++] >> 8));
 		for (int i = 0; i < 4; ++i)
-			scaleRadioGroup.get(i).setAccelerator(KeyStroke.getKeyStroke(keyMap[keyMapIndex] & 0xff, keyMap[keyMapIndex++] >> 8));
-		keepAspectRatio.setAccelerator(KeyStroke.getKeyStroke(keyMap[keyMapIndex] & 0xff, keyMap[keyMapIndex++] >> 8));
+			scaleRadioGroup.get(i).setAccelerator(KeyStroke.getKeyStroke(keyStates[keyMapIndex] & 0xff, keyStates[keyMapIndex++] >> 8));
+		keepAspectRatio.setAccelerator(KeyStroke.getKeyStroke(keyStates[keyMapIndex] & 0xff, keyStates[keyMapIndex++] >> 8));
 		for (int i = 0; i < 4; ++i)
-			interpolationRadioGroup.get(i).setAccelerator(KeyStroke.getKeyStroke(keyMap[keyMapIndex] & 0xff, keyMap[keyMapIndex++] >> 8));
-		menuitemIncFrameSkip.setAccelerator(KeyStroke.getKeyStroke(keyMap[keyMapIndex] & 0xff, keyMap[keyMapIndex++] >> 8));
-		menuitemDecFrameSkip.setAccelerator(KeyStroke.getKeyStroke(keyMap[keyMapIndex] & 0xff, keyMap[keyMapIndex++] >> 8));
-		menuitemColorSchemes[0].setAccelerator(KeyStroke.getKeyStroke(keyMap[keyMapIndex] & 0xff, keyMap[keyMapIndex++] >> 8));
-		menuitemColorSchemes[1].setAccelerator(KeyStroke.getKeyStroke(keyMap[keyMapIndex] & 0xff, keyMap[keyMapIndex++] >> 8));
-		menuitemColorSchemes[2].setAccelerator(KeyStroke.getKeyStroke(keyMap[keyMapIndex] & 0xff, keyMap[keyMapIndex++] >> 8));
-		menuitemColorSchemes[3].setAccelerator(KeyStroke.getKeyStroke(keyMap[keyMapIndex] & 0xff, keyMap[keyMapIndex++] >> 8));
-		menuitemColorSchemes[4].setAccelerator(KeyStroke.getKeyStroke(keyMap[keyMapIndex] & 0xff, keyMap[keyMapIndex++] >> 8));
-		menuitemSaveState.setAccelerator(KeyStroke.getKeyStroke(keyMap[keyMapIndex] & 0xff, keyMap[keyMapIndex++] >> 8));
-		menuitemLoadState.setAccelerator(KeyStroke.getKeyStroke(keyMap[keyMapIndex] & 0xff, keyMap[keyMapIndex++] >> 8));
-		menuitemSaveOldestState.setAccelerator(KeyStroke.getKeyStroke(keyMap[keyMapIndex] & 0xff, keyMap[keyMapIndex++] >> 8));
-		menuitemEnableSound.setAccelerator(KeyStroke.getKeyStroke(keyMap[keyMapIndex] & 0xff, keyMap[keyMapIndex++] >> 8));
+			interpolationRadioGroup.get(i).setAccelerator(KeyStroke.getKeyStroke(keyStates[keyMapIndex] & 0xff, keyStates[keyMapIndex++] >> 8));
+		menuitemIncFrameSkip.setAccelerator(KeyStroke.getKeyStroke(keyStates[keyMapIndex] & 0xff, keyStates[keyMapIndex++] >> 8));
+		menuitemDecFrameSkip.setAccelerator(KeyStroke.getKeyStroke(keyStates[keyMapIndex] & 0xff, keyStates[keyMapIndex++] >> 8));
+		menuitemColorSchemes[0].setAccelerator(KeyStroke.getKeyStroke(keyStates[keyMapIndex] & 0xff, keyStates[keyMapIndex++] >> 8));
+		menuitemColorSchemes[1].setAccelerator(KeyStroke.getKeyStroke(keyStates[keyMapIndex] & 0xff, keyStates[keyMapIndex++] >> 8));
+		menuitemColorSchemes[2].setAccelerator(KeyStroke.getKeyStroke(keyStates[keyMapIndex] & 0xff, keyStates[keyMapIndex++] >> 8));
+		menuitemColorSchemes[3].setAccelerator(KeyStroke.getKeyStroke(keyStates[keyMapIndex] & 0xff, keyStates[keyMapIndex++] >> 8));
+		menuitemColorSchemes[4].setAccelerator(KeyStroke.getKeyStroke(keyStates[keyMapIndex] & 0xff, keyStates[keyMapIndex++] >> 8));
+		menuitemSaveState.setAccelerator(KeyStroke.getKeyStroke(keyStates[keyMapIndex] & 0xff, keyStates[keyMapIndex++] >> 8));
+		menuitemLoadState.setAccelerator(KeyStroke.getKeyStroke(keyStates[keyMapIndex] & 0xff, keyStates[keyMapIndex++] >> 8));
+		menuitemSaveOldestState.setAccelerator(KeyStroke.getKeyStroke(keyStates[keyMapIndex] & 0xff, keyStates[keyMapIndex++] >> 8));
+		menuitemEnableSound.setAccelerator(KeyStroke.getKeyStroke(keyStates[keyMapIndex] & 0xff, keyStates[keyMapIndex++] >> 8));
 		for (int i = 0; i < 4; ++i)
-			soundChannelGroup.get(i).setAccelerator(KeyStroke.getKeyStroke(keyMap[keyMapIndex] & 0xff, keyMap[keyMapIndex++] >> 8));
-		menuitemCheats.setAccelerator(KeyStroke.getKeyStroke(keyMap[keyMapIndex] & 0xff, keyMap[keyMapIndex++] >> 8));
-		menuitemEnableCheats.setAccelerator(KeyStroke.getKeyStroke(keyMap[keyMapIndex] & 0xff, keyMap[keyMapIndex++] >> 8));
-		menuitemEmuSpeedPlus.setAccelerator(KeyStroke.getKeyStroke(keyMap[keyMapIndex] & 0xff, keyMap[keyMapIndex++] >> 8));
-		menuitemEmuSpeedMinus.setAccelerator(KeyStroke.getKeyStroke(keyMap[keyMapIndex] & 0xff, keyMap[keyMapIndex++] >> 8));
-		menuitemEmuSpeedMul.setAccelerator(KeyStroke.getKeyStroke(keyMap[keyMapIndex] & 0xff, keyMap[keyMapIndex++] >> 8));
-		menuitemEmuSpeedDiv.setAccelerator(KeyStroke.getKeyStroke(keyMap[keyMapIndex] & 0xff, keyMap[keyMapIndex++] >> 8));
-		menuitemEmuSpeedNormal.setAccelerator(KeyStroke.getKeyStroke(keyMap[keyMapIndex] & 0xff, keyMap[keyMapIndex++] >> 8));
-		KeyStroke.getKeyStroke(keyMap[keyMapIndex] & 0xff, keyMap[keyMapIndex++] >> 8);
+			soundChannelGroup.get(i).setAccelerator(KeyStroke.getKeyStroke(keyStates[keyMapIndex] & 0xff, keyStates[keyMapIndex++] >> 8));
+		menuitemCheats.setAccelerator(KeyStroke.getKeyStroke(keyStates[keyMapIndex] & 0xff, keyStates[keyMapIndex++] >> 8));
+		menuitemEnableCheats.setAccelerator(KeyStroke.getKeyStroke(keyStates[keyMapIndex] & 0xff, keyStates[keyMapIndex++] >> 8));
+		menuitemEmuSpeedPlus.setAccelerator(KeyStroke.getKeyStroke(keyStates[keyMapIndex] & 0xff, keyStates[keyMapIndex++] >> 8));
+		menuitemEmuSpeedMinus.setAccelerator(KeyStroke.getKeyStroke(keyStates[keyMapIndex] & 0xff, keyStates[keyMapIndex++] >> 8));
+		menuitemEmuSpeedMul.setAccelerator(KeyStroke.getKeyStroke(keyStates[keyMapIndex] & 0xff, keyStates[keyMapIndex++] >> 8));
+		menuitemEmuSpeedDiv.setAccelerator(KeyStroke.getKeyStroke(keyStates[keyMapIndex] & 0xff, keyStates[keyMapIndex++] >> 8));
+		menuitemEmuSpeedNormal.setAccelerator(KeyStroke.getKeyStroke(keyStates[keyMapIndex] & 0xff, keyStates[keyMapIndex++] >> 8));
+		KeyStroke.getKeyStroke(keyStates[keyMapIndex] & 0xff, keyStates[keyMapIndex++] >> 8);
 	}
 
 	public void addComponentsToPane(Container contentPane) {
@@ -995,9 +995,9 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 			addOSDLine("Cheats codes are now " + (cheatcodes.UseCheats ? "enabled" : "disabled"));
 			configStateChanged = true;
 		} else if (e.getSource().equals(menuitemConfigKeys)) {
-			keyConfigDialog k = new keyConfigDialog(frame, keyMap);
+			KeyConfigurationDialog k = new KeyConfigurationDialog(frame, keyStates);
 			pauseEmulation(false);
-			k.getKeyCodes();
+			k.setVisible(true);
 			saveKeyBinds();
 			applyAccelerators();
 			resumeEmulation(false);
@@ -1337,18 +1337,18 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 		int keyState = keyCode | (keyModifiers << 8);
 
 		for (int i = 0; i < 8; ++i) {
-			if ((keyMap[i] & 0xff) == keyCode) {
+			if ((keyStates[i] & 0xff) == keyCode) {
 				cpu.releaseButton(keyMasks[i]);
 				return;
 			}
 		}
 		for (int i = 8; i < 16; ++i) {
-			if (keyMap[i] == keyState) {
+			if (keyStates[i] == keyState) {
 				cpu.releaseRemoteButton(keyMasks[i & 7]);
 				return;
 			}
 		}
-		if (keyCode == keyMap[39 + 16 - 1]) {
+		if (keyCode == keyStates[39 + 16 - 1]) {
 			cpu.audioController.speedHax = false;
 		}
 	}
@@ -1359,18 +1359,18 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 		int keyState = keyCode | (keyModifiers << 8);
 
 		for (int i = 0; i < 8; ++i) {
-			if (keyMap[i] == keyState) {
+			if (keyStates[i] == keyState) {
 				cpu.pressButton(keyMasks[i]);
 				return;
 			}
 		}
 		for (int i = 8; i < 16; ++i) {
-			if (keyMap[i] == keyState) {
+			if (keyStates[i] == keyState) {
 				cpu.pressRemoteButton(keyMasks[i & 7]);
 				return;
 			}
 		}
-		if (keyCode == keyMap[39 + 16 - 1]) {
+		if (keyCode == keyStates[39 + 16 - 1]) {
 			cpu.audioController.speedHax = true;
 		}
 	}
@@ -2072,7 +2072,7 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 			FileOutputStream fistream = new FileOutputStream(path);
 			distream = new DataOutputStream(fistream);
 			for (int i = 0; i < 16 + 39; ++i) {
-				distream.writeInt(keyMap[i]);
+				distream.writeInt(keyStates[i]);
 
 			}
 		} catch (IOException e) {
@@ -2092,14 +2092,14 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 			FileInputStream fistream = new FileInputStream(path);
 			distream = new DataInputStream(fistream);
 			for (int i = 0; i < 16 + 39; ++i) {
-				keyMap[i] = distream.readInt();
+				keyStates[i] = distream.readInt();
 			}
 		} catch (IOException e) {
 			pauseEmulation(false);
 			JOptionPane.showMessageDialog(frame, "Keys need to be configured", "Warning", JOptionPane.WARNING_MESSAGE);
 			generateDefaultKeyBinds();
-			keyConfigDialog k = new keyConfigDialog(frame, keyMap);
-			k.getKeyCodes();
+			KeyConfigurationDialog k = new KeyConfigurationDialog(frame, keyStates);
+			k.setVisible(true);
 			saveKeyBinds();
 			resumeEmulation(false);
 		} finally {
@@ -2113,61 +2113,61 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 
 	private void generateDefaultKeyBinds() {
 		int Magix = 0;
-		keyMap[Magix++] = 38;
-		keyMap[Magix++] = 40;
-		keyMap[Magix++] = 37;
-		keyMap[Magix++] = 39;
-		keyMap[Magix++] = 90;
-		keyMap[Magix++] = 88;
-		keyMap[Magix++] = 61;
-		keyMap[Magix++] = 45;
-		keyMap[Magix++] = 73;
-		keyMap[Magix++] = 75;
-		keyMap[Magix++] = 74;
-		keyMap[Magix++] = 76;
-		keyMap[Magix++] = 91;
-		keyMap[Magix++] = 93;
-		keyMap[Magix++] = 222;
-		keyMap[Magix++] = 59;
-		keyMap[Magix++] = 556;
-		keyMap[Magix++] = 591;
-		keyMap[Magix++] = 19;
-		keyMap[Magix++] = 594;
-		keyMap[Magix++] = 593;
-		keyMap[Magix++] = 2058;
-		keyMap[Magix++] = 589;
-		keyMap[Magix++] = 561;
-		keyMap[Magix++] = 562;
-		keyMap[Magix++] = 563;
-		keyMap[Magix++] = 564;
-		keyMap[Magix++] = 2625;
-		keyMap[Magix++] = 305;
-		keyMap[Magix++] = 306;
-		keyMap[Magix++] = 307;
-		keyMap[Magix++] = 308;
-		keyMap[Magix++] = 605;
-		keyMap[Magix++] = 603;
-		keyMap[Magix++] = 560;
-		keyMap[Magix++] = 569;
-		keyMap[Magix++] = 568;
-		keyMap[Magix++] = 567;
-		keyMap[Magix++] = 566;
-		keyMap[Magix++] = 595;
-		keyMap[Magix++] = 588;
-		keyMap[Magix++] = 851;
-		keyMap[Magix++] = 577;
-		keyMap[Magix++] = 2097;
-		keyMap[Magix++] = 2098;
-		keyMap[Magix++] = 2099;
-		keyMap[Magix++] = 2100;
-		keyMap[Magix++] = 704;
-		keyMap[Magix++] = 604;
-		keyMap[Magix++] = 829;
-		keyMap[Magix++] = 557;
-		keyMap[Magix++] = 861;
-		keyMap[Magix++] = 859;
-		keyMap[Magix++] = 573;
-		keyMap[Magix++] = 32;
+		keyStates[Magix++] = 38;
+		keyStates[Magix++] = 40;
+		keyStates[Magix++] = 37;
+		keyStates[Magix++] = 39;
+		keyStates[Magix++] = 90;
+		keyStates[Magix++] = 88;
+		keyStates[Magix++] = 61;
+		keyStates[Magix++] = 45;
+		keyStates[Magix++] = 73;
+		keyStates[Magix++] = 75;
+		keyStates[Magix++] = 74;
+		keyStates[Magix++] = 76;
+		keyStates[Magix++] = 91;
+		keyStates[Magix++] = 93;
+		keyStates[Magix++] = 222;
+		keyStates[Magix++] = 59;
+		keyStates[Magix++] = 556;
+		keyStates[Magix++] = 591;
+		keyStates[Magix++] = 19;
+		keyStates[Magix++] = 594;
+		keyStates[Magix++] = 593;
+		keyStates[Magix++] = 2058;
+		keyStates[Magix++] = 589;
+		keyStates[Magix++] = 561;
+		keyStates[Magix++] = 562;
+		keyStates[Magix++] = 563;
+		keyStates[Magix++] = 564;
+		keyStates[Magix++] = 2625;
+		keyStates[Magix++] = 305;
+		keyStates[Magix++] = 306;
+		keyStates[Magix++] = 307;
+		keyStates[Magix++] = 308;
+		keyStates[Magix++] = 605;
+		keyStates[Magix++] = 603;
+		keyStates[Magix++] = 560;
+		keyStates[Magix++] = 569;
+		keyStates[Magix++] = 568;
+		keyStates[Magix++] = 567;
+		keyStates[Magix++] = 566;
+		keyStates[Magix++] = 595;
+		keyStates[Magix++] = 588;
+		keyStates[Magix++] = 851;
+		keyStates[Magix++] = 577;
+		keyStates[Magix++] = 2097;
+		keyStates[Magix++] = 2098;
+		keyStates[Magix++] = 2099;
+		keyStates[Magix++] = 2100;
+		keyStates[Magix++] = 704;
+		keyStates[Magix++] = 604;
+		keyStates[Magix++] = 829;
+		keyStates[Magix++] = 557;
+		keyStates[Magix++] = 861;
+		keyStates[Magix++] = 859;
+		keyStates[Magix++] = 573;
+		keyStates[Magix++] = 32;
 	}
 
 	static Cartridge cart = null;
