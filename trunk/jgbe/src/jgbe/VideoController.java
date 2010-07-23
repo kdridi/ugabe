@@ -5,9 +5,6 @@ import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.awt.image.WritableRaster;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
 
 public final class VideoController {
 	private final static int MIN_WIDTH = 160;
@@ -19,7 +16,7 @@ public final class VideoController {
 
 	private int curDrawImg = 0;
 
-	private int CurrentVRAMBank = 0;
+	int CurrentVRAMBank = 0;
 	protected int VRAM[] = new int[0x4000];
 	protected int OAM[] = new int[0xa0];
 
@@ -33,7 +30,7 @@ public final class VideoController {
 	protected int WY = 0;
 	protected int LCDC = 0;
 	protected int STAT = 0;
-	private int LCDCcntdwn = 0;
+	int LCDCcntdwn = 0;
 
 	public boolean useSubscanlineRendering = false;
 
@@ -47,18 +44,18 @@ public final class VideoController {
 	private int GrayColors[][][] = { GRAYSHADES, GRAYSHADES, GRAYSHADES };
 
 	protected int BGPI = 0;
-	private int BGPD[] = new int[8 * 4 * 2];
+	int BGPD[] = new int[8 * 4 * 2];
 
 	protected int OBPI = 0;
-	private int OBPD[] = new int[8 * 4 * 2];
+	int OBPD[] = new int[8 * 4 * 2];
 
 	private int blitImg[][] = new int[144][160];
 	private int blitImg_prev[][] = new int[144][160];
 	private int palColors[] = new int[8 * 4 * 2];
 
 	private int patpix[][][] = new int[4096][][];
-	private boolean patdirty[] = new boolean[1024];
-	private boolean anydirty = true;
+	boolean patdirty[] = new boolean[1024];
+	boolean anydirty = true;
 
 	private CPU cpu;
 
@@ -197,198 +194,6 @@ public final class VideoController {
 
 		scale();
 		reset();
-	}
-
-	protected void stateSaveLoad(boolean save, int version, DataOutputStream dostream, DataInputStream distream) throws IOException {
-		{
-			if ((save))
-				dostream.writeInt((int) CurrentVRAMBank);
-			else
-				CurrentVRAMBank = distream.readInt();
-		}
-		;
-		{
-			for (int sl_i = 0; sl_i < (0x4000); ++sl_i) {
-				if ((save))
-					dostream.writeByte((VRAM[sl_i]) & 0xff);
-				else
-					VRAM[sl_i] = distream.readUnsignedByte();
-			}
-			;
-		}
-		;
-		{
-			for (int sl_i = 0; sl_i < (0xa0); ++sl_i) {
-				if ((save))
-					dostream.writeByte((OAM[sl_i]) & 0xff);
-				else
-					OAM[sl_i] = distream.readUnsignedByte();
-			}
-			;
-		}
-		;
-
-		{
-			if ((save))
-				dostream.writeByte((LY) & 0xff);
-			else
-				LY = distream.readUnsignedByte();
-		}
-		;
-		{
-			if ((save))
-				dostream.writeByte((LYC) & 0xff);
-			else
-				LYC = distream.readUnsignedByte();
-		}
-		;
-		{
-			if ((save))
-				dostream.writeByte((SCX) & 0xff);
-			else
-				SCX = distream.readUnsignedByte();
-		}
-		;
-		{
-			if ((save))
-				dostream.writeByte((SCY) & 0xff);
-			else
-				SCY = distream.readUnsignedByte();
-		}
-		;
-		{
-			if ((save))
-				dostream.writeByte((WX) & 0xff);
-			else
-				WX = distream.readUnsignedByte();
-		}
-		;
-		{
-			if ((save))
-				dostream.writeByte((WY) & 0xff);
-			else
-				WY = distream.readUnsignedByte();
-		}
-		;
-		{
-			if ((save))
-				dostream.writeByte((LCDC) & 0xff);
-			else
-				LCDC = distream.readUnsignedByte();
-		}
-		;
-		if (15 <= version) {
-			{
-				if ((save))
-					dostream.writeInt((int) LCDCcntdwn);
-				else
-					LCDCcntdwn = distream.readInt();
-			}
-			;
-			{
-				if ((save))
-					dostream.writeInt((int) mode3duration);
-				else
-					mode3duration = distream.readInt();
-			}
-			;
-		}
-		if (18 <= version) {
-			{
-				if ((save))
-					dostream.writeInt((int) STAT_statemachine_state);
-				else
-					STAT_statemachine_state = distream.readInt();
-			}
-			;
-		}
-		{
-			if ((save))
-				dostream.writeByte((STAT) & 0xff);
-			else
-				STAT = distream.readUnsignedByte();
-		}
-		;
-		if (version <= 17) {
-
-			switch (STAT & 3) {
-			case 0:
-				LCDCcntdwn = 204;
-				STAT_statemachine_state = 2;
-				break;
-			case 1:
-				LCDCcntdwn = 0;
-				STAT_statemachine_state = 3;
-				break;
-			case 2:
-				LCDCcntdwn = 80;
-				STAT_statemachine_state = 0;
-				break;
-			case 3:
-				LCDCcntdwn = 172;
-				STAT_statemachine_state = 1;
-				break;
-			}
-		}
-
-		{
-			if ((save))
-				dostream.writeByte((BGPI) & 0xff);
-			else
-				BGPI = distream.readUnsignedByte();
-		}
-		;
-		{
-			for (int sl_i = 0; sl_i < (8 * 4 * 2); ++sl_i) {
-				if ((save))
-					dostream.writeByte((BGPD[sl_i]) & 0xff);
-				else
-					BGPD[sl_i] = distream.readUnsignedByte();
-			}
-			;
-		}
-		;
-
-		{
-			if ((save))
-				dostream.writeByte((OBPI) & 0xff);
-			else
-				OBPI = distream.readUnsignedByte();
-		}
-		;
-		{
-			for (int sl_i = 0; sl_i < (8 * 4 * 2); ++sl_i) {
-				if ((save))
-					dostream.writeByte((OBPD[sl_i]) & 0xff);
-				else
-					OBPD[sl_i] = distream.readUnsignedByte();
-			}
-			;
-		}
-		;
-
-		if (8 <= version) {
-			if ((save))
-				dostream.writeByte((curWNDY) & 0xff);
-			else
-				curWNDY = distream.readUnsignedByte();
-		}
-		;
-
-		if ((!save)) {
-			for (int i = 0; i < 1024; ++i) {
-				patdirty[i] = true;
-			}
-			anydirty = true;
-			for (int i = 0; i < 0x20; ++i) {
-				updateBGColData(i);
-				updateOBColData(i);
-			}
-			;
-			updateMonoColData(0);
-			updateMonoColData(1);
-			updateMonoColData(2);
-		}
 	}
 
 	public void addListener(IVideoListener vl) {

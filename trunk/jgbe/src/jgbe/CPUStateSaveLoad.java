@@ -339,7 +339,7 @@ class CPUStateSaveLoad {
 		
 		new CartridgeStateSaveLoad(this.cpu.cartridge).stateSaveLoad(save, version, dostream, distream);
 		;
-		(this.cpu.videoController).stateSaveLoad(save, version, dostream, distream);
+		new VideoControllerStateSaveLoad(this.cpu.videoController).stateSaveLoad(save, version, dostream, distream);
 		;
 		if (((2 == -1) || (2 <= version)) && ((-1 == -1) || (version <= -1)))
 			new AudioControllerStateSaveLoad(this.cpu.audioController).stateSaveLoad(save, version, dostream, distream);
