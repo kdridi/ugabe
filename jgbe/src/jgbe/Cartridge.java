@@ -17,10 +17,13 @@ public final class Cartridge {
 	protected int[][] MM_RAM = new int[MAX_RAM_MM][];;
 	protected int[] BIOS_ROM = new int[0x100];
 
-	public void loadBios(String filename) {
-		for (int i = 0; i < 0x100; ++i)
-			BIOS_ROM[i] = (0);
-		new Bios(filename, BIOS_ROM);
+	public void loadBios(String filename, BiosLoadingFunction function) {
+		function.loadBios(filename, new BiosLoadingHandler() {
+			public void onLoad(Bios value) {
+				value.update(BIOS_ROM);
+			}
+		});
+
 	}
 
 	protected int rom_mm_size;

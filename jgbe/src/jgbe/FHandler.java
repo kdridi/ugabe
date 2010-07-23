@@ -60,31 +60,8 @@ public final class FHandler {
 	}
 
 	public static DataInputStream getDataInputStream(String fname) throws IOException {
-
-		int dotPos = 0;
-		int dp = fname.indexOf(".");
-		while (dp >= 0) {
-			dotPos = dp;
-			dp = fname.indexOf(".", dp + 1);
-		}
-		String fext = fname.substring(dotPos);
-		if (!fext.equals(".zip")) {
-
-			InputStream bistream = new FileInputStream(fname);
-
-			DataInputStream distream = new DataInputStream(bistream);
-
-			return distream;
-		} else {
-
-			FileInputStream fistream = new FileInputStream(fname);
-			ZipInputStream zistream = new ZipInputStream(fistream);
-
-			BufferedInputStream bistream = new BufferedInputStream(zistream);
-			DataInputStream distream = new DataInputStream(bistream);
-
-			return distream;
-		}
+		InputStream bistream = new FileInputStream(fname);
+		return new DataInputStream(new BufferedInputStream(fname.endsWith(".zip") ? new ZipInputStream(bistream) : bistream));
 
 	}
 

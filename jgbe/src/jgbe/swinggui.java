@@ -1012,9 +1012,9 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 			addOSDLine("ZOMG CHEATER!!!!");
 		} else if (e.getSource().equals(menuitemUseBIOS)) {
 			if (menuitemUseBIOS.getState())
-				cart.loadBios(biosfilename);
+				cart.loadBios(biosfilename, new BiosLoadingFunctionLocalImpl());
 			else
-				cart.loadBios("");
+				cart.loadBios("", new BiosLoadingFunctionLocalImpl());
 			configStateChanged = true;
 		} else if (e.getSource().equals(menuitemSetBIOS)) {
 			JFileChooser fc = new JFileChooser(".");
@@ -1026,9 +1026,9 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 				else {
 					biosfilename = selFile.getAbsolutePath();
 					if (menuitemUseBIOS.getState())
-						cart.loadBios(biosfilename);
+						cart.loadBios(biosfilename, new BiosLoadingFunctionLocalImpl());
 					else
-						cart.loadBios("");
+						cart.loadBios("", new BiosLoadingFunctionLocalImpl());
 					configStateChanged = true;
 				}
 			}
@@ -2038,9 +2038,9 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 		pauseEmulation(false);
 		Cartridge tcart = new Cartridge(filename);
 		if (menuitemUseBIOS.getState())
-			tcart.loadBios(biosfilename);
+			tcart.loadBios(biosfilename, new BiosLoadingFunctionLocalImpl());
 		else
-			tcart.loadBios("");
+			tcart.loadBios("", new BiosLoadingFunctionLocalImpl());
 		String[] messages = { "[Missing an error message here]" };
 		switch (tcart.getStatus(messages)) {
 		case Cartridge.STATUS_NONFATAL_ERROR: {
@@ -2247,7 +2247,7 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 		this.loadConfig();
 
 		if (this.menuitemUseBIOS.getState() && cart != null)
-			cart.loadBios(biosfilename);
+			cart.loadBios(biosfilename, new BiosLoadingFunctionLocalImpl());
 		this.loadKeyBinds();
 
 		this.cpu.videoController.addListener(this.grfx);
