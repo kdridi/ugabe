@@ -1,17 +1,16 @@
 package jgbe;
 
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 
 public final class Cartridge {
 
-	private static final int MEMMAP_SIZE = 0x1000;
+	static final int MEMMAP_SIZE = 0x1000;
 
 	private static final int MAX_ROM_MM = 512 << 2;
-	private static final int MAX_RAM_MM = 32 << 1;
+	static final int MAX_RAM_MM = 32 << 1;
 
 	protected int[][] MM_ROM = new int[MAX_ROM_MM][];
 	protected int[][] MM_RAM = new int[MAX_RAM_MM][];;
@@ -35,12 +34,12 @@ public final class Cartridge {
 
 	protected int MBC;
 
-	private boolean ram_enabled = false;
-	private boolean RTCRegisterEnabled = false;
-	private int RomRamModeSelect = 0;
+	boolean ram_enabled = false;
+	boolean RTCRegisterEnabled = false;
+	int RomRamModeSelect = 0;
 	protected int CurrentROMBank = 1;
 	protected int CurrentRAMBank = 0;
-	private int CurrentRTCRegister = 0;
+	int CurrentRTCRegister = 0;
 	DataInputStream distream;
 
 	private void handleIOException(IOException e) {
@@ -76,85 +75,6 @@ public final class Cartridge {
 			handleIOException(e);
 		}
 
-		;
-	}
-
-	protected void stateSaveLoad(boolean save, int version, DataOutputStream dostream, DataInputStream distream) throws IOException {
-		boolean isnull = false;
-		for (int t = 0; t < MAX_RAM_MM; ++t) {
-			if ((save))
-				isnull = (MM_RAM[t] == null);
-			{
-				if ((save))
-					dostream.writeBoolean(isnull);
-				else
-					isnull = distream.readBoolean();
-			}
-			;
-			if (!isnull) {
-				for (int sl_i = 0; sl_i < (MEMMAP_SIZE); ++sl_i) {
-					if ((save))
-						dostream.writeByte(((MM_RAM[t][sl_i]) & 0xff));
-					else
-						MM_RAM[t][sl_i] = (distream.readUnsignedByte());
-				}
-				;
-			} else if ((!save))
-				MM_RAM[t] = null;
-		}
-
-		{
-			for (int sl_i = 0; sl_i < (0x100); ++sl_i) {
-				if ((save))
-					dostream.writeByte(((BIOS_ROM[sl_i]) & 0xff));
-				else
-					BIOS_ROM[sl_i] = (distream.readUnsignedByte());
-			}
-			;
-		}
-		;
-
-		{
-			if ((save))
-				dostream.writeBoolean(ram_enabled);
-			else
-				ram_enabled = distream.readBoolean();
-		}
-		;
-		{
-			if ((save))
-				dostream.writeBoolean(RTCRegisterEnabled);
-			else
-				RTCRegisterEnabled = distream.readBoolean();
-		}
-		;
-		{
-			if ((save))
-				dostream.writeInt((int) RomRamModeSelect);
-			else
-				RomRamModeSelect = distream.readInt();
-		}
-		;
-		{
-			if ((save))
-				dostream.writeInt((int) CurrentROMBank);
-			else
-				CurrentROMBank = distream.readInt();
-		}
-		;
-		{
-			if ((save))
-				dostream.writeInt((int) CurrentRAMBank);
-			else
-				CurrentRAMBank = distream.readInt();
-		}
-		;
-		{
-			if ((save))
-				dostream.writeInt((int) CurrentRTCRegister);
-			else
-				CurrentRTCRegister = distream.readInt();
-		}
 		;
 	}
 

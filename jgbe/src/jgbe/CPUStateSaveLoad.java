@@ -337,7 +337,7 @@ class CPUStateSaveLoad {
 		}
 		;
 		
-		(this.cpu.cartridge).stateSaveLoad(save, version, dostream, distream);
+		new CartridgeStateSaveLoad(this.cpu.cartridge).stateSaveLoad(save, version, dostream, distream);
 		;
 		(this.cpu.videoController).stateSaveLoad(save, version, dostream, distream);
 		;
