@@ -1,6 +1,5 @@
 package jgbe;
 
-import java.io.DataOutputStream;
 
 public final class AudioController {
 	protected boolean isMuted = false;
@@ -15,10 +14,6 @@ public final class AudioController {
 	protected double currentEmulationSpeed = 1.0;
 
 	boolean[] channelactive = new boolean[5];
-
-	public void setDumpStream(DataOutputStream dos) {
-		audioListener.setDumpStream(dos);
-	}
 
 	protected AudioControllerSoundRegister S1;
 	protected AudioControllerSoundRegister S2;
