@@ -93,7 +93,8 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 	private int lastmousecnt;
 	private int mousehidden = 0;
 	protected VideoController VC;
-	protected CPU cpu = new CPU();
+	protected CPUServer server = new CPUServerImpl();
+	protected CPU cpu = new CPU(server);
 	protected AudioDriver audioDriver;
 	private int fps;
 	private boolean isApplet;
@@ -1048,15 +1049,15 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 			}
 		} else if (e.getSource().equals(menuitemLinkServe)) {
 			try {
-				cpu.serveLink();
+				server.serveLink(cpu);
 			} catch (IOException ioe) {
 				JOptionPane.showMessageDialog(frame, "Failed: " + ioe.getMessage(), "Error!", JOptionPane.ERROR_MESSAGE);
 			}
 		} else if (e.getSource().equals(menuitemLinkSever)) {
-			cpu.severLink();
+			server.severLink(cpu);
 		} else if (e.getSource().equals(menuitemLinkClient)) {
 			try {
-				cpu.clientLink((String) JOptionPane.showInputDialog(frame, (Object) "Enter host address", "Link setup", JOptionPane.QUESTION_MESSAGE, null, null, "localhost"));
+				server.clientLink(cpu, (String) JOptionPane.showInputDialog(frame, (Object) "Enter host address", "Link setup", JOptionPane.QUESTION_MESSAGE, null, null, "localhost"));
 			} catch (IOException ioe) {
 				JOptionPane.showMessageDialog(frame, "Failed: " + ioe.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 			}
