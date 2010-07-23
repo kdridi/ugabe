@@ -70,14 +70,9 @@ class AudioControllerStateSaveLoad {
 		}
 		;
 		
-		(this.audioController.S1).stateSaveLoad(save, version, dostream, distream);
-		;
-		(this.audioController.S2).stateSaveLoad(save, version, dostream, distream);
-		;
-		(this.audioController.S3).stateSaveLoad(save, version, dostream, distream);
-		;
-		(this.audioController.S4).stateSaveLoad(save, version, dostream, distream);
-		;
-		
+		new AudioControllerSoundRegisterStateSaveLoad(this.audioController.S1).stateSaveLoad(save, version, dostream, distream);
+		new AudioControllerSoundRegisterStateSaveLoad(this.audioController.S2).stateSaveLoad(save, version, dostream, distream);
+		new AudioControllerSoundRegisterStateSaveLoad(this.audioController.S3).stateSaveLoad(save, version, dostream, distream);
+		new AudioControllerSoundRegisterStateSaveLoad(this.audioController.S4).stateSaveLoad(save, version, dostream, distream);
 	}
 }

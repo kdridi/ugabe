@@ -1,8 +1,6 @@
 package jgbe;
 
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.IOException;
 
 public final class AudioController {
 	protected boolean isMuted = false;
@@ -22,107 +20,10 @@ public final class AudioController {
 		audioListener.setDumpStream(dos);
 	}
 
-	public final class SoundRegister {
-		int on;
-		int pos;
-		int cnt, encnt, swcnt;
-		int len, enlen, swlen;
-		int swfreq;
-		int freq;
-		int envol, endir;
-
-		protected void stateSaveLoad(boolean save, int version, DataOutputStream dostream, DataInputStream distream) throws IOException {
-			{
-				if ((save))
-					dostream.writeInt((int) on);
-				else
-					on = distream.readInt();
-			}
-			;
-			{
-				if ((save))
-					dostream.writeInt((int) pos);
-				else
-					pos = distream.readInt();
-			}
-			;
-			{
-				if ((save))
-					dostream.writeInt((int) cnt);
-				else
-					cnt = distream.readInt();
-			}
-			;
-			{
-				if ((save))
-					dostream.writeInt((int) encnt);
-				else
-					encnt = distream.readInt();
-			}
-			;
-			{
-				if ((save))
-					dostream.writeInt((int) swcnt);
-				else
-					swcnt = distream.readInt();
-			}
-			;
-			{
-				if ((save))
-					dostream.writeInt((int) len);
-				else
-					len = distream.readInt();
-			}
-			;
-			{
-				if ((save))
-					dostream.writeInt((int) enlen);
-				else
-					enlen = distream.readInt();
-			}
-			;
-			{
-				if ((save))
-					dostream.writeInt((int) swlen);
-				else
-					swlen = distream.readInt();
-			}
-			;
-			{
-				if ((save))
-					dostream.writeInt((int) swfreq);
-				else
-					swfreq = distream.readInt();
-			}
-			;
-			{
-				if ((save))
-					dostream.writeInt((int) freq);
-				else
-					freq = distream.readInt();
-			}
-			;
-			{
-				if ((save))
-					dostream.writeInt((int) envol);
-				else
-					envol = distream.readInt();
-			}
-			;
-			{
-				if ((save))
-					dostream.writeInt((int) endir);
-				else
-					endir = distream.readInt();
-			}
-			;
-		}
-	}
-
-	protected SoundRegister S1;
-	protected SoundRegister S2;
-	protected SoundRegister S3;
-	protected SoundRegister S4;
+	protected AudioControllerSoundRegister S1;
+	protected AudioControllerSoundRegister S2;
+	protected AudioControllerSoundRegister S3;
+	protected AudioControllerSoundRegister S4;
 
 	protected CPU cpu;
 
@@ -158,10 +59,10 @@ public final class AudioController {
 		this.audioListener = null;
 		IO = new int[0x30];
 		cyclesLeftToRender = 0;
-		S1 = new SoundRegister();
-		S2 = new SoundRegister();
-		S3 = new SoundRegister();
-		S4 = new SoundRegister();
+		S1 = new AudioControllerSoundRegister();
+		S2 = new AudioControllerSoundRegister();
+		S3 = new AudioControllerSoundRegister();
+		S4 = new AudioControllerSoundRegister();
 		TimerCountDown = 16384;
 		SweepTimerTick = false;
 		RATE = (1 << 21) / sampleRate;
@@ -313,10 +214,10 @@ public final class AudioController {
 
 	public void reset() {
 		cyclesLeftToRender = 0;
-		S1 = new SoundRegister();
-		S2 = new SoundRegister();
-		S3 = new SoundRegister();
-		S4 = new SoundRegister();
+		S1 = new AudioControllerSoundRegister();
+		S2 = new AudioControllerSoundRegister();
+		S3 = new AudioControllerSoundRegister();
+		S4 = new AudioControllerSoundRegister();
 		TimerCountDown = 16384;
 		SweepTimerTick = false;
 
