@@ -265,7 +265,7 @@ public class Disassembler {
 	}
 
 	public static void main(String[] args) {
-		CPU cpu = new CPU();
+		CPU cpu = new CPU(new CPUServerImpl());
 		Disassembler disassembler = new Disassembler(cpu, SIMPLE_DISASSEMBLY);
 		System.out.println(disassembler.disassemble(0));
 		System.out.println(disassembler.disassemble(0));

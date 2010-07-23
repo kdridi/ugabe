@@ -1,10 +1,6 @@
 package jgbe;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
 
 public final class CPU {
 	public final static int ZF_Shift = 7;
@@ -59,6 +55,11 @@ public final class CPU {
 	public int[] smallcruise = new int[2];
 	public int[] decoderMemory = null;
 	public int decoderMaxCruise = 0;
+	private CPUServer server;
+
+	public CPU(CPUServer server) {
+		this.server = server;
+	}
 
 	public int getPC() {
 		return globalPC + localPC;
@@ -4038,9 +4039,7 @@ public final class CPU {
 
 						lstatus |= RemoteKeyStatus << 16;
 
-						LinkCableOut.writeInt(lstatus);
-						LinkCableOut.flush();
-						rstatus = LinkCableIn.readInt();
+						rstatus = server.updateServer(lstatus);
 
 						if (useRemoteKeys) {
 							int rkeys = (rstatus >> 16) & 0xff;
@@ -4099,7 +4098,7 @@ public final class CPU {
 
 					} catch (IOException e) {
 						System.out.println("Link exception");
-						severLink();
+						server.severLink(this);
 					}
 
 				}
@@ -4110,7 +4109,7 @@ public final class CPU {
 			throw new RuntimeException();
 		}
 		;
-	};
+	}
 
 	public void runloop() {
 		keeprunning = true;
@@ -4122,8 +4121,8 @@ public final class CPU {
 		runlooprun();
 	};
 
-	private int LINKmulti = 1;
-	private int LINKdelay = 0;
+	int LINKmulti = 1;
+	int LINKdelay = 0;
 
 	private int LINKcntdwn = 0;
 	private int[] LINKbuf = new int[8];
@@ -4132,78 +4131,6 @@ public final class CPU {
 
 	protected int LinkCableStatus = 0;
 
-	void setDelay(int ndelay) throws IOException {
-		for (int i = 0; i < LINKdelay; ++i)
-			LinkCableIn.readInt();
-		LINKdelay = ndelay;
-		for (int i = 0; i < LINKdelay; ++i)
-			LinkCableOut.writeInt(0);
-		LINKmulti = LINKdelay + 1;
-	}
-
 	protected boolean LinkCableSendReceive = false;
-
-	protected ServerSocket LinkCablesrvr = null;
-	protected Socket LinkCablesktOut = null;
-	protected Socket LinkCablesktIn = null;
-	protected DataInputStream LinkCableIn = null;
-	protected DataOutputStream LinkCableOut = null;
-
-
-	public final void severLink() {
-		try {
-			if (LinkCablesrvr != null) {
-				LinkCablesrvr.close();
-				LinkCablesrvr = null;
-			}
-			if (LinkCablesktOut != null) {
-				LinkCablesktOut.close();
-				LinkCablesktOut = null;
-			}
-			if (LinkCablesktIn != null) {
-				LinkCablesktIn.close();
-				LinkCablesktIn = null;
-			}
-			if (LinkCableIn != null) {
-				LinkCableIn.close();
-				LinkCableIn = null;
-			}
-			if (LinkCableOut != null) {
-				LinkCableOut.close();
-				LinkCableOut = null;
-			}
-		} catch (IOException e) {
-			System.out.println("Error while closing socket(s)");
-			e.printStackTrace();
-		} finally {
-			LinkCableStatus = 0;
-		}
-	}
-
-	public final void serveLink() throws IOException {
-		if (LinkCableStatus == 0) {
-			LinkCablesrvr = new ServerSocket(0x4321);
-			LinkCablesktOut = LinkCablesrvr.accept();
-			System.out.println("Connection established");
-			LinkCablesktOut.setTcpNoDelay(true);
-			LinkCableIn = new DataInputStream(LinkCablesktOut.getInputStream());
-			LinkCableOut = new DataOutputStream(LinkCablesktOut.getOutputStream());
-			LinkCableStatus = 1;
-			setDelay(0);
-		} else
-			throw new IOException("WARNING: Can't serve while not offline");
-	}
-
-	public final void clientLink(String target) throws IOException {
-		if (LinkCableStatus == 0) {
-			LinkCablesktIn = new Socket(target, 0x4321);
-			LinkCablesktIn.setTcpNoDelay(true);
-			LinkCableIn = new DataInputStream(LinkCablesktIn.getInputStream());
-			LinkCableOut = new DataOutputStream(LinkCablesktIn.getOutputStream());
-			LinkCableStatus = 2;
-			setDelay(0);
-		} else
-			throw new IOException("WARNING: Can't client while not offline");
-	}
 
 }

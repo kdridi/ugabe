@@ -13,7 +13,7 @@ import java.io.Writer;
 
 public class romtester {
 	public static void main(String[] args) {
-		CPU cpu;
+		CPU cpu = new CPU(new CPUServerImpl());
 		Cartridge cartridge;
 		String romfile = "", logfile = "";
 		for (int i = 0; i < args.length; ++i) {
@@ -47,7 +47,6 @@ public class romtester {
 		}
 
 		System.out.println("Succesfully loaded ROM :)");
-		cpu = new CPU();
 		cpu.loadCartridge(cartridge);
 
 		cpu.reset();
