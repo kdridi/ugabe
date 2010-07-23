@@ -6,12 +6,12 @@ import java.io.IOException;
 
 public final class AudioController {
 	protected boolean isMuted = false;
-	private int IO[];
-	private int WAVE[] = new int[16];
+	int IO[];
+	int WAVE[] = new int[16];
 	private int sampleRate = 44100;
 	public int cyclesLeftToRender;
-	private int TimerCountDown;
-	private boolean SweepTimerTick;
+	int TimerCountDown;
+	boolean SweepTimerTick;
 	private int RATE;
 	public int CRATE;
 	protected double currentEmulationSpeed = 1.0;
@@ -177,70 +177,6 @@ public final class AudioController {
 	public void setSpeed(double emulationSpeed) {
 		currentEmulationSpeed = emulationSpeed;
 		CRATE = (int) ((4194304.0 / (double) sampleRate) * emulationSpeed);
-	}
-
-	protected void stateSaveLoad(boolean save, int version, DataOutputStream dostream, DataInputStream distream) throws IOException {
-		if (version <= 5) {
-			for (int sl_i = 0; sl_i < (0x20); ++sl_i) {
-				if ((save))
-					dostream.writeByte((IO[sl_i]) & 0xff);
-				else
-					IO[sl_i] = distream.readUnsignedByte();
-			}
-			;
-		}
-		;
-		if (6 <= version) {
-			for (int sl_i = 0; sl_i < (0x30); ++sl_i) {
-				if ((save))
-					dostream.writeByte((IO[sl_i]) & 0xff);
-				else
-					IO[sl_i] = distream.readUnsignedByte();
-			}
-			;
-		}
-		;
-		{
-			for (int sl_i = 0; sl_i < (0x10); ++sl_i) {
-				if ((save))
-					dostream.writeByte((WAVE[sl_i]) & 0xff);
-				else
-					WAVE[sl_i] = distream.readUnsignedByte();
-			}
-			;
-		}
-		;
-		{
-			if ((save))
-				dostream.writeInt((int) cyclesLeftToRender);
-			else
-				cyclesLeftToRender = distream.readInt();
-		}
-		;
-		{
-			if ((save))
-				dostream.writeInt((int) TimerCountDown);
-			else
-				TimerCountDown = distream.readInt();
-		}
-		;
-		{
-			if ((save))
-				dostream.writeBoolean(SweepTimerTick);
-			else
-				SweepTimerTick = distream.readBoolean();
-		}
-		;
-
-		(S1).stateSaveLoad(save, version, dostream, distream);
-		;
-		(S2).stateSaveLoad(save, version, dostream, distream);
-		;
-		(S3).stateSaveLoad(save, version, dostream, distream);
-		;
-		(S4).stateSaveLoad(save, version, dostream, distream);
-		;
-
 	}
 
 	void s1_init() {

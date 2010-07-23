@@ -342,7 +342,7 @@ class CPUStateSaveLoad {
 		(this.cpu.videoController).stateSaveLoad(save, version, dostream, distream);
 		;
 		if (((2 == -1) || (2 <= version)) && ((-1 == -1) || (version <= -1)))
-			(this.cpu.audioController).stateSaveLoad(save, version, dostream, distream);
+			new AudioControllerStateSaveLoad(this.cpu.audioController).stateSaveLoad(save, version, dostream, distream);
 		;
 		
 		if (((3 == -1) || (3 <= version)) && ((13 == -1) || (version <= 13))) {
