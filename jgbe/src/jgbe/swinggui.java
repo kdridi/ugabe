@@ -2032,38 +2032,43 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 		}
 	}
 
-	private void tryToLoadROM(String filename) {
 
+	private void tryToLoadROM(final String filename) {
 		logo = null;
 		pauseEmulation(false);
-		Cartridge tcart = new Cartridge(filename);
-		if (menuitemUseBIOS.getState())
-			tcart.loadBios(biosfilename, new BiosLoadingFunctionLocalImpl());
-		else
-			tcart.loadBios("", new BiosLoadingFunctionLocalImpl());
-		String[] messages = { "[Missing an error message here]" };
-		switch (tcart.getStatus(messages)) {
-		case Cartridge.STATUS_NONFATAL_ERROR: {
-			JOptionPane.showMessageDialog(frame, "WARNING:\n" + messages[0], "Warning!", JOptionPane.WARNING_MESSAGE);
-		}
-		case Cartridge.STATUS_OK: {
-			cart = tcart;
-			cpu.loadCartridge(cart);
-			updateCartName(filename);
-			boolean b = (cheatcodes == null) ? false : cheatcodes.UseCheats;
-			cheatcodes = new CheatCodeEditor(frame, curcartname);
-			cheatcodes.useCheats(b);
-			cheatcodes.applyCheatCodes(cart);
-			updateSaveStateOrder();
-			addOSDLine("loaded Rom: " + curcartname);
-		}
-			break;
-		default: {
-			JOptionPane.showMessageDialog(frame, "There was an error loading this ROM!\n(" + messages[0] + ")", "Error!", JOptionPane.ERROR_MESSAGE);
-		}
-			break;
-		}
-		resumeEmulation(false);
+		CartridgeController cartridgeController = new CartridgeController();
+		cartridgeController.createCartridge(filename, new CartridgeCreateHandler() {
+			public void onCreateCartridge(Cartridge tcart) {
+				if (menuitemUseBIOS.getState())
+					tcart.loadBios(biosfilename, new BiosLoadingFunctionLocalImpl());
+				else
+					tcart.loadBios("", new BiosLoadingFunctionLocalImpl());
+				String[] messages = { "[Missing an error message here]" };
+				switch (tcart.getStatus(messages)) {
+				case Cartridge.STATUS_NONFATAL_ERROR: {
+					JOptionPane.showMessageDialog(frame, "WARNING:\n" + messages[0], "Warning!", JOptionPane.WARNING_MESSAGE);
+				}
+				case Cartridge.STATUS_OK: {
+					cart = tcart;
+					cpu.loadCartridge(cart);
+					updateCartName(filename);
+					boolean b = (cheatcodes == null) ? false : cheatcodes.UseCheats;
+					cheatcodes = new CheatCodeEditor(frame, curcartname);
+					cheatcodes.useCheats(b);
+					cheatcodes.applyCheatCodes(cart);
+					updateSaveStateOrder();
+					addOSDLine("loaded Rom: " + curcartname);
+				}
+					break;
+				default: {
+					JOptionPane.showMessageDialog(frame, "There was an error loading this ROM!\n(" + messages[0] + ")", "Error!", JOptionPane.ERROR_MESSAGE);
+				}
+					break;
+				}
+				resumeEmulation(false);
+			}
+		});
+
 	}
 
 	private void saveKeyBinds() {

@@ -1,15 +1,13 @@
 package jgbe;
 
-import java.io.EOFException;
-import java.io.IOException;
-import java.util.Iterator;
+import java.io.Serializable;
 
-public final class Cartridge {
+public final class Cartridge implements Serializable {
+	private static final long serialVersionUID = -1333527778670544370L;
 
-	static final int MEMMAP_SIZE = 0x1000;
-
-	private static final int MAX_ROM_MM = 512 << 2;
-	static final int MAX_RAM_MM = 32 << 1;
+	public static final int MEMMAP_SIZE = 0x1000;
+	public static final int MAX_ROM_MM = 512 << 2;
+	public static final int MAX_RAM_MM = 32 << 1;
 
 	protected int[][] MM_ROM = new int[MAX_ROM_MM][];
 	protected int[][] MM_RAM = new int[MAX_RAM_MM][];;
@@ -27,8 +25,8 @@ public final class Cartridge {
 	protected int rom_mm_size;
 	protected int ram_mm_size;
 
-	private String err_msg;
-	private String title;
+	String err_msg;
+	String title;
 
 	protected int MBC;
 
@@ -39,30 +37,10 @@ public final class Cartridge {
 	protected int CurrentRAMBank = 0;
 	int CurrentRTCRegister = 0;
 
-	private void handleIOException(IOException e) {
-		System.out.println("error loading cartridge from file!: " + e.toString());
-		status = STATUS_FATAL_ERROR;
-		err_msg = e.getMessage();
-		if (e instanceof EOFException) {
-			err_msg = "This ROM image should have " + (rom_mm_size >> 2) + " banks of data,\nbut not all banks appear to be present in the ROM image.\nJGBE will try to emulate the ROM regardless, but beware\nthat this may cause the ROM to lockup or crash.";
-			status = STATUS_NONFATAL_ERROR;
-		}
-		if (err_msg == null)
-			err_msg = "Java Error messages are useless! (UNKNOWN_ERROR)";
-	}
-
-	public Cartridge(String filename) {
-		try {
-			loadFromStream(FHandler.getDataInputStreasm(filename).iterator());
-		} catch (java.io.IOException e) {
-			handleIOException(e);
-		}
-	}
-
 	public static final int STATUS_OK = 0;
 	public static final int STATUS_NONFATAL_ERROR = STATUS_OK + 1;
 	public static final int STATUS_FATAL_ERROR = STATUS_NONFATAL_ERROR + 1;
-	private int status = STATUS_OK;
+	int status = STATUS_OK;
 
 	public int getStatus(String[] s) {
 
@@ -74,252 +52,6 @@ public final class Cartridge {
 
 	public String getTitle() {
 		return title;
-	}
-
-	public void loadFromStream(Iterator<Integer> iterator) throws java.io.IOException {
-		MM_ROM[0] = new int[MEMMAP_SIZE];
-		for (int i = 0; i < MEMMAP_SIZE; ++i) {
-			MM_ROM[0][i] = iterator.next();
-		}
-		System.out.printf("Cartridge MBC type: 0x%02x - ", (MM_ROM[0][0x0147]));
-		switch ((MM_ROM[0][0x0147])) {
-		case 0x00:
-			MBC = 0;
-			System.out.printf("ROM ONLY");
-			break;
-		case 0x01:
-			MBC = 1;
-			System.out.printf("MBC1");
-			break;
-		case 0x02:
-			MBC = 1;
-			System.out.printf("MBC1+RAM");
-			break;
-		case 0x03:
-			MBC = 1;
-			System.out.printf("MBC1+RAM+BATTERY");
-			break;
-		case 0x05:
-			MBC = 2;
-			System.out.printf("MBC2");
-			break;
-		case 0x06:
-			MBC = 2;
-			System.out.printf("MBC2+BATTERY");
-			break;
-		case 0x08:
-			MBC = 0;
-			System.out.printf("ROM+RAM");
-			break;
-		case 0x09:
-			MBC = 0;
-			System.out.printf("ROM+RAM+BATTERY");
-			break;
-		case 0x0b:
-			MBC = -1;
-			System.out.printf("MMM01");
-			break;
-		case 0x0c:
-			MBC = -1;
-			System.out.printf("MMM01+RAM");
-			break;
-		case 0x0d:
-			MBC = -1;
-			System.out.printf("MMM01+RAM+BATTERY");
-			break;
-		case 0x0f:
-			MBC = 3;
-			System.out.printf("MBC3+TIMER+BATTERY");
-			break;
-		case 0x10:
-			MBC = 3;
-			System.out.printf("MBC3+TIMER+RAM+BATTERY");
-			break;
-		case 0x11:
-			MBC = 3;
-			System.out.printf("MBC3");
-			break;
-		case 0x12:
-			MBC = 3;
-			System.out.printf("MBC3+RAM");
-			break;
-		case 0x13:
-			MBC = 3;
-			System.out.printf("MBC3+RAM+BATTERY");
-			break;
-		case 0x15:
-			MBC = 4;
-			System.out.printf("MBC4");
-			break;
-		case 0x16:
-			MBC = 4;
-			System.out.printf("MBC4+RAM");
-			break;
-		case 0x17:
-			MBC = 4;
-			System.out.printf("MBC4+RAM+BATTERY");
-			break;
-		case 0x19:
-			MBC = 5;
-			System.out.printf("MBC5");
-			break;
-		case 0x1a:
-			MBC = 5;
-			System.out.printf("MBC5+RAM");
-			break;
-		case 0x1b:
-			MBC = 5;
-			System.out.printf("MBC5+RAM+BATTERY");
-			break;
-		case 0x1c:
-			MBC = 5;
-			System.out.printf("MBC5+RUMBLE");
-			break;
-		case 0x1d:
-			MBC = 5;
-			System.out.printf("MBC5+RUMBLE+RAM");
-			break;
-		case 0x1e:
-			MBC = 5;
-			System.out.printf("MBC5+RUMBLE+RAM+BATTERY");
-			break;
-		case 0xfc:
-			MBC = -2;
-			System.out.printf("POCKET CAMERA");
-			break;
-		case 0xfd:
-			MBC = -5;
-			System.out.printf("BANDAI TAMA5");
-			break;
-		case 0xfe:
-			MBC = -42;
-			System.out.printf("HuC3");
-			break;
-		case 0xff:
-			MBC = -99;
-			System.out.printf("HuC1+RAM+BATTERY");
-			break;
-		default:
-			MBC = -666;
-			System.out.println("*UNKNOWN*");
-			throw new java.io.IOException("unknown MBC type");
-		}
-		System.out.println(" (MBC" + MBC + ")");
-		if ((MM_ROM[0][0x0143]) == 0) {
-			System.out.println("Cartridge appears to be a GameBoy game");
-		} else {
-			System.out.println("Cartridge could be a ColorGameBoy game");
-		}
-
-		rom_mm_size = 0;
-		switch ((MM_ROM[0][0x0148])) {
-		case 0x00:
-			rom_mm_size = 2 << 2;
-			System.out.println("ROM size = 32KByte (no ROM banking)");
-			break;
-		case 0x01:
-			rom_mm_size = 4 << 2;
-			System.out.println("ROM size = 64KByte (4 banks)");
-			break;
-		case 0x02:
-			rom_mm_size = 8 << 2;
-			System.out.println("ROM size = 128KByte (8 banks)");
-			break;
-		case 0x03:
-			rom_mm_size = 16 << 2;
-			System.out.println("ROM size = 256KByte (16 banks)");
-			break;
-		case 0x04:
-			rom_mm_size = 32 << 2;
-			System.out.println("ROM size = 512KByte (32 banks)");
-			break;
-		case 0x05:
-			rom_mm_size = 64 << 2;
-			System.out.println("ROM size = 1MByte (64 banks) - only 63 banks used by MBC1");
-			break;
-		case 0x06:
-			rom_mm_size = 128 << 2;
-			System.out.println("ROM size = 2MByte (128 banks) - only 125 banks used by MBC1");
-			break;
-		case 0x07:
-			rom_mm_size = 256 << 2;
-			System.out.println("ROM size = 4MByte (256 banks)");
-			break;
-		case 0x08:
-			rom_mm_size = 512 << 2;
-			System.out.println("ROM size = 8MByte (512 banks)");
-			break;
-		case 0x52:
-			rom_mm_size = 72 << 2;
-			System.out.println("ROM size = 1.1MByte (72 banks)");
-			break;
-		case 0x53:
-			rom_mm_size = 80 << 2;
-			System.out.println("ROM size = 1.2MByte (80 banks)");
-			break;
-		case 0x54:
-			rom_mm_size = 96 << 2;
-			System.out.println("ROM size = 1.5MByte (96 banks)");
-			break;
-		default:
-			System.out.printf("WARNING: Non-standard ROM size! (MM_ROM[0][0x0148]=0x%02x=%d)\n", (MM_ROM[0][0x0148]), (MM_ROM[0][0x0148]));
-			rom_mm_size = 1;
-		}
-
-		ram_mm_size = 0;
-		switch ((MM_ROM[0][0x0149])) {
-		case 0x00:
-			ram_mm_size = 0;
-			System.out.println(MBC == 2 ? "Cartridge has 512x4 bits of RAM" : "Cartridge has no RAM");
-			break;
-		case 0x01:
-			ram_mm_size = 1;
-			System.out.println("Cartridge has 2KBytes of RAM");
-			break;
-		case 0x02:
-			ram_mm_size = 2;
-			System.out.println("Cartridge has 8Kbytes of RAM");
-			break;
-		case 0x03:
-			ram_mm_size = 8;
-			System.out.println("Cartridge has 32 KBytes of RAM (4 banks of 8KBytes each)");
-			break;
-		case 0x04:
-			ram_mm_size = 32;
-			System.out.println("Cartridge has 128 KBytes of RAM (16 banks of 8KBytes each)");
-			break;
-		default:
-			System.out.printf("WARNING: Non-standard RAM size! (MM_ROM[0][0x0149]=0x%02x=%d)\n", (MM_ROM[0][0x0149]), (MM_ROM[0][0x0149]));
-			ram_mm_size = 32;
-		}
-
-		if ((MBC == 2) && (ram_mm_size == 0))
-			ram_mm_size = 1;
-
-		title = "";
-		for (int i = 0; i < 16; ++i) {
-			if ((MM_ROM[0][0x0134 + i]) == 0)
-				break;
-			title += (char) (MM_ROM[0][0x0134 + i]);
-		}
-		System.out.println("ROM Name appears to be `" + title + "'");
-
-		System.out.printf("Trying to load " + (rom_mm_size >> 2) + " banks of ROM ");
-
-		for (int i = 1; i < rom_mm_size; ++i) {
-			MM_ROM[i] = new int[MEMMAP_SIZE];
-		}
-		for (int i = 1; i < rom_mm_size; ++i) {
-			System.out.printf(".");
-			for (int j = 0; j < MEMMAP_SIZE; ++j) {
-				MM_ROM[i][j] = iterator.next();
-			}
-		}
-		System.out.printf("\n");
-
-		for (int i = 0; i < ram_mm_size; ++i)
-			MM_RAM[i] = new int[MEMMAP_SIZE];
-
 	}
 
 	public int read(int index) {
