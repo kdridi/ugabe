@@ -1,9 +1,8 @@
 package jgbe;
 
-import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.IOException;
-import java.io.InputStream;
+import java.util.Iterator;
 
 public final class Cartridge {
 
@@ -28,7 +27,6 @@ public final class Cartridge {
 	protected int rom_mm_size;
 	protected int ram_mm_size;
 
-	protected String file_name;
 	private String err_msg;
 	private String title;
 
@@ -40,7 +38,6 @@ public final class Cartridge {
 	protected int CurrentROMBank = 1;
 	protected int CurrentRAMBank = 0;
 	int CurrentRTCRegister = 0;
-	DataInputStream distream;
 
 	private void handleIOException(IOException e) {
 		System.out.println("error loading cartridge from file!: " + e.toString());
@@ -54,28 +51,12 @@ public final class Cartridge {
 			err_msg = "Java Error messages are useless! (UNKNOWN_ERROR)";
 	}
 
-	public Cartridge(InputStream is) {
+	public Cartridge(String filename) {
 		try {
-			file_name = "";
-			distream = new DataInputStream(is);
-			loadFromStream();
+			loadFromStream(FHandler.getDataInputStreasm(filename).iterator());
 		} catch (java.io.IOException e) {
 			handleIOException(e);
 		}
-	}
-
-	public Cartridge(String file_name) {
-
-		this.file_name = file_name;
-		distream = null;
-		try {
-			distream = FHandler.getDataInputStream(file_name);
-			loadFromStream();
-		} catch (java.io.IOException e) {
-			handleIOException(e);
-		}
-
-		;
 	}
 
 	public static final int STATUS_OK = 0;
@@ -95,16 +76,11 @@ public final class Cartridge {
 		return title;
 	}
 
-	private void loadFromStream() throws java.io.IOException {
-
-		;
+	public void loadFromStream(Iterator<Integer> iterator) throws java.io.IOException {
 		MM_ROM[0] = new int[MEMMAP_SIZE];
-		;
-
-		;
-		for (int i = 0; i < MEMMAP_SIZE; ++i)
-			MM_ROM[0][i] = (distream.readUnsignedByte());
-
+		for (int i = 0; i < MEMMAP_SIZE; ++i) {
+			MM_ROM[0][i] = iterator.next();
+		}
 		System.out.printf("Cartridge MBC type: 0x%02x - ", (MM_ROM[0][0x0147]));
 		switch ((MM_ROM[0][0x0147])) {
 		case 0x00:
@@ -331,19 +307,15 @@ public final class Cartridge {
 		System.out.printf("Trying to load " + (rom_mm_size >> 2) + " banks of ROM ");
 
 		for (int i = 1; i < rom_mm_size; ++i) {
-			;
 			MM_ROM[i] = new int[MEMMAP_SIZE];
 		}
 		for (int i = 1; i < rom_mm_size; ++i) {
 			System.out.printf(".");
 			for (int j = 0; j < MEMMAP_SIZE; ++j) {
-				MM_ROM[i][j] = (distream.readUnsignedByte());
+				MM_ROM[i][j] = iterator.next();
 			}
 		}
 		System.out.printf("\n");
-
-		distream.close();
-		distream = null;
 
 		for (int i = 0; i < ram_mm_size; ++i)
 			MM_RAM[i] = new int[MEMMAP_SIZE];
