@@ -33,11 +33,11 @@ class CartridgeStateSaveLoad {
 			}
 			;
 			if (!isnull) {
-				for (int sl_i = 0; sl_i < (Cartridge.MEMMAP_SIZE); ++sl_i) {
+				for (int index = 0; index < (Cartridge.MEMMAP_SIZE); ++index) {
 					if ((save))
-						dostream.writeByte(((this.cartridge.MM_RAM[t][sl_i]) & 0xff));
+						dostream.writeByte(((this.cartridge.MM_RAM[t][index]) & 0xff));
 					else
-						this.cartridge.MM_RAM[t][sl_i] = (distream.readUnsignedByte());
+						this.cartridge.MM_RAM[t][index] = (distream.readUnsignedByte());
 				}
 				;
 			} else if ((!save))

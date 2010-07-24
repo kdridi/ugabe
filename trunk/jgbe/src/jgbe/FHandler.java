@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipInputStream;
 
+import com.google.gwt.user.client.rpc.AsyncCallback;
+
 public final class FHandler {
 
 	private static FHandler fhinstance = new FHandler();
@@ -69,23 +71,27 @@ public final class FHandler {
 
 	}
 
-	public static UnsignedBytesIterable getDataInputStreasm(String fileName) throws IOException {
-		InputStream inputStream = new FileInputStream(fileName);
-		if (fileName.endsWith(".zip")) {
-			inputStream = new ZipInputStream(inputStream);
-		}
-		DataInputStream dataInputStream = new DataInputStream(new BufferedInputStream(inputStream));
-
-		List<Integer> integers = new ArrayList<Integer>();
-		boolean finished = false;
-		do {
-			try {
-				integers.add(dataInputStream.readUnsignedByte());
-			} catch (EOFException e) {
-				finished = true;
+	public static void getDataInputStreasm(String fileName, AsyncCallback<UnsignedBytesIterable> callback) {
+		try {
+			InputStream inputStream = new FileInputStream(fileName);
+			if (fileName.endsWith(".zip")) {
+				inputStream = new ZipInputStream(inputStream);
 			}
-		} while (!finished);
-		return new UnsignedBytesIterable(integers);
+			DataInputStream dataInputStream = new DataInputStream(new BufferedInputStream(inputStream));
+
+			List<Integer> integers = new ArrayList<Integer>();
+			boolean finished = false;
+			do {
+				try {
+					integers.add(dataInputStream.readUnsignedByte());
+				} catch (EOFException e) {
+					finished = true;
+				}
+			} while (!finished);
+			callback.onSuccess(new UnsignedBytesIterable(integers));
+		} catch (Exception e) {
+			callback.onFailure(e);
+		}
 	}
 
 	public static DataOutputStream getDataOutputStream(String fname) throws IOException {
