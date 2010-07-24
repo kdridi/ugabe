@@ -5,11 +5,14 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.zip.ZipInputStream;
 
 public final class FHandler {
@@ -60,9 +63,29 @@ public final class FHandler {
 	}
 
 	public static DataInputStream getDataInputStream(String fname) throws IOException {
-		InputStream bistream = new FileInputStream(fname);
+		File file = new File(fname);
+		InputStream bistream = new FileInputStream(file);
 		return new DataInputStream(new BufferedInputStream(fname.endsWith(".zip") ? new ZipInputStream(bistream) : bistream));
 
+	}
+
+	public static UnsignedBytesIterable getDataInputStreasm(String fileName) throws IOException {
+		InputStream inputStream = new FileInputStream(fileName);
+		if (fileName.endsWith(".zip")) {
+			inputStream = new ZipInputStream(inputStream);
+		}
+		DataInputStream dataInputStream = new DataInputStream(new BufferedInputStream(inputStream));
+
+		List<Integer> integers = new ArrayList<Integer>();
+		boolean finished = false;
+		do {
+			try {
+				integers.add(dataInputStream.readUnsignedByte());
+			} catch (EOFException e) {
+				finished = true;
+			}
+		} while (!finished);
+		return new UnsignedBytesIterable(integers);
 	}
 
 	public static DataOutputStream getDataOutputStream(String fname) throws IOException {
