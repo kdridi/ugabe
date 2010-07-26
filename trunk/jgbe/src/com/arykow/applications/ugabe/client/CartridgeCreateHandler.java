@@ -13,9 +13,8 @@
  * $URL$
  * $Id$
  * ========================================================================== */ 
-package com.arykow.applications.ugabe.server;
+package com.arykow.applications.ugabe.client;
 
-import com.arykow.applications.ugabe.client.Cartridge;
 
 public interface CartridgeCreateHandler {
 	public abstract void onCreateCartridge(Cartridge cartridge);

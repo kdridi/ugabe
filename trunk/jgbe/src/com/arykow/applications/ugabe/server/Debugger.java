@@ -56,6 +56,7 @@ import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
 import com.arykow.applications.ugabe.client.CPU;
+import com.arykow.applications.ugabe.client.CPURunner;
 import com.arykow.applications.ugabe.client.Disassembler;
 
 public class Debugger implements ActionListener, ItemListener, KeyListener, MouseListener, AdjustmentListener {

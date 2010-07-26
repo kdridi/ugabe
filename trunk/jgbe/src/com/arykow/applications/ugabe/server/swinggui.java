@@ -66,6 +66,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Scanner;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPInputStream;
@@ -95,12 +96,18 @@ import javax.swing.TransferHandler;
 import javax.swing.UIManager;
 
 import com.arykow.applications.ugabe.client.CPU;
+import com.arykow.applications.ugabe.client.CPURunner;
 import com.arykow.applications.ugabe.client.CPUServer;
 import com.arykow.applications.ugabe.client.Cartridge;
+import com.arykow.applications.ugabe.client.CartridgeController;
+import com.arykow.applications.ugabe.client.CartridgeCreateHandler;
 import com.arykow.applications.ugabe.client.IntVector;
+import com.arykow.applications.ugabe.client.UGABEService;
+import com.arykow.applications.ugabe.client.UGABEServiceAsync;
 import com.arykow.applications.ugabe.client.Version;
 import com.arykow.applications.ugabe.client.VideoController;
 import com.arykow.applications.ugabe.client.VideoScreen;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public final class swinggui extends JApplet implements ActionListener, ItemListener, KeyListener, ComponentListener, WindowListener, MouseMotionListener, FocusListener {
 	private IntVector saveStateOrder = new IntVector();
@@ -2069,7 +2076,18 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 	private void tryToLoadROM(final String filename) {
 		logo = null;
 		pauseEmulation(false);
-		CartridgeController cartridgeController = new CartridgeController();
+
+		UGABEServiceAsync service = new UGABEServiceAsync() {
+			public void loadCartridge(String fileName, AsyncCallback<List<Integer>> callback) {
+				UGABEService service = new UGABEServiceController();
+				try {
+					callback.onSuccess(service.loadCartridge(fileName));
+				} catch (Exception e) {
+					callback.onFailure(e);
+				}
+			}
+		};
+		CartridgeController cartridgeController = new CartridgeController(service);
 		cartridgeController.createCartridge(filename, new CartridgeCreateHandler() {
 			public void onCreateCartridge(Cartridge tcart) {
 				if (menuitemUseBIOS.getState())

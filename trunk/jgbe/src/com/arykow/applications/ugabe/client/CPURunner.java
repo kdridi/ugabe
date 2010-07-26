@@ -13,7 +13,7 @@
  * $URL$
  * $Id$
  * ========================================================================== */ 
-package com.arykow.applications.ugabe.server;
+package com.arykow.applications.ugabe.client;
 
 public interface CPURunner {
 	public void suspend();
