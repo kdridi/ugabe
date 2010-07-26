@@ -1,7 +1,3 @@
 <module>
-	<!-- Inherit the core Web Toolkit stuff. -->
-	<inherits name="com.google.gwt.core.Core" />
 	<inherits name='com.google.gwt.user.User' />
-
-	<extend-property name="user.agent" values="gecko,gecko1_8" />
 </module>
