@@ -107,6 +107,7 @@ import com.arykow.applications.ugabe.client.UGABEServiceAsync;
 import com.arykow.applications.ugabe.client.Version;
 import com.arykow.applications.ugabe.client.VideoController;
 import com.arykow.applications.ugabe.client.VideoScreen;
+import com.arykow.applications.ugabe.server.Debugger.DebugRunner;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public final class swinggui extends JApplet implements ActionListener, ItemListener, KeyListener, ComponentListener, WindowListener, MouseMotionListener, FocusListener {
@@ -201,7 +202,7 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 	class GlobalExceptionCatcher implements UncaughtExceptionHandler {
 		public void uncaughtException(Thread t, Throwable ee) {
 			final Throwable e = ee;
-			if ((cpuRunner != null) && cpuRunner.hasThread(t)) {
+			if ((cpuRunner != null) && hasThread(cpuRunner, t)) {
 				cpuRunner = null;
 			} else {
 				pauseEmulation(false);
@@ -254,6 +255,16 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 					errMsg.setVisible(true);
 				}
 			});
+		}
+
+		private boolean hasThread(CPURunner cpuRunner, Thread t) {
+			boolean result = false;
+			if (cpuRunner instanceof SimpleCPURunner) {
+				result = ((SimpleCPURunner) cpuRunner).hasThread(t);
+			} else if (cpuRunner instanceof DebugRunner) {
+				result = ((DebugRunner) cpuRunner).hasThread(t);
+			}
+			return result;
 		}
 	}
 
