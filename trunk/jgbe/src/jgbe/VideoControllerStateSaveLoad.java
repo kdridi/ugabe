@@ -1,3 +1,18 @@
+/* ==========================================================================
+ * GNU GENERAL PUBLIC LICENSE
+ * Version 2, June 1991
+ * 
+ * Copyright (C) 1989, 1991 Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ * Everyone is permitted to copy and distribute verbatim copies
+ * of this license document, but changing it is not allowed.
+ * 
+ * $LastChangeDate$
+ * $Rev$
+ * $LastChangedBy$
+ * $URL$
+ * $Id$
+ * ========================================================================== */ 
 package jgbe;
 
 import java.io.DataInputStream;
@@ -33,7 +48,7 @@ class VideoControllerStateSaveLoad implements StateSaveLoad<VideoController> {
 			;
 		}
 		;
-		
+
 		{
 			if ((save))
 				dostream.writeByte((videoController.LY) & 0xff);
@@ -116,7 +131,7 @@ class VideoControllerStateSaveLoad implements StateSaveLoad<VideoController> {
 		}
 		;
 		if (version <= 17) {
-			
+
 			switch (videoController.STAT & 3) {
 			case 0:
 				videoController.LCDCcntdwn = 204;
@@ -136,7 +151,7 @@ class VideoControllerStateSaveLoad implements StateSaveLoad<VideoController> {
 				break;
 			}
 		}
-		
+
 		{
 			if ((save))
 				dostream.writeByte((videoController.BGPI) & 0xff);
@@ -154,7 +169,7 @@ class VideoControllerStateSaveLoad implements StateSaveLoad<VideoController> {
 			;
 		}
 		;
-		
+
 		{
 			if ((save))
 				dostream.writeByte((videoController.OBPI) & 0xff);
@@ -172,7 +187,7 @@ class VideoControllerStateSaveLoad implements StateSaveLoad<VideoController> {
 			;
 		}
 		;
-		
+
 		if (8 <= version) {
 			if ((save))
 				dostream.writeByte((videoController.curWNDY) & 0xff);
@@ -180,7 +195,7 @@ class VideoControllerStateSaveLoad implements StateSaveLoad<VideoController> {
 				videoController.curWNDY = distream.readUnsignedByte();
 		}
 		;
-		
+
 		if ((!save)) {
 			for (int i = 0; i < 1024; ++i) {
 				videoController.patdirty[i] = true;

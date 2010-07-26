@@ -1,3 +1,18 @@
+/* ==========================================================================
+ * GNU GENERAL PUBLIC LICENSE
+ * Version 2, June 1991
+ * 
+ * Copyright (C) 1989, 1991 Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ * Everyone is permitted to copy and distribute verbatim copies
+ * of this license document, but changing it is not allowed.
+ * 
+ * $LastChangeDate$
+ * $Rev$
+ * $LastChangedBy$
+ * $URL$
+ * $Id$
+ * ========================================================================== */ 
 package jgbe;
 
 import java.io.DataInputStream;
@@ -23,7 +38,9 @@ class CPUServerImpl implements CPUServer {
 		cpu.LINKmulti = cpu.LINKdelay + 1;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see jgbe.CPUServer#severLink(jgbe.CPU)
 	 */
 	public final void severLink(CPU cpu) {
@@ -56,7 +73,9 @@ class CPUServerImpl implements CPUServer {
 		}
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see jgbe.CPUServer#serveLink(jgbe.CPU)
 	 */
 	public final void serveLink(CPU cpu) throws IOException {
@@ -73,7 +92,9 @@ class CPUServerImpl implements CPUServer {
 			throw new IOException("WARNING: Can't serve while not offline");
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see jgbe.CPUServer#clientLink(jgbe.CPU, java.lang.String)
 	 */
 	public final void clientLink(CPU cpu, String target) throws IOException {
@@ -88,7 +109,9 @@ class CPUServerImpl implements CPUServer {
 			throw new IOException("WARNING: Can't client while not offline");
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see jgbe.CPUServer#updateServer(int)
 	 */
 	public int updateServer(int lstatus) throws IOException {

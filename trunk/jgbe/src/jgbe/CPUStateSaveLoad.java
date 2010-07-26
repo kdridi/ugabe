@@ -1,3 +1,18 @@
+/* ==========================================================================
+ * GNU GENERAL PUBLIC LICENSE
+ * Version 2, June 1991
+ * 
+ * Copyright (C) 1989, 1991 Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ * Everyone is permitted to copy and distribute verbatim copies
+ * of this license document, but changing it is not allowed.
+ * 
+ * $LastChangeDate$
+ * $Rev$
+ * $LastChangedBy$
+ * $URL$
+ * $Id$
+ * ========================================================================== */ 
 package jgbe;
 
 import java.io.DataInputStream;
@@ -27,7 +42,7 @@ class CPUStateSaveLoad implements StateSaveLoad<CPU> {
 				cpu.last_save_string = distream.readUTF();
 		}
 		;
-		
+
 		if (((1 == -1) || (1 <= version)) && ((-1 == -1) || (version <= -1))) {
 			{
 				if ((save))
@@ -118,7 +133,7 @@ class CPUStateSaveLoad implements StateSaveLoad<CPU> {
 					;
 				}
 				;
-				
+
 			}
 		}
 		if (((1 == -1) || (1 <= version)) && ((-1 == -1) || (version <= -1))) {
@@ -153,7 +168,7 @@ class CPUStateSaveLoad implements StateSaveLoad<CPU> {
 				cpu.speedswitch = distream.readBoolean();
 		}
 		;
-		
+
 		int DIVcntdwnFix = -1;
 		if (((-1 == -1) || (-1 <= version)) && ((18 == -1) || (version <= 18))) {
 			if ((save))
@@ -184,7 +199,7 @@ class CPUStateSaveLoad implements StateSaveLoad<CPU> {
 				cpu.TIMAEventCycleCount = distream.readLong();
 		}
 		;
-		
+
 		if (((-1 == -1) || (-1 <= version)) && ((14 == -1) || (version <= 14))) {
 			int tempskip = 0;
 			for (int sl_i = 0; sl_i < (1); ++sl_i) {
@@ -203,7 +218,7 @@ class CPUStateSaveLoad implements StateSaveLoad<CPU> {
 				cpu.lastVCRenderCycleCount = distream.readLong();
 		}
 		;
-		
+
 		int pc = cpu.getPC();
 		{
 			if ((save))
@@ -213,7 +228,7 @@ class CPUStateSaveLoad implements StateSaveLoad<CPU> {
 		}
 		;
 		cpu.setPC(pc);
-		
+
 		{
 			if ((save))
 				dostream.writeShort((cpu.SP) & 0xffff);
@@ -329,7 +344,7 @@ class CPUStateSaveLoad implements StateSaveLoad<CPU> {
 		if (((2 == -1) || (2 <= version)) && ((-1 == -1) || (version <= -1)))
 			StateSaveLoad.Impl.stateSaveLoad(save, version, dostream, distream, cpu.audioController);
 		;
-		
+
 		if (((3 == -1) || (3 <= version)) && ((13 == -1) || (version <= 13))) {
 			int tempskip = 0;
 			for (int sl_i = 0; sl_i < (1); ++sl_i) {
@@ -341,7 +356,7 @@ class CPUStateSaveLoad implements StateSaveLoad<CPU> {
 			;
 		}
 		;
-		
+
 		if (((0 == -1) || (0 <= version)) && ((8 == -1) || (version <= 8))) {
 			if ((save))
 				dostream.writeInt((int) cpu.TotalInstrCount);
@@ -370,7 +385,7 @@ class CPUStateSaveLoad implements StateSaveLoad<CPU> {
 				cpu.TotalCycleCount = distream.readLong();
 		}
 		;
-		
+
 		if (((4 == -1) || (4 <= version)) && ((16 == -1) || (version <= 16))) {
 			int tempskip = 0;
 			for (int sl_i = 0; sl_i < (1); ++sl_i) {
@@ -382,7 +397,7 @@ class CPUStateSaveLoad implements StateSaveLoad<CPU> {
 			;
 		}
 		;
-		
+
 		if (((7 == -1) || (7 <= version)) && ((-1 == -1) || (version <= -1))) {
 			if ((save))
 				dostream.writeByte((cpu.hblank_dma_state) & 0xff);
@@ -390,7 +405,7 @@ class CPUStateSaveLoad implements StateSaveLoad<CPU> {
 				cpu.hblank_dma_state = distream.readUnsignedByte();
 		}
 		;
-		
+
 		if (((13 == -1) || (13 <= version)) && ((-1 == -1) || (version <= -1))) {
 			if ((save) && cpu.playbackHistoryIndex != -1) {
 				boolean t = true;
@@ -435,20 +450,20 @@ class CPUStateSaveLoad implements StateSaveLoad<CPU> {
 				cpu.playbackHistoryIndex = -1;
 		} else
 			cpu.keyHistoryEnabled = false;
-		
+
 		if ((!save)) {
 			cpu.refreshMemMap();
 			cpu.calcCyclesPerTIMA();
 			cpu.NextEventCycleCount = 0;
 			cpu.VCRenderEventCycleCount = 0;
 			if (((-1 == -1) || (-1 <= version)) && ((18 == -1) || (version <= 18))) {
-				
+
 				cpu.divReset = (cpu.TotalCycleCount + CPU.CYCLES_PER_DIV - 1) - (cpu.IOP[0x04] * CPU.CYCLES_PER_DIV);
 				cpu.divReset -= CPU.CYCLES_PER_DIV;
 				cpu.divReset += DIVcntdwnFix;
 			}
 			if (((-1 == -1) || (-1 <= version)) && ((19 == -1) || (version <= 19))) {
-				
+
 				cpu.calcTIMAEventCycleCount();
 				cpu.TIMAEventCycleCount -= cpu.cyclesPerTIMA;
 				cpu.TIMAEventCycleCount += TIMAcntdwnFix;
@@ -458,12 +473,12 @@ class CPUStateSaveLoad implements StateSaveLoad<CPU> {
 				cpu.lastVCRenderCycleCount = cpu.TotalCycleCount;
 			if (((-1 == -1) || (-1 <= version)) && ((21 == -1) || (version <= 21)))
 				cpu.KeyBounceEventCycleCount = (cpu.keyBounce > 0) ? cpu.TotalCycleCount + keyBounceWaitNextFix * ((cpu.doublespeed) ? 10 : 20) : CPU.MAX_CYCLE_COUNT;
-				if (((22 == -1) || (22 <= version)) && ((22 == -1) || (version <= 22))) {
-					cpu.TIMAEventCycleCount = cpu.TotalCycleCount;
-					cpu.KeyBounceEventCycleCount = cpu.TotalCycleCount;
-				}
-				cpu.TIMAEventPending = (cpu.TIMAEventCycleCount != CPU.MAX_CYCLE_COUNT);
-				cpu.KeyBounceEventPending = (cpu.KeyBounceEventCycleCount != CPU.MAX_CYCLE_COUNT);
+			if (((22 == -1) || (22 <= version)) && ((22 == -1) || (version <= 22))) {
+				cpu.TIMAEventCycleCount = cpu.TotalCycleCount;
+				cpu.KeyBounceEventCycleCount = cpu.TotalCycleCount;
+			}
+			cpu.TIMAEventPending = (cpu.TIMAEventCycleCount != CPU.MAX_CYCLE_COUNT);
+			cpu.KeyBounceEventPending = (cpu.KeyBounceEventCycleCount != CPU.MAX_CYCLE_COUNT);
 		}
 	}
 }
