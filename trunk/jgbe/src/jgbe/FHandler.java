@@ -71,7 +71,7 @@ public final class FHandler {
 
 	}
 
-	public static void getDataInputStreasm(String fileName, AsyncCallback<UnsignedBytesIterable> callback) {
+	public static void getDataInputStreasm(String fileName, AsyncCallback<List<Integer>> callback) {
 		try {
 			InputStream inputStream = new FileInputStream(fileName);
 			if (fileName.endsWith(".zip")) {
@@ -88,7 +88,7 @@ public final class FHandler {
 					finished = true;
 				}
 			} while (!finished);
-			callback.onSuccess(new UnsignedBytesIterable(integers));
+			callback.onSuccess(integers);
 		} catch (Exception e) {
 			callback.onFailure(e);
 		}
