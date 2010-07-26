@@ -7,13 +7,10 @@ package jgbe;
  *  Modify the corresponding .jpp file instead, and regenerate this file.
  */
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
 
 public class IntVector {
-	private int length;
-	private int[] data;
+	int length;
+	int[] data;
 
 	private void resize(int newsize) {
 		int[] old = data;
@@ -83,28 +80,6 @@ public class IntVector {
 
 	void trimToSize() {
 		resize(length);
-	}
-
-	protected void stateSaveLoad(boolean save, int version, DataOutputStream dostream, DataInputStream distream) throws IOException {
-		{
-			if ((save))
-				dostream.writeInt((int) length);
-			else
-				length = distream.readInt();
-		}
-		;
-		if ((!save))
-			data = new int[Math.max(1, length * 2)];
-		{
-			for (int sl_i = 0; sl_i < (length); ++sl_i) {
-				if ((save))
-					dostream.writeInt((int) data[sl_i]);
-				else
-					data[sl_i] = distream.readInt();
-			}
-			;
-		}
-		;
 	}
 
 	void setSize(int len) {

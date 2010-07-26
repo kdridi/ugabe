@@ -25,6 +25,8 @@ public interface StateSaveLoad<T> {
 				result = new CPUStateSaveLoad();
 			} else if (t instanceof VideoController) {
 				result = new VideoControllerStateSaveLoad();
+			} else if (t instanceof IntVector) {
+				result = new IntVectorStateSaveLoad();
 			}
 			return result;
 		}
