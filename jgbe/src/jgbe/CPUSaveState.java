@@ -6,18 +6,7 @@ import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPOutputStream;
 
 class CPUSaveState {
-	/**
-	 * 
-	 */
-	private final CPU cpu;
-
-	/**
-	 * @param cpu
-	 */
-	CPUSaveState(CPU cpu) {
-		this.cpu = cpu;
-	}
-	public void saveState(DataOutputStream dostream) throws IOException {
+	public void saveState(DataOutputStream dostream, CPU cpu) throws IOException {
 		int saveversion = (23);
 		dostream.writeInt((0x4a374a53));
 		dostream.writeInt(saveversion);
@@ -42,7 +31,7 @@ class CPUSaveState {
 			if (!(false))
 				throw new Error("Assertion failed: " + "false");
 		}
-		new CPUStateSaveLoad(cpu).stateSaveLoad(true, saveversion, dostream, null);
+		StateSaveLoad.Impl.stateSaveLoad(true, saveversion, dostream, null, cpu);
 		
 		if (zostream != null) {
 			dostream.flush();

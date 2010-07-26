@@ -4,102 +4,90 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-class AudioControllerSoundRegisterStateSaveLoad {
-	/**
-	 * 
-	 */
-	private final AudioControllerSoundRegister audioControllerSoundRegister;
-
-	/**
-	 * @param audioControllerSoundRegister
-	 */
-	AudioControllerSoundRegisterStateSaveLoad(AudioControllerSoundRegister audioControllerSoundRegister) {
-		this.audioControllerSoundRegister = audioControllerSoundRegister;
-	}
-
-	protected void stateSaveLoad(boolean save, int version, DataOutputStream dostream, DataInputStream distream) throws IOException {
+class AudioControllerSoundRegisterStateSaveLoad implements StateSaveLoad<AudioControllerSoundRegister> {
+	public void stateSaveLoad(boolean save, int version, DataOutputStream dostream, DataInputStream distream, AudioControllerSoundRegister audioControllerSoundRegister) throws IOException {
 		{
 			if ((save))
-				dostream.writeInt((int) this.audioControllerSoundRegister.on);
+				dostream.writeInt((int) audioControllerSoundRegister.on);
 			else
-				this.audioControllerSoundRegister.on = distream.readInt();
+				audioControllerSoundRegister.on = distream.readInt();
 		}
 		;
 		{
 			if ((save))
-				dostream.writeInt((int) this.audioControllerSoundRegister.pos);
+				dostream.writeInt((int) audioControllerSoundRegister.pos);
 			else
-				this.audioControllerSoundRegister.pos = distream.readInt();
+				audioControllerSoundRegister.pos = distream.readInt();
 		}
 		;
 		{
 			if ((save))
-				dostream.writeInt((int) this.audioControllerSoundRegister.cnt);
+				dostream.writeInt((int) audioControllerSoundRegister.cnt);
 			else
-				this.audioControllerSoundRegister.cnt = distream.readInt();
+				audioControllerSoundRegister.cnt = distream.readInt();
 		}
 		;
 		{
 			if ((save))
-				dostream.writeInt((int) this.audioControllerSoundRegister.encnt);
+				dostream.writeInt((int) audioControllerSoundRegister.encnt);
 			else
-				this.audioControllerSoundRegister.encnt = distream.readInt();
+				audioControllerSoundRegister.encnt = distream.readInt();
 		}
 		;
 		{
 			if ((save))
-				dostream.writeInt((int) this.audioControllerSoundRegister.swcnt);
+				dostream.writeInt((int) audioControllerSoundRegister.swcnt);
 			else
-				this.audioControllerSoundRegister.swcnt = distream.readInt();
+				audioControllerSoundRegister.swcnt = distream.readInt();
 		}
 		;
 		{
 			if ((save))
-				dostream.writeInt((int) this.audioControllerSoundRegister.len);
+				dostream.writeInt((int) audioControllerSoundRegister.len);
 			else
-				this.audioControllerSoundRegister.len = distream.readInt();
+				audioControllerSoundRegister.len = distream.readInt();
 		}
 		;
 		{
 			if ((save))
-				dostream.writeInt((int) this.audioControllerSoundRegister.enlen);
+				dostream.writeInt((int) audioControllerSoundRegister.enlen);
 			else
-				this.audioControllerSoundRegister.enlen = distream.readInt();
+				audioControllerSoundRegister.enlen = distream.readInt();
 		}
 		;
 		{
 			if ((save))
-				dostream.writeInt((int) this.audioControllerSoundRegister.swlen);
+				dostream.writeInt((int) audioControllerSoundRegister.swlen);
 			else
-				this.audioControllerSoundRegister.swlen = distream.readInt();
+				audioControllerSoundRegister.swlen = distream.readInt();
 		}
 		;
 		{
 			if ((save))
-				dostream.writeInt((int) this.audioControllerSoundRegister.swfreq);
+				dostream.writeInt((int) audioControllerSoundRegister.swfreq);
 			else
-				this.audioControllerSoundRegister.swfreq = distream.readInt();
+				audioControllerSoundRegister.swfreq = distream.readInt();
 		}
 		;
 		{
 			if ((save))
-				dostream.writeInt((int) this.audioControllerSoundRegister.freq);
+				dostream.writeInt((int) audioControllerSoundRegister.freq);
 			else
-				this.audioControllerSoundRegister.freq = distream.readInt();
+				audioControllerSoundRegister.freq = distream.readInt();
 		}
 		;
 		{
 			if ((save))
-				dostream.writeInt((int) this.audioControllerSoundRegister.envol);
+				dostream.writeInt((int) audioControllerSoundRegister.envol);
 			else
-				this.audioControllerSoundRegister.envol = distream.readInt();
+				audioControllerSoundRegister.envol = distream.readInt();
 		}
 		;
 		{
 			if ((save))
-				dostream.writeInt((int) this.audioControllerSoundRegister.endir);
+				dostream.writeInt((int) audioControllerSoundRegister.endir);
 			else
-				this.audioControllerSoundRegister.endir = distream.readInt();
+				audioControllerSoundRegister.endir = distream.readInt();
 		}
 		;
 	}

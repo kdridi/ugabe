@@ -5,28 +5,17 @@ import java.io.IOException;
 import java.util.zip.GZIPInputStream;
 
 class CPULoadState {
-	/**
-	 * 
-	 */
-	private final CPU cpu;
 
-	/**
-	 * @param cpu
-	 */
-	CPULoadState(CPU cpu) {
-		this.cpu = cpu;
-	}
-
-	public void loadState(DataInputStream distream) throws IOException {
+	public void loadState(DataInputStream distream, CPU cpu) throws IOException {
 		int loadversion;
 		int magix = distream.readInt();
 		if (magix != (0x4a374a53)) {
 			
 			loadversion = 0;
-			this.cpu.B = (magix >> 24) & 0xff;
-			this.cpu.C = (magix >> 16) & 0xff;
-			this.cpu.D = (magix >> 8) & 0xff;
-			this.cpu.E = (magix >> 0) & 0xff;
+			cpu.B = (magix >> 24) & 0xff;
+			cpu.C = (magix >> 16) & 0xff;
+			cpu.D = (magix >> 8) & 0xff;
+			cpu.E = (magix >> 0) & 0xff;
 		} else
 			loadversion = distream.readInt();
 		if (loadversion < (0))
@@ -51,6 +40,6 @@ class CPULoadState {
 		default:
 			throw new IOException("unknown compression method:" + compressionmethod);
 		}
-		new CPUStateSaveLoad(cpu).stateSaveLoad(false, loadversion, null, distream);
+		StateSaveLoad.Impl.stateSaveLoad(false, loadversion, null, distream, cpu);
 	}
 }

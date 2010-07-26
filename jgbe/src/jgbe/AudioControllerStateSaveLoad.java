@@ -4,26 +4,14 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-class AudioControllerStateSaveLoad {
-	/**
-	 * 
-	 */
-	private final AudioController audioController;
-
-	/**
-	 * @param audioController
-	 */
-	AudioControllerStateSaveLoad(AudioController audioController) {
-		this.audioController = audioController;
-	}
-
-	protected void stateSaveLoad(boolean save, int version, DataOutputStream dostream, DataInputStream distream) throws IOException {
+class AudioControllerStateSaveLoad implements StateSaveLoad<AudioController> {
+	public void stateSaveLoad(boolean save, int version, DataOutputStream dostream, DataInputStream distream, AudioController audioController) throws IOException {
 		if (version <= 5) {
 			for (int sl_i = 0; sl_i < (0x20); ++sl_i) {
 				if ((save))
-					dostream.writeByte((this.audioController.IO[sl_i]) & 0xff);
+					dostream.writeByte((audioController.IO[sl_i]) & 0xff);
 				else
-					this.audioController.IO[sl_i] = distream.readUnsignedByte();
+					audioController.IO[sl_i] = distream.readUnsignedByte();
 			}
 			;
 		}
@@ -31,9 +19,9 @@ class AudioControllerStateSaveLoad {
 		if (6 <= version) {
 			for (int sl_i = 0; sl_i < (0x30); ++sl_i) {
 				if ((save))
-					dostream.writeByte((this.audioController.IO[sl_i]) & 0xff);
+					dostream.writeByte((audioController.IO[sl_i]) & 0xff);
 				else
-					this.audioController.IO[sl_i] = distream.readUnsignedByte();
+					audioController.IO[sl_i] = distream.readUnsignedByte();
 			}
 			;
 		}
@@ -41,38 +29,38 @@ class AudioControllerStateSaveLoad {
 		{
 			for (int sl_i = 0; sl_i < (0x10); ++sl_i) {
 				if ((save))
-					dostream.writeByte((this.audioController.WAVE[sl_i]) & 0xff);
+					dostream.writeByte((audioController.WAVE[sl_i]) & 0xff);
 				else
-					this.audioController.WAVE[sl_i] = distream.readUnsignedByte();
+					audioController.WAVE[sl_i] = distream.readUnsignedByte();
 			}
 			;
 		}
 		;
 		{
 			if ((save))
-				dostream.writeInt((int) this.audioController.cyclesLeftToRender);
+				dostream.writeInt((int) audioController.cyclesLeftToRender);
 			else
-				this.audioController.cyclesLeftToRender = distream.readInt();
+				audioController.cyclesLeftToRender = distream.readInt();
 		}
 		;
 		{
 			if ((save))
-				dostream.writeInt((int) this.audioController.TimerCountDown);
+				dostream.writeInt((int) audioController.TimerCountDown);
 			else
-				this.audioController.TimerCountDown = distream.readInt();
+				audioController.TimerCountDown = distream.readInt();
 		}
 		;
 		{
 			if ((save))
-				dostream.writeBoolean(this.audioController.SweepTimerTick);
+				dostream.writeBoolean(audioController.SweepTimerTick);
 			else
-				this.audioController.SweepTimerTick = distream.readBoolean();
+				audioController.SweepTimerTick = distream.readBoolean();
 		}
 		;
-		
-		new AudioControllerSoundRegisterStateSaveLoad(this.audioController.S1).stateSaveLoad(save, version, dostream, distream);
-		new AudioControllerSoundRegisterStateSaveLoad(this.audioController.S2).stateSaveLoad(save, version, dostream, distream);
-		new AudioControllerSoundRegisterStateSaveLoad(this.audioController.S3).stateSaveLoad(save, version, dostream, distream);
-		new AudioControllerSoundRegisterStateSaveLoad(this.audioController.S4).stateSaveLoad(save, version, dostream, distream);
+
+		StateSaveLoad.Impl.stateSaveLoad(save, version, dostream, distream, audioController.S1);
+		StateSaveLoad.Impl.stateSaveLoad(save, version, dostream, distream, audioController.S2);
+		StateSaveLoad.Impl.stateSaveLoad(save, version, dostream, distream, audioController.S3);
+		StateSaveLoad.Impl.stateSaveLoad(save, version, dostream, distream, audioController.S4);
 	}
 }

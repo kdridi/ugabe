@@ -1,39 +1,24 @@
-/**
- * 
- */
 package jgbe;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-class VideoControllerStateSaveLoad {
-	/**
-	 * 
-	 */
-	private final VideoController videoController;
-
-	/**
-	 * @param videoController
-	 */
-	VideoControllerStateSaveLoad(VideoController videoController) {
-		this.videoController = videoController;
-	}
-
-	protected void stateSaveLoad(boolean save, int version, DataOutputStream dostream, DataInputStream distream) throws IOException {
+class VideoControllerStateSaveLoad implements StateSaveLoad<VideoController> {
+	public void stateSaveLoad(boolean save, int version, DataOutputStream dostream, DataInputStream distream, VideoController videoController) throws IOException {
 		{
 			if ((save))
-				dostream.writeInt((int) this.videoController.CurrentVRAMBank);
+				dostream.writeInt((int) videoController.CurrentVRAMBank);
 			else
-				this.videoController.CurrentVRAMBank = distream.readInt();
+				videoController.CurrentVRAMBank = distream.readInt();
 		}
 		;
 		{
-			for (int sl_i = 0; sl_i < (0x4000); ++sl_i) {
+			for (int index = 0; index < (0x4000); ++index) {
 				if ((save))
-					dostream.writeByte((this.videoController.VRAM[sl_i]) & 0xff);
+					dostream.writeByte((videoController.VRAM[index]) & 0xff);
 				else
-					this.videoController.VRAM[sl_i] = distream.readUnsignedByte();
+					videoController.VRAM[index] = distream.readUnsignedByte();
 			}
 			;
 		}
@@ -41,9 +26,9 @@ class VideoControllerStateSaveLoad {
 		{
 			for (int sl_i = 0; sl_i < (0xa0); ++sl_i) {
 				if ((save))
-					dostream.writeByte((this.videoController.OAM[sl_i]) & 0xff);
+					dostream.writeByte((videoController.OAM[sl_i]) & 0xff);
 				else
-					this.videoController.OAM[sl_i] = distream.readUnsignedByte();
+					videoController.OAM[sl_i] = distream.readUnsignedByte();
 			}
 			;
 		}
@@ -51,120 +36,120 @@ class VideoControllerStateSaveLoad {
 		
 		{
 			if ((save))
-				dostream.writeByte((this.videoController.LY) & 0xff);
+				dostream.writeByte((videoController.LY) & 0xff);
 			else
-				this.videoController.LY = distream.readUnsignedByte();
+				videoController.LY = distream.readUnsignedByte();
 		}
 		;
 		{
 			if ((save))
-				dostream.writeByte((this.videoController.LYC) & 0xff);
+				dostream.writeByte((videoController.LYC) & 0xff);
 			else
-				this.videoController.LYC = distream.readUnsignedByte();
+				videoController.LYC = distream.readUnsignedByte();
 		}
 		;
 		{
 			if ((save))
-				dostream.writeByte((this.videoController.SCX) & 0xff);
+				dostream.writeByte((videoController.SCX) & 0xff);
 			else
-				this.videoController.SCX = distream.readUnsignedByte();
+				videoController.SCX = distream.readUnsignedByte();
 		}
 		;
 		{
 			if ((save))
-				dostream.writeByte((this.videoController.SCY) & 0xff);
+				dostream.writeByte((videoController.SCY) & 0xff);
 			else
-				this.videoController.SCY = distream.readUnsignedByte();
+				videoController.SCY = distream.readUnsignedByte();
 		}
 		;
 		{
 			if ((save))
-				dostream.writeByte((this.videoController.WX) & 0xff);
+				dostream.writeByte((videoController.WX) & 0xff);
 			else
-				this.videoController.WX = distream.readUnsignedByte();
+				videoController.WX = distream.readUnsignedByte();
 		}
 		;
 		{
 			if ((save))
-				dostream.writeByte((this.videoController.WY) & 0xff);
+				dostream.writeByte((videoController.WY) & 0xff);
 			else
-				this.videoController.WY = distream.readUnsignedByte();
+				videoController.WY = distream.readUnsignedByte();
 		}
 		;
 		{
 			if ((save))
-				dostream.writeByte((this.videoController.LCDC) & 0xff);
+				dostream.writeByte((videoController.LCDC) & 0xff);
 			else
-				this.videoController.LCDC = distream.readUnsignedByte();
+				videoController.LCDC = distream.readUnsignedByte();
 		}
 		;
 		if (15 <= version) {
 			{
 				if ((save))
-					dostream.writeInt((int) this.videoController.LCDCcntdwn);
+					dostream.writeInt((int) videoController.LCDCcntdwn);
 				else
-					this.videoController.LCDCcntdwn = distream.readInt();
+					videoController.LCDCcntdwn = distream.readInt();
 			}
 			;
 			{
 				if ((save))
-					dostream.writeInt((int) this.videoController.mode3duration);
+					dostream.writeInt((int) videoController.mode3duration);
 				else
-					this.videoController.mode3duration = distream.readInt();
+					videoController.mode3duration = distream.readInt();
 			}
 			;
 		}
 		if (18 <= version) {
 			{
 				if ((save))
-					dostream.writeInt((int) this.videoController.STAT_statemachine_state);
+					dostream.writeInt((int) videoController.STAT_statemachine_state);
 				else
-					this.videoController.STAT_statemachine_state = distream.readInt();
+					videoController.STAT_statemachine_state = distream.readInt();
 			}
 			;
 		}
 		{
 			if ((save))
-				dostream.writeByte((this.videoController.STAT) & 0xff);
+				dostream.writeByte((videoController.STAT) & 0xff);
 			else
-				this.videoController.STAT = distream.readUnsignedByte();
+				videoController.STAT = distream.readUnsignedByte();
 		}
 		;
 		if (version <= 17) {
 			
-			switch (this.videoController.STAT & 3) {
+			switch (videoController.STAT & 3) {
 			case 0:
-				this.videoController.LCDCcntdwn = 204;
-				this.videoController.STAT_statemachine_state = 2;
+				videoController.LCDCcntdwn = 204;
+				videoController.STAT_statemachine_state = 2;
 				break;
 			case 1:
-				this.videoController.LCDCcntdwn = 0;
-				this.videoController.STAT_statemachine_state = 3;
+				videoController.LCDCcntdwn = 0;
+				videoController.STAT_statemachine_state = 3;
 				break;
 			case 2:
-				this.videoController.LCDCcntdwn = 80;
-				this.videoController.STAT_statemachine_state = 0;
+				videoController.LCDCcntdwn = 80;
+				videoController.STAT_statemachine_state = 0;
 				break;
 			case 3:
-				this.videoController.LCDCcntdwn = 172;
-				this.videoController.STAT_statemachine_state = 1;
+				videoController.LCDCcntdwn = 172;
+				videoController.STAT_statemachine_state = 1;
 				break;
 			}
 		}
 		
 		{
 			if ((save))
-				dostream.writeByte((this.videoController.BGPI) & 0xff);
+				dostream.writeByte((videoController.BGPI) & 0xff);
 			else
-				this.videoController.BGPI = distream.readUnsignedByte();
+				videoController.BGPI = distream.readUnsignedByte();
 		}
 		;
 		{
 			for (int sl_i = 0; sl_i < (8 * 4 * 2); ++sl_i) {
 				if ((save))
-					dostream.writeByte((this.videoController.BGPD[sl_i]) & 0xff);
+					dostream.writeByte((videoController.BGPD[sl_i]) & 0xff);
 				else
-					this.videoController.BGPD[sl_i] = distream.readUnsignedByte();
+					videoController.BGPD[sl_i] = distream.readUnsignedByte();
 			}
 			;
 		}
@@ -172,17 +157,17 @@ class VideoControllerStateSaveLoad {
 		
 		{
 			if ((save))
-				dostream.writeByte((this.videoController.OBPI) & 0xff);
+				dostream.writeByte((videoController.OBPI) & 0xff);
 			else
-				this.videoController.OBPI = distream.readUnsignedByte();
+				videoController.OBPI = distream.readUnsignedByte();
 		}
 		;
 		{
 			for (int sl_i = 0; sl_i < (8 * 4 * 2); ++sl_i) {
 				if ((save))
-					dostream.writeByte((this.videoController.OBPD[sl_i]) & 0xff);
+					dostream.writeByte((videoController.OBPD[sl_i]) & 0xff);
 				else
-					this.videoController.OBPD[sl_i] = distream.readUnsignedByte();
+					videoController.OBPD[sl_i] = distream.readUnsignedByte();
 			}
 			;
 		}
@@ -190,25 +175,26 @@ class VideoControllerStateSaveLoad {
 		
 		if (8 <= version) {
 			if ((save))
-				dostream.writeByte((this.videoController.curWNDY) & 0xff);
+				dostream.writeByte((videoController.curWNDY) & 0xff);
 			else
-				this.videoController.curWNDY = distream.readUnsignedByte();
+				videoController.curWNDY = distream.readUnsignedByte();
 		}
 		;
 		
 		if ((!save)) {
 			for (int i = 0; i < 1024; ++i) {
-				this.videoController.patdirty[i] = true;
+				videoController.patdirty[i] = true;
 			}
-			this.videoController.anydirty = true;
+			videoController.anydirty = true;
 			for (int i = 0; i < 0x20; ++i) {
-				this.videoController.updateBGColData(i);
-				this.videoController.updateOBColData(i);
+				videoController.updateBGColData(i);
+				videoController.updateOBColData(i);
 			}
 			;
-			this.videoController.updateMonoColData(0);
-			this.videoController.updateMonoColData(1);
-			this.videoController.updateMonoColData(2);
+			videoController.updateMonoColData(0);
+			videoController.updateMonoColData(1);
+			videoController.updateMonoColData(2);
 		}
 	}
+
 }
