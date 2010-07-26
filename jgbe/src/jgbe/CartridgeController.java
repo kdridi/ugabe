@@ -3,12 +3,13 @@ package jgbe;
 import java.io.EOFException;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class CartridgeController {
 	public void createCartridge(String filename, final CartridgeCreateHandler handler) {
-		FHandler.getDataInputStreasm(filename, new AsyncCallback<UnsignedBytesIterable>() {
+		FHandler.getDataInputStreasm(filename, new AsyncCallback<List<Integer>>() {
 			private Cartridge cartridge = new Cartridge();
 
 			public void onFailure(Throwable caught) {
@@ -24,7 +25,7 @@ public class CartridgeController {
 				}
 			}
 
-			public void onSuccess(UnsignedBytesIterable result) {
+			public void onSuccess(List<Integer> result) {
 				try {
 					loadFromStream(cartridge, result.iterator());
 				} catch (IOException caught) {
