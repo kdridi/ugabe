@@ -410,7 +410,7 @@ class CPUStateSaveLoad implements StateSaveLoad<CPU> {
 				;
 				int olen = cpu.keyHistory.size();
 				cpu.keyHistory.setSize(cpu.playbackHistoryIndex);
-				(cpu.keyHistory).stateSaveLoad(save, version, dostream, distream);
+				StateSaveLoad.Impl.stateSaveLoad(save, version, dostream, distream, cpu.keyHistory);
 				;
 				cpu.keyHistory.setSize(olen);
 			} else {
@@ -428,9 +428,7 @@ class CPUStateSaveLoad implements StateSaveLoad<CPU> {
 						else
 							cpu.lastKeyChange = distream.readInt();
 					}
-					;
-					(cpu.keyHistory).stateSaveLoad(save, version, dostream, distream);
-					;
+					StateSaveLoad.Impl.stateSaveLoad(save, version, dostream, distream, cpu.keyHistory);
 				}
 			}
 			if ((!save))
