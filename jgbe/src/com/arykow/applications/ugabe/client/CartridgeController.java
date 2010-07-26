@@ -38,13 +38,13 @@ public class CartridgeController {
 				CPULogger.log("error loading cartridge from file!: " + caught.toString());
 				cartridge.status = Cartridge.STATUS_FATAL_ERROR;
 				cartridge.err_msg = caught.getMessage();
-				if (caught instanceof EOFException) {
-					cartridge.err_msg = "This ROM image should have " + (cartridge.rom_mm_size >> 2) + " banks of data,\nbut not all banks appear to be present in the ROM image.\nJGBE will try to emulate the ROM regardless, but beware\nthat this may cause the ROM to lockup or crash.";
-					cartridge.status = Cartridge.STATUS_NONFATAL_ERROR;
-				}
-				if (cartridge.err_msg == null) {
-					cartridge.err_msg = "Java Error messages are useless! (UNKNOWN_ERROR)";
-				}
+//				if (caught instanceof EOFException) {
+//					cartridge.err_msg = "This ROM image should have " + (cartridge.rom_mm_size >> 2) + " banks of data,\nbut not all banks appear to be present in the ROM image.\nJGBE will try to emulate the ROM regardless, but beware\nthat this may cause the ROM to lockup or crash.";
+//					cartridge.status = Cartridge.STATUS_NONFATAL_ERROR;
+//				}
+//				if (cartridge.err_msg == null) {
+//					cartridge.err_msg = "Java Error messages are useless! (UNKNOWN_ERROR)";
+//				}
 			}
 
 			public void onSuccess(List<Integer> result) {
@@ -63,123 +63,123 @@ public class CartridgeController {
 		for (int i = 0; i < Cartridge.MEMMAP_SIZE; ++i) {
 			cartridge.MM_ROM[0][i] = iterator.next();
 		}
-		System.out.printf("Cartridge MBC type: 0x%02x - ", (cartridge.MM_ROM[0][0x0147]));
+		CPULogger.printf("Cartridge MBC type: 0x%02x - ", (cartridge.MM_ROM[0][0x0147]));
 		switch ((cartridge.MM_ROM[0][0x0147])) {
 		case 0x00:
 			cartridge.MBC = 0;
-			System.out.printf("ROM ONLY");
+			CPULogger.printf("ROM ONLY");
 			break;
 		case 0x01:
 			cartridge.MBC = 1;
-			System.out.printf("MBC1");
+			CPULogger.printf("MBC1");
 			break;
 		case 0x02:
 			cartridge.MBC = 1;
-			System.out.printf("MBC1+RAM");
+			CPULogger.printf("MBC1+RAM");
 			break;
 		case 0x03:
 			cartridge.MBC = 1;
-			System.out.printf("MBC1+RAM+BATTERY");
+			CPULogger.printf("MBC1+RAM+BATTERY");
 			break;
 		case 0x05:
 			cartridge.MBC = 2;
-			System.out.printf("MBC2");
+			CPULogger.printf("MBC2");
 			break;
 		case 0x06:
 			cartridge.MBC = 2;
-			System.out.printf("MBC2+BATTERY");
+			CPULogger.printf("MBC2+BATTERY");
 			break;
 		case 0x08:
 			cartridge.MBC = 0;
-			System.out.printf("ROM+RAM");
+			CPULogger.printf("ROM+RAM");
 			break;
 		case 0x09:
 			cartridge.MBC = 0;
-			System.out.printf("ROM+RAM+BATTERY");
+			CPULogger.printf("ROM+RAM+BATTERY");
 			break;
 		case 0x0b:
 			cartridge.MBC = -1;
-			System.out.printf("MMM01");
+			CPULogger.printf("MMM01");
 			break;
 		case 0x0c:
 			cartridge.MBC = -1;
-			System.out.printf("MMM01+RAM");
+			CPULogger.printf("MMM01+RAM");
 			break;
 		case 0x0d:
 			cartridge.MBC = -1;
-			System.out.printf("MMM01+RAM+BATTERY");
+			CPULogger.printf("MMM01+RAM+BATTERY");
 			break;
 		case 0x0f:
 			cartridge.MBC = 3;
-			System.out.printf("MBC3+TIMER+BATTERY");
+			CPULogger.printf("MBC3+TIMER+BATTERY");
 			break;
 		case 0x10:
 			cartridge.MBC = 3;
-			System.out.printf("MBC3+TIMER+RAM+BATTERY");
+			CPULogger.printf("MBC3+TIMER+RAM+BATTERY");
 			break;
 		case 0x11:
 			cartridge.MBC = 3;
-			System.out.printf("MBC3");
+			CPULogger.printf("MBC3");
 			break;
 		case 0x12:
 			cartridge.MBC = 3;
-			System.out.printf("MBC3+RAM");
+			CPULogger.printf("MBC3+RAM");
 			break;
 		case 0x13:
 			cartridge.MBC = 3;
-			System.out.printf("MBC3+RAM+BATTERY");
+			CPULogger.printf("MBC3+RAM+BATTERY");
 			break;
 		case 0x15:
 			cartridge.MBC = 4;
-			System.out.printf("MBC4");
+			CPULogger.printf("MBC4");
 			break;
 		case 0x16:
 			cartridge.MBC = 4;
-			System.out.printf("MBC4+RAM");
+			CPULogger.printf("MBC4+RAM");
 			break;
 		case 0x17:
 			cartridge.MBC = 4;
-			System.out.printf("MBC4+RAM+BATTERY");
+			CPULogger.printf("MBC4+RAM+BATTERY");
 			break;
 		case 0x19:
 			cartridge.MBC = 5;
-			System.out.printf("MBC5");
+			CPULogger.printf("MBC5");
 			break;
 		case 0x1a:
 			cartridge.MBC = 5;
-			System.out.printf("MBC5+RAM");
+			CPULogger.printf("MBC5+RAM");
 			break;
 		case 0x1b:
 			cartridge.MBC = 5;
-			System.out.printf("MBC5+RAM+BATTERY");
+			CPULogger.printf("MBC5+RAM+BATTERY");
 			break;
 		case 0x1c:
 			cartridge.MBC = 5;
-			System.out.printf("MBC5+RUMBLE");
+			CPULogger.printf("MBC5+RUMBLE");
 			break;
 		case 0x1d:
 			cartridge.MBC = 5;
-			System.out.printf("MBC5+RUMBLE+RAM");
+			CPULogger.printf("MBC5+RUMBLE+RAM");
 			break;
 		case 0x1e:
 			cartridge.MBC = 5;
-			System.out.printf("MBC5+RUMBLE+RAM+BATTERY");
+			CPULogger.printf("MBC5+RUMBLE+RAM+BATTERY");
 			break;
 		case 0xfc:
 			cartridge.MBC = -2;
-			System.out.printf("POCKET CAMERA");
+			CPULogger.printf("POCKET CAMERA");
 			break;
 		case 0xfd:
 			cartridge.MBC = -5;
-			System.out.printf("BANDAI TAMA5");
+			CPULogger.printf("BANDAI TAMA5");
 			break;
 		case 0xfe:
 			cartridge.MBC = -42;
-			System.out.printf("HuC3");
+			CPULogger.printf("HuC3");
 			break;
 		case 0xff:
 			cartridge.MBC = -99;
-			System.out.printf("HuC1+RAM+BATTERY");
+			CPULogger.printf("HuC1+RAM+BATTERY");
 			break;
 		default:
 			cartridge.MBC = -666;
@@ -244,7 +244,7 @@ public class CartridgeController {
 			CPULogger.log("ROM size = 1.5MByte (96 banks)");
 			break;
 		default:
-			System.out.printf("WARNING: Non-standard ROM size! (MM_ROM[0][0x0148]=0x%02x=%d)\n", (cartridge.MM_ROM[0][0x0148]), (cartridge.MM_ROM[0][0x0148]));
+			CPULogger.printf("WARNING: Non-standard ROM size! (MM_ROM[0][0x0148]=0x%02x=%d)\n", (cartridge.MM_ROM[0][0x0148]), (cartridge.MM_ROM[0][0x0148]));
 			cartridge.rom_mm_size = 1;
 		}
 
@@ -271,7 +271,7 @@ public class CartridgeController {
 			CPULogger.log("Cartridge has 128 KBytes of RAM (16 banks of 8KBytes each)");
 			break;
 		default:
-			System.out.printf("WARNING: Non-standard RAM size! (MM_ROM[0][0x0149]=0x%02x=%d)\n", (cartridge.MM_ROM[0][0x0149]), (cartridge.MM_ROM[0][0x0149]));
+			CPULogger.printf("WARNING: Non-standard RAM size! (MM_ROM[0][0x0149]=0x%02x=%d)\n", (cartridge.MM_ROM[0][0x0149]), (cartridge.MM_ROM[0][0x0149]));
 			cartridge.ram_mm_size = 32;
 		}
 
@@ -286,18 +286,18 @@ public class CartridgeController {
 		}
 		CPULogger.log("ROM Name appears to be `" + cartridge.title + "'");
 
-		System.out.printf("Trying to load " + (cartridge.rom_mm_size >> 2) + " banks of ROM ");
+		CPULogger.printf("Trying to load " + (cartridge.rom_mm_size >> 2) + " banks of ROM ");
 
 		for (int i = 1; i < cartridge.rom_mm_size; ++i) {
 			cartridge.MM_ROM[i] = new int[Cartridge.MEMMAP_SIZE];
 		}
 		for (int i = 1; i < cartridge.rom_mm_size; ++i) {
-			System.out.printf(".");
+			CPULogger.printf(".");
 			for (int j = 0; j < Cartridge.MEMMAP_SIZE; ++j) {
 				cartridge.MM_ROM[i][j] = iterator.next();
 			}
 		}
-		System.out.printf("\n");
+		CPULogger.printf("\n");
 
 		for (int i = 0; i < cartridge.ram_mm_size; ++i)
 			cartridge.MM_RAM[i] = new int[Cartridge.MEMMAP_SIZE];
