@@ -12,20 +12,26 @@
  * $LastChangedBy$
  * $URL$
  * $Id$
- * ========================================================================== */ 
-package com.arykow.applications.ugabe.server;
+ * ========================================================================== */
+package com.arykow.applications.ugabe.client;
 
 import java.io.EOFException;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
-import com.arykow.applications.ugabe.client.Cartridge;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class CartridgeController {
+	private final UGABEServiceAsync service;
+
+	public CartridgeController(UGABEServiceAsync service) {
+		super();
+		this.service = service;
+	}
+
 	public void createCartridge(String filename, final CartridgeCreateHandler handler) {
-		FHandler.getDataInputStreasm(filename, new AsyncCallback<List<Integer>>() {
+		service.loadCartridge(filename, new AsyncCallback<List<Integer>>() {
 			private Cartridge cartridge = new Cartridge();
 
 			public void onFailure(Throwable caught) {
@@ -50,7 +56,6 @@ public class CartridgeController {
 				handler.onCreateCartridge(cartridge);
 			}
 		});
-
 	}
 
 	public void loadFromStream(Cartridge cartridge, Iterator<Integer> iterator) throws IOException {

@@ -18,9 +18,15 @@ package com.arykow.applications.ugabe.server;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.Writer;
+import java.util.List;
 
 import com.arykow.applications.ugabe.client.CPU;
 import com.arykow.applications.ugabe.client.Cartridge;
+import com.arykow.applications.ugabe.client.CartridgeController;
+import com.arykow.applications.ugabe.client.CartridgeCreateHandler;
+import com.arykow.applications.ugabe.client.UGABEService;
+import com.arykow.applications.ugabe.client.UGABEServiceAsync;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class romtester {
 	private static String romfile = "", logfile = "";
@@ -41,7 +47,17 @@ public class romtester {
 			return;
 		}
 
-		CartridgeController cartridgeController = new CartridgeController();
+		UGABEServiceAsync service = new UGABEServiceAsync() {
+			public void loadCartridge(String fileName, AsyncCallback<List<Integer>> callback) {
+				UGABEService service = new UGABEServiceController();
+				try {
+					callback.onSuccess(service.loadCartridge(fileName));
+				} catch (Exception e) {
+					callback.onFailure(e);
+				}
+			}
+		};
+		CartridgeController cartridgeController = new CartridgeController(service);
 		cartridgeController.createCartridge(romfile, new CartridgeCreateHandler() {
 			public void onCreateCartridge(Cartridge cartridge) {
 				CPU cpu = new CPU(new CPUServerImpl(), null);

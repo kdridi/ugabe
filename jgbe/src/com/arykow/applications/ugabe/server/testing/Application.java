@@ -3,21 +3,36 @@ package com.arykow.applications.ugabe.server.testing;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.io.File;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
 import com.arykow.applications.ugabe.client.CPU;
+import com.arykow.applications.ugabe.client.CPURunner;
 import com.arykow.applications.ugabe.client.CPUServer;
 import com.arykow.applications.ugabe.client.Cartridge;
+import com.arykow.applications.ugabe.client.CartridgeController;
+import com.arykow.applications.ugabe.client.CartridgeCreateHandler;
+import com.arykow.applications.ugabe.client.UGABEService;
+import com.arykow.applications.ugabe.client.UGABEServiceAsync;
 import com.arykow.applications.ugabe.client.VideoScreen;
-import com.arykow.applications.ugabe.server.CPURunner;
-import com.arykow.applications.ugabe.server.CartridgeController;
-import com.arykow.applications.ugabe.server.CartridgeCreateHandler;
+import com.arykow.applications.ugabe.server.UGABEServiceController;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 
 public class Application {
 	public static void main(String[] args) {
-		CartridgeController cartridgeController = new CartridgeController();
+		UGABEServiceAsync service = new UGABEServiceAsync() {
+			public void loadCartridge(String fileName, AsyncCallback<List<Integer>> callback) {
+				UGABEService service = new UGABEServiceController();
+				try {
+					callback.onSuccess(service.loadCartridge(fileName));
+				} catch (Exception e) {
+					callback.onFailure(e);
+				}
+			}
+		};
+		CartridgeController cartridgeController = new CartridgeController(service);
 		cartridgeController.createCartridge("/home/kdridi/sml.gb", new CartridgeCreateHandler() {
 			public void onCreateCartridge(Cartridge cartridge) {
 				CPUServer server = null;
