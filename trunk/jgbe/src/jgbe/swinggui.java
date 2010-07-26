@@ -1070,7 +1070,7 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 				String stname = FHandler.JGBEDir("savestates");
 				stname += curcartname + ".st" + selectedState;
 				DataOutputStream dostream = FHandler.getDataOutputStream(stname);
-				new CPUSaveState(cpu).saveState(dostream);
+				new CPUSaveState().saveState(dostream, cpu);
 				dostream.close();
 			} catch (java.io.IOException ioe) {
 				System.out.println("Error saving state! ");
@@ -1087,7 +1087,7 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 			try {
 				String stname = FHandler.JGBEDir("savestates") + curcartname + ".st" + selectedState;
 				DataInputStream distream = FHandler.getDataInputStream(stname);
-				new CPULoadState(cpu).loadState(distream);
+				new CPULoadState().loadState(distream, cpu);
 				distream.close();
 				addOSDLine("Loaded state " + selectedState);
 			} catch (java.io.IOException ioe) {
@@ -1110,7 +1110,7 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 				String stname = FHandler.JGBEDir("savestates");
 				stname += curcartname + ".st" + selectedState;
 				DataOutputStream dostream = FHandler.getDataOutputStream(stname);
-				new CPUSaveState(cpu).saveState(dostream);
+				new CPUSaveState().saveState(dostream, cpu);
 				dostream.close();
 			} catch (java.io.IOException ioe) {
 				System.out.println("Error saving state! ");

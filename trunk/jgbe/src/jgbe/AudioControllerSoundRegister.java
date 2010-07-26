@@ -1,6 +1,5 @@
 package jgbe;
 
-
 public final class AudioControllerSoundRegister {
 	int on;
 	int pos;
