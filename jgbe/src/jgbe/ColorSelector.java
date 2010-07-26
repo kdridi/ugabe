@@ -155,7 +155,7 @@ public class ColorSelector extends JFrame implements MouseListener, ChangeListen
 		if (e.getSource().equals(colorchooser.getSelectionModel())) {
 			Color c = colorchooser.getColor();
 			colorPanes[currentColorPane].setBackground(c);
-			vc.setGrayShade(currentColorPane / 4, currentColorPane % 4, c);
+			vc.setGrayShade(currentColorPane / 4, currentColorPane % 4, c.getRed(), c.getGreen(), c.getBlue());
 		}
 		gui.saveConfig();
 	}

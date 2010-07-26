@@ -12,31 +12,16 @@
  * $LastChangedBy$
  * $URL$
  * $Id$
- * ========================================================================== */ 
+ * ========================================================================== */
 package jgbe;
 
-import java.awt.Color;
-import java.awt.Image;
-import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferInt;
-import java.awt.image.WritableRaster;
-
 public final class VideoController {
-	private final static int MIN_WIDTH = 160;
-	private final static int MIN_HEIGHT = 144;
 
-	private IVideoListener listener = null;
-	private Image drawImg[] = new Image[2];
-	private int drawData[];
-
-	private int curDrawImg = 0;
-
+	private final VideoScreen screen;
 	int CurrentVRAMBank = 0;
 	protected int VRAM[] = new int[0x4000];
 	protected int OAM[] = new int[0xa0];
-
 	protected boolean isCGB;
-
 	protected int LY = 0;
 	protected int LYC = 0;
 	protected int SCX = 0;
@@ -46,34 +31,23 @@ public final class VideoController {
 	protected int LCDC = 0;
 	protected int STAT = 0;
 	int LCDCcntdwn = 0;
-
 	public boolean useSubscanlineRendering = false;
-
 	protected int curBGY;
 	protected int curWNDY;
-
 	protected int[][][] Scalerx4 = new int[0x100][4][4];
-
 	private final static int GRAYSHADES[][] = { { 0xa0, 0xe0, 0x20 }, { 0x70, 0xb0, 0x40 }, { 0x40, 0x70, 0x32 }, { 0x10, 0x50, 0x26 } };
-
 	private int GrayColors[][][] = { GRAYSHADES, GRAYSHADES, GRAYSHADES };
-
 	protected int BGPI = 0;
 	int BGPD[] = new int[8 * 4 * 2];
-
 	protected int OBPI = 0;
 	int OBPD[] = new int[8 * 4 * 2];
-
 	private int blitImg[][] = new int[144][160];
 	private int blitImg_prev[][] = new int[144][160];
 	private int palColors[] = new int[8 * 4 * 2];
-
 	private int patpix[][][] = new int[4096][][];
 	boolean patdirty[] = new boolean[1024];
 	boolean anydirty = true;
-
 	private CPU cpu;
-
 	private int scale = 3;
 	public int nscale = 3;
 	private int cfskip = 0;
@@ -81,17 +55,16 @@ public final class VideoController {
 	public boolean MixFrames;
 	public boolean allow_writes_in_mode_2_3 = true;
 
-	public void setGrayShade(int i, int j, Color c) {
-		GrayColors[i][j][0] = c.getRed();
-		GrayColors[i][j][1] = c.getGreen();
-		GrayColors[i][j][2] = c.getBlue();
+	public void setGrayShade(int i, int j, int red, int green, int blue) {
+		GrayColors[i][j][0] = red;
+		GrayColors[i][j][1] = green;
+		GrayColors[i][j][2] = blue;
 		updateMonoColData(0);
 		updateMonoColData(1);
 		updateMonoColData(2);
 	}
 
 	public void setGrayShades(int[][][] g) {
-
 		setGrayShades(g[0], g[1], g[2]);
 	}
 
@@ -202,33 +175,11 @@ public final class VideoController {
 			VRAM[i] = 0;
 	}
 
-	public VideoController(CPU cpu, int image_width, int image_height) {
+	public VideoController(CPU cpu, int image_width, int image_height, VideoScreen screen) {
 		this.cpu = cpu;
-
-		drawImg = new Image[2];
-
-		scale();
+		this.screen = screen;
+		scale = screen.scaleImage(nscale);
 		reset();
-	}
-
-	public void addListener(IVideoListener vl) {
-
-		listener = vl;
-		this.scale();
-	}
-
-	private void scale() {
-		scale = nscale;
-		int width = scale * MIN_WIDTH;
-		int height = scale * MIN_HEIGHT;
-
-		drawImg[0] = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-		drawImg[1] = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-
-	}
-
-	public Image getImage() {
-		return drawImg[curDrawImg];
 	}
 
 	private void palChange(int palcol, int r, int g, int b) {
@@ -243,11 +194,11 @@ public final class VideoController {
 		cfskip--;
 		if (cfskip < 0) {
 			cfskip += fskip;
-			if (scale != nscale)
-				scale();
+			if (scale != nscale) {
+				scale = screen.scaleImage(nscale);
+			}
 
-			WritableRaster wr = ((BufferedImage) drawImg[curDrawImg ^ 1]).getRaster();
-			drawData = ((DataBufferInt) wr.getDataBuffer()).getData();
+			int pixels[] = screen.getPixels();
 
 			if (MixFrames)
 				for (int y = 0; y < 144; ++y) {
@@ -260,7 +211,7 @@ public final class VideoController {
 			if (scale == 1) {
 				for (int y = 0; y < 144; ++y) {
 					int[] blitLine = blitImg[y];
-					System.arraycopy(blitLine, 0, drawData, y * 160, 160);
+					System.arraycopy(blitLine, 0, pixels, y * 160, 160);
 				}
 			} else if (scale == 2) {
 
@@ -276,16 +227,16 @@ public final class VideoController {
 						int xn = (x == 0) ? 0 : x - 1;
 						int xp = (x == 159) ? 159 : x + 1;
 						if (!((blitLine2[xn]) == (blitLine2[xp])) && !((blitLine1[x]) == (blitLine3[x]))) {
-							drawData[++ti1] = ((blitLine1[x]) == (blitLine2[xn])) ? blitLine2[xn] : blitLine2[x];
-							drawData[++ti1] = ((blitLine1[x]) == (blitLine2[xp])) ? blitLine2[xp] : blitLine2[x];
-							drawData[++ti2] = ((blitLine3[x]) == (blitLine2[xn])) ? blitLine2[xn] : blitLine2[x];
-							drawData[++ti2] = ((blitLine3[x]) == (blitLine2[xp])) ? blitLine2[xp] : blitLine2[x];
+							pixels[++ti1] = ((blitLine1[x]) == (blitLine2[xn])) ? blitLine2[xn] : blitLine2[x];
+							pixels[++ti1] = ((blitLine1[x]) == (blitLine2[xp])) ? blitLine2[xp] : blitLine2[x];
+							pixels[++ti2] = ((blitLine3[x]) == (blitLine2[xn])) ? blitLine2[xn] : blitLine2[x];
+							pixels[++ti2] = ((blitLine3[x]) == (blitLine2[xp])) ? blitLine2[xp] : blitLine2[x];
 						} else {
 							int col = blitLine2[x];
-							drawData[++ti1] = col;
-							drawData[++ti1] = col;
-							drawData[++ti2] = col;
-							drawData[++ti2] = col;
+							pixels[++ti1] = col;
+							pixels[++ti1] = col;
+							pixels[++ti2] = col;
+							pixels[++ti2] = col;
 						}
 					}
 					ti1 += 160 * 2;
@@ -306,26 +257,26 @@ public final class VideoController {
 						int xn = (x == 0) ? 0 : x - 1;
 						int xp = (x == 159) ? 159 : x + 1;
 						if (!((blitLine1[x]) == (blitLine3[x])) && !((blitLine2[xn]) == (blitLine2[xp]))) {
-							drawData[++ti1] = ((blitLine2[xn]) == (blitLine1[x])) ? blitLine2[xn] : blitLine2[x];
-							drawData[++ti1] = (((blitLine2[xn]) == (blitLine1[x])) && !((blitLine2[x]) == (blitLine1[xp]))) || (((blitLine1[x]) == (blitLine2[xp])) && !((blitLine2[x]) == (blitLine1[xn]))) ? blitLine1[x] : blitLine2[x];
-							drawData[++ti1] = ((blitLine1[x]) == (blitLine2[xp])) ? blitLine2[xp] : blitLine2[x];
-							drawData[++ti2] = (((blitLine2[xn]) == (blitLine1[x])) && !((blitLine2[x]) == (blitLine3[xn]))) || (((blitLine2[xn]) == (blitLine3[x])) && !((blitLine2[x]) == (blitLine1[xn]))) ? blitLine2[xn] : blitLine2[x];
-							drawData[++ti2] = blitLine2[x];
-							drawData[++ti2] = (((blitLine1[x]) == (blitLine2[xp])) && !((blitLine2[x]) == (blitLine3[xp]))) || (((blitLine3[x]) == (blitLine2[xp])) && !((blitLine2[x]) == (blitLine1[xp]))) ? blitLine2[xp] : blitLine2[x];
-							drawData[++ti3] = ((blitLine2[xn]) == (blitLine3[x])) ? blitLine2[xn] : blitLine2[x];
-							drawData[++ti3] = (((blitLine2[xn]) == (blitLine3[x])) && !((blitLine2[x]) == (blitLine3[xp]))) || (((blitLine3[x]) == (blitLine2[xp])) && !((blitLine2[x]) == (blitLine3[xn]))) ? blitLine3[x] : blitLine2[x];
-							drawData[++ti3] = ((blitLine3[x]) == (blitLine2[xp])) ? blitLine2[xp] : blitLine2[x];
+							pixels[++ti1] = ((blitLine2[xn]) == (blitLine1[x])) ? blitLine2[xn] : blitLine2[x];
+							pixels[++ti1] = (((blitLine2[xn]) == (blitLine1[x])) && !((blitLine2[x]) == (blitLine1[xp]))) || (((blitLine1[x]) == (blitLine2[xp])) && !((blitLine2[x]) == (blitLine1[xn]))) ? blitLine1[x] : blitLine2[x];
+							pixels[++ti1] = ((blitLine1[x]) == (blitLine2[xp])) ? blitLine2[xp] : blitLine2[x];
+							pixels[++ti2] = (((blitLine2[xn]) == (blitLine1[x])) && !((blitLine2[x]) == (blitLine3[xn]))) || (((blitLine2[xn]) == (blitLine3[x])) && !((blitLine2[x]) == (blitLine1[xn]))) ? blitLine2[xn] : blitLine2[x];
+							pixels[++ti2] = blitLine2[x];
+							pixels[++ti2] = (((blitLine1[x]) == (blitLine2[xp])) && !((blitLine2[x]) == (blitLine3[xp]))) || (((blitLine3[x]) == (blitLine2[xp])) && !((blitLine2[x]) == (blitLine1[xp]))) ? blitLine2[xp] : blitLine2[x];
+							pixels[++ti3] = ((blitLine2[xn]) == (blitLine3[x])) ? blitLine2[xn] : blitLine2[x];
+							pixels[++ti3] = (((blitLine2[xn]) == (blitLine3[x])) && !((blitLine2[x]) == (blitLine3[xp]))) || (((blitLine3[x]) == (blitLine2[xp])) && !((blitLine2[x]) == (blitLine3[xn]))) ? blitLine3[x] : blitLine2[x];
+							pixels[++ti3] = ((blitLine3[x]) == (blitLine2[xp])) ? blitLine2[xp] : blitLine2[x];
 						} else {
 							int col = blitLine2[x];
-							drawData[++ti1] = col;
-							drawData[++ti1] = col;
-							drawData[++ti1] = col;
-							drawData[++ti2] = col;
-							drawData[++ti2] = col;
-							drawData[++ti2] = col;
-							drawData[++ti3] = col;
-							drawData[++ti3] = col;
-							drawData[++ti3] = col;
+							pixels[++ti1] = col;
+							pixels[++ti1] = col;
+							pixels[++ti1] = col;
+							pixels[++ti2] = col;
+							pixels[++ti2] = col;
+							pixels[++ti2] = col;
+							pixels[++ti3] = col;
+							pixels[++ti3] = col;
+							pixels[++ti3] = col;
 						}
 					}
 					ti1 += 160 * 3 * 2;
@@ -349,44 +300,44 @@ public final class VideoController {
 						int xp = (x == 159) ? 159 : x + 1;
 
 						if (((blitLine1[x]) == (blitLine2[xn]))) {
-							drawData[++ti1] = blitLine1[x];
-							drawData[++ti1] = blitLine1[x];
-							drawData[++ti2] = blitLine1[x];
+							pixels[++ti1] = blitLine1[x];
+							pixels[++ti1] = blitLine1[x];
+							pixels[++ti2] = blitLine1[x];
 						} else {
-							drawData[++ti1] = blitLine2[x];
-							drawData[++ti1] = blitLine2[x];
-							drawData[++ti2] = blitLine2[x];
+							pixels[++ti1] = blitLine2[x];
+							pixels[++ti1] = blitLine2[x];
+							pixels[++ti2] = blitLine2[x];
 						}
-						drawData[++ti2] = blitLine2[x];
-						drawData[++ti2] = blitLine2[x];
+						pixels[++ti2] = blitLine2[x];
+						pixels[++ti2] = blitLine2[x];
 						if (((blitLine1[x]) == (blitLine2[xp]))) {
-							drawData[++ti1] = blitLine1[x];
-							drawData[++ti1] = blitLine1[x];
-							drawData[++ti2] = blitLine1[x];
+							pixels[++ti1] = blitLine1[x];
+							pixels[++ti1] = blitLine1[x];
+							pixels[++ti2] = blitLine1[x];
 						} else {
-							drawData[++ti1] = blitLine2[x];
-							drawData[++ti1] = blitLine2[x];
-							drawData[++ti2] = blitLine2[x];
+							pixels[++ti1] = blitLine2[x];
+							pixels[++ti1] = blitLine2[x];
+							pixels[++ti2] = blitLine2[x];
 						}
 						if (((blitLine3[x]) == (blitLine2[xn]))) {
-							drawData[++ti3] = blitLine3[x];
-							drawData[++ti4] = blitLine3[x];
-							drawData[++ti4] = blitLine3[x];
+							pixels[++ti3] = blitLine3[x];
+							pixels[++ti4] = blitLine3[x];
+							pixels[++ti4] = blitLine3[x];
 						} else {
-							drawData[++ti3] = blitLine2[x];
-							drawData[++ti4] = blitLine2[x];
-							drawData[++ti4] = blitLine2[x];
+							pixels[++ti3] = blitLine2[x];
+							pixels[++ti4] = blitLine2[x];
+							pixels[++ti4] = blitLine2[x];
 						}
-						drawData[++ti3] = blitLine2[x];
-						drawData[++ti3] = blitLine2[x];
+						pixels[++ti3] = blitLine2[x];
+						pixels[++ti3] = blitLine2[x];
 						if (((blitLine3[x]) == (blitLine2[xp]))) {
-							drawData[++ti3] = blitLine3[x];
-							drawData[++ti4] = blitLine3[x];
-							drawData[++ti4] = blitLine3[x];
+							pixels[++ti3] = blitLine3[x];
+							pixels[++ti4] = blitLine3[x];
+							pixels[++ti4] = blitLine3[x];
 						} else {
-							drawData[++ti3] = blitLine2[x];
-							drawData[++ti4] = blitLine2[x];
-							drawData[++ti4] = blitLine2[x];
+							pixels[++ti3] = blitLine2[x];
+							pixels[++ti4] = blitLine2[x];
+							pixels[++ti4] = blitLine2[x];
 						}
 					}
 					ti1 += 160 * 4 * 3;
@@ -395,9 +346,9 @@ public final class VideoController {
 					ti4 += 160 * 4 * 3;
 				}
 			}
-			curDrawImg ^= 1;
-			if (listener != null)
-				listener.newVideoImage();
+			if (screen != null) {
+				screen.swapImage();
+			}
 		}
 		curBGY = 0;
 		curWNDY = 0;
