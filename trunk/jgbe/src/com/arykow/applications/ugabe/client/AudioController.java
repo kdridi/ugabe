@@ -397,10 +397,10 @@ public final class AudioController {
 	public int read(int index) {
 		int i = (index & 0xff) - 0x10;
 		if ((i < 0) || (i > 0x3f)) {
-			System.out.println("AudioController: Error: reading from non sound-address:" + index);
+			CPULogger.log("AudioController: Error: reading from non sound-address:" + index);
 			return -1;
 		} else if ((i != 0x16) && ((IO[0x16] & 0x80) == 0)) {
-			System.out.println("AudioController: Sound disabled: Reads are undefined!");
+			CPULogger.log("AudioController: Sound disabled: Reads are undefined!");
 			return 0;
 		} else if ((i == 0x05) || (i == 0x0f) || ((i > 0x16) && (i < 0x20))) {
 
@@ -412,10 +412,10 @@ public final class AudioController {
 	public void write(int index, int value) {
 		int i = (index & 0xff) - 0x10;
 		if ((i < 0) || (i > 0x2f)) {
-			System.out.println("AudioController: Error: writing to non sound-address:" + index);
+			CPULogger.log("AudioController: Error: writing to non sound-address:" + index);
 			return;
 		} else if ((i != 0x16) && ((IO[0x16] & 0x80) == 0)) {
-			System.out.println("AudioController: Sound disabled: Writes are undefined!");
+			CPULogger.log("AudioController: Sound disabled: Writes are undefined!");
 			return;
 		} else if ((i == 0x05) || (i == 0x0f) || ((i > 0x16) && (i < 0x20))) {
 

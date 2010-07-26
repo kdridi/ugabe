@@ -15,6 +15,7 @@
  * ========================================================================== */ 
 package com.arykow.applications.ugabe.client;
 
+
 public interface IAudioListener {
 
 	public void writeAudioSample(byte[] s);
@@ -23,5 +24,4 @@ public interface IAudioListener {
 
 	public void reset();
 
-	public void setDumpStream(java.io.DataOutputStream dos);
 }

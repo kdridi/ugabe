@@ -100,10 +100,10 @@ public class Disassembler {
 		String result = null;
 		switch (mode) {
 		case 0:
-			result = simple_disassemble(PC);
+//			result = simple_disassemble(PC);
 			break;
 		case 1:
-			result = extended_disassemble(PC);
+//			result = extended_disassemble(PC);
 			break;
 		default:
 			throw new Error("Assertion failed: " + "false");
@@ -111,181 +111,181 @@ public class Disassembler {
 		return result;
 	}
 
-	private final String extended_disassemble(int PC) {
-		try {
-			int instr = cpu.read(PC);
-			int immediate = -1;
-			int i = -1;
-			int j = -1;
-			int bytecount = 1;
-			String op = "";
-			if (instr == 0xcb) {
-				instr = cpu.read(PC + 1);
-				op = opcode[instr + 0x100];
-				bytecount = 2;
-			} else {
-				op = opcode[instr];
-			}
-			String s = op;
-			i = op.indexOf("IMM08");
-			if (i > -1) {
-				immediate = cpu.read(PC + 1);
-				if (op.indexOf("JR") > -1)
-					immediate = (PC + 2) + (((immediate & 0x80) != 0) ? (-((immediate ^ 0xff) + 1)) : immediate);
-				s = String.format(op.substring(0, i) + "$%02x" + op.substring(i + 5), immediate);
-				bytecount = 2;
-			}
-			i = op.indexOf("IMM16");
-			if (i > -1) {
-				immediate = (cpu.read(PC + 2) << 8) | cpu.read(PC + 1);
-				s = String.format(op.substring(0, i) + "$%04x" + op.substring(i + 5), immediate);
-				bytecount = 3;
-			}
+//	private final String extended_disassemble(int PC) {
+//		try {
+//			int instr = cpu.read(PC);
+//			int immediate = -1;
+//			int i = -1;
+//			int j = -1;
+//			int bytecount = 1;
+//			String op = "";
+//			if (instr == 0xcb) {
+//				instr = cpu.read(PC + 1);
+//				op = opcode[instr + 0x100];
+//				bytecount = 2;
+//			} else {
+//				op = opcode[instr];
+//			}
+//			String s = op;
+//			i = op.indexOf("IMM08");
+//			if (i > -1) {
+//				immediate = cpu.read(PC + 1);
+//				if (op.indexOf("JR") > -1)
+//					immediate = (PC + 2) + (((immediate & 0x80) != 0) ? (-((immediate ^ 0xff) + 1)) : immediate);
+//				s = String.format(op.substring(0, i) + "$%02x" + op.substring(i + 5), immediate);
+//				bytecount = 2;
+//			}
+//			i = op.indexOf("IMM16");
+//			if (i > -1) {
+//				immediate = (cpu.read(PC + 2) << 8) | cpu.read(PC + 1);
+//				s = String.format(op.substring(0, i) + "$%04x" + op.substring(i + 5), immediate);
+//				bytecount = 3;
+//			}
+//
+//			i = op.lastIndexOf(" ");
+//			if (i > -1) {
+//				j = op.lastIndexOf(",", i - 1);
+//				if (j > -1) {
+//
+//					if (op.charAt(i + 1) == '[') {
+//						immediate = regval(op.substring(i + 2, op.indexOf("]", i + 2)));
+//
+//						++i;
+//					} else {
+//						immediate = regval(op.substring(i + 1));
+//					}
+//					if (immediate > -1) {
+//						if (immediate > 0xffff) {
+//							s = String.format(s.substring(0, i + 1) + "$%04x" + s.substring(i + 3), immediate & 0xffff);
+//						} else {
+//							s = String.format(s.substring(0, i + 1) + "$%02x" + s.substring(i + 2), immediate);
+//						}
+//					}
+//
+//					i = op.lastIndexOf(" ", j);
+//					if (op.charAt(i + 1) == '[') {
+//						immediate = regval(op.substring(i + 2, op.indexOf("]", i + 2)));
+//						++i;
+//					} else {
+//						immediate = -1;
+//					}
+//					if (immediate > -1) {
+//						if (immediate > 0xffff) {
+//							s = String.format(s.substring(0, i + 1) + "$%04x" + s.substring(i + 3), immediate & 0xffff);
+//						} else {
+//							s = String.format(s.substring(0, i + 1) + "$%02x" + s.substring(i + 2), immediate);
+//						}
+//					}
+//				} else {
+//					if (op.charAt(i + 1) == '[') {
+//						immediate = regval(op.substring(i + 2, op.indexOf("]", i + 2)));
+//						++i;
+//					} else {
+//						immediate = regval(op.substring(i + 1));
+//					}
+//					if (immediate > -1) {
+//						if (immediate > 0xffff) {
+//							s = String.format(s.substring(0, i + 1) + "$%04x" + s.substring(i + 3), immediate & 0xffff);
+//						} else {
+//							s = String.format(s.substring(0, i + 1) + "$%02x" + s.substring(i + 2), immediate);
+//						}
+//					}
+//				}
+//			}
+//			i = s.indexOf("[n]");
+//			if (i > -1) {
+//				immediate = cpu.read(PC + 1);
+//				bytecount = 2;
+//				if (op.indexOf("LDH") > -1)
+//					immediate |= 0xff00;
+//				s = String.format(s.substring(0, i + 1) + "$%04x" + s.substring(i + 2), immediate);
+//
+//			}
+//			i = op.indexOf("dd");
+//			if (i > -1) {
+//				immediate = cpu.read(PC + 1);
+//				if (op.indexOf("(SP+dd)") > -1) {
+//					immediate ^= 0x80;
+//					immediate -= 0x80;
+//					immediate += cpu.SP;
+//				}
+//				bytecount = 2;
+//			}
+//
+//			String prefix = String.format("$%04x ", PC);
+//			for (i = 0; i < bytecount; ++i) {
+//				prefix += String.format("$%02x ", cpu.read(PC + i));
+//			}
+//			for (i = 0; i < 3 - bytecount; ++i) {
+//				prefix += String.format("    ", cpu.read(PC + i));
+//			}
+//			return prefix + op + (new String(whitespace, 0, 18 - op.length())) + "// " + s;
+//		} catch (Exception e) {
+//			return "";
+//		}
+//	}
 
-			i = op.lastIndexOf(" ");
-			if (i > -1) {
-				j = op.lastIndexOf(",", i - 1);
-				if (j > -1) {
-
-					if (op.charAt(i + 1) == '[') {
-						immediate = regval(op.substring(i + 2, op.indexOf("]", i + 2)));
-
-						++i;
-					} else {
-						immediate = regval(op.substring(i + 1));
-					}
-					if (immediate > -1) {
-						if (immediate > 0xffff) {
-							s = String.format(s.substring(0, i + 1) + "$%04x" + s.substring(i + 3), immediate & 0xffff);
-						} else {
-							s = String.format(s.substring(0, i + 1) + "$%02x" + s.substring(i + 2), immediate);
-						}
-					}
-
-					i = op.lastIndexOf(" ", j);
-					if (op.charAt(i + 1) == '[') {
-						immediate = regval(op.substring(i + 2, op.indexOf("]", i + 2)));
-						++i;
-					} else {
-						immediate = -1;
-					}
-					if (immediate > -1) {
-						if (immediate > 0xffff) {
-							s = String.format(s.substring(0, i + 1) + "$%04x" + s.substring(i + 3), immediate & 0xffff);
-						} else {
-							s = String.format(s.substring(0, i + 1) + "$%02x" + s.substring(i + 2), immediate);
-						}
-					}
-				} else {
-					if (op.charAt(i + 1) == '[') {
-						immediate = regval(op.substring(i + 2, op.indexOf("]", i + 2)));
-						++i;
-					} else {
-						immediate = regval(op.substring(i + 1));
-					}
-					if (immediate > -1) {
-						if (immediate > 0xffff) {
-							s = String.format(s.substring(0, i + 1) + "$%04x" + s.substring(i + 3), immediate & 0xffff);
-						} else {
-							s = String.format(s.substring(0, i + 1) + "$%02x" + s.substring(i + 2), immediate);
-						}
-					}
-				}
-			}
-			i = s.indexOf("[n]");
-			if (i > -1) {
-				immediate = cpu.read(PC + 1);
-				bytecount = 2;
-				if (op.indexOf("LDH") > -1)
-					immediate |= 0xff00;
-				s = String.format(s.substring(0, i + 1) + "$%04x" + s.substring(i + 2), immediate);
-
-			}
-			i = op.indexOf("dd");
-			if (i > -1) {
-				immediate = cpu.read(PC + 1);
-				if (op.indexOf("(SP+dd)") > -1) {
-					immediate ^= 0x80;
-					immediate -= 0x80;
-					immediate += cpu.SP;
-				}
-				bytecount = 2;
-			}
-
-			String prefix = String.format("$%04x ", PC);
-			for (i = 0; i < bytecount; ++i) {
-				prefix += String.format("$%02x ", cpu.read(PC + i));
-			}
-			for (i = 0; i < 3 - bytecount; ++i) {
-				prefix += String.format("    ", cpu.read(PC + i));
-			}
-			return prefix + op + (new String(whitespace, 0, 18 - op.length())) + "// " + s;
-		} catch (Exception e) {
-			return "";
-		}
-	}
-
-	private final String simple_disassemble(int PC) {
-		try {
-			int instr = cpu.read(PC);
-			int immediate = -1;
-			int bytecount = 1;
-			int i;
-			String op = "";
-			if (instr == 0xcb) {
-				instr = cpu.read(PC + 1);
-				op = opcode[instr + 0x100];
-				bytecount = 2;
-			} else {
-				op = opcode[instr];
-			}
-			String s = op;
-			i = op.indexOf("IMM08");
-			if (i > -1) {
-				immediate = cpu.read(PC + 1);
-				if (op.indexOf("JR") > -1)
-					immediate = (PC + 2) + (((immediate & 0x80) != 0) ? (-((immediate ^ 0xff) + 1)) : immediate);
-				s = String.format(op.substring(0, i) + "$%02x" + op.substring(i + 5), immediate);
-				bytecount = 2;
-			}
-			i = op.indexOf("IMM16");
-			if (i > -1) {
-				immediate = (cpu.read(PC + 2) << 8) | cpu.read(PC + 1);
-				s = String.format(op.substring(0, i) + "$%04x" + op.substring(i + 5), immediate);
-				bytecount = 3;
-			}
-			i = s.indexOf("[n]");
-			if (i > -1) {
-				immediate = cpu.read(PC + 1);
-				bytecount = 2;
-				s = String.format(s.substring(0, i + 1) + "$%02x" + s.substring(i + 2), immediate);
-			}
-			i = op.indexOf("dd");
-			if (i > -1) {
-				immediate = cpu.read(PC + 1);
-				bytecount = 2;
-				s = String.format(s.substring(0, i) + "$%02x" + s.substring(i + 2), immediate);
-			}
-
-			String prefix = String.format("$%04x: ", PC);
-			for (i = 0; i < bytecount; ++i) {
-				prefix += String.format("$%02x ", cpu.read(PC + i));
-			}
-			for (; i < 3; ++i) {
-				prefix += "    ";
-			}
-			return prefix + " " + s;
-		} catch (Exception e) {
-			return "";
-		}
-	}
+//	private final String simple_disassemble(int PC) {
+//		try {
+//			int instr = cpu.read(PC);
+//			int immediate = -1;
+//			int bytecount = 1;
+//			int i;
+//			String op = "";
+//			if (instr == 0xcb) {
+//				instr = cpu.read(PC + 1);
+//				op = opcode[instr + 0x100];
+//				bytecount = 2;
+//			} else {
+//				op = opcode[instr];
+//			}
+//			String s = op;
+//			i = op.indexOf("IMM08");
+//			if (i > -1) {
+//				immediate = cpu.read(PC + 1);
+//				if (op.indexOf("JR") > -1)
+//					immediate = (PC + 2) + (((immediate & 0x80) != 0) ? (-((immediate ^ 0xff) + 1)) : immediate);
+//				s = String.format(op.substring(0, i) + "$%02x" + op.substring(i + 5), immediate);
+//				bytecount = 2;
+//			}
+//			i = op.indexOf("IMM16");
+//			if (i > -1) {
+//				immediate = (cpu.read(PC + 2) << 8) | cpu.read(PC + 1);
+//				s = String.format(op.substring(0, i) + "$%04x" + op.substring(i + 5), immediate);
+//				bytecount = 3;
+//			}
+//			i = s.indexOf("[n]");
+//			if (i > -1) {
+//				immediate = cpu.read(PC + 1);
+//				bytecount = 2;
+//				s = String.format(s.substring(0, i + 1) + "$%02x" + s.substring(i + 2), immediate);
+//			}
+//			i = op.indexOf("dd");
+//			if (i > -1) {
+//				immediate = cpu.read(PC + 1);
+//				bytecount = 2;
+//				s = String.format(s.substring(0, i) + "$%02x" + s.substring(i + 2), immediate);
+//			}
+//
+//			String prefix = String.format("$%04x: ", PC);
+//			for (i = 0; i < bytecount; ++i) {
+//				prefix += String.format("$%02x ", cpu.read(PC + i));
+//			}
+//			for (; i < 3; ++i) {
+//				prefix += "    ";
+//			}
+//			return prefix + " " + s;
+//		} catch (Exception e) {
+//			return "";
+//		}
+//	}
 
 	public static void main(String[] args) {
 		CPU cpu = new CPU(null, null);
 		Disassembler disassembler = new Disassembler(cpu, SIMPLE_DISASSEMBLY);
-		System.out.println(disassembler.disassemble(0));
-		System.out.println(disassembler.disassemble(0));
-		System.out.println(disassembler.disassemble(255));
-		System.out.println(disassembler.disassemble(255));
+		CPULogger.log(disassembler.disassemble(0));
+		CPULogger.log(disassembler.disassemble(0));
+		CPULogger.log(disassembler.disassemble(255));
+		CPULogger.log(disassembler.disassemble(255));
 	}
 }
