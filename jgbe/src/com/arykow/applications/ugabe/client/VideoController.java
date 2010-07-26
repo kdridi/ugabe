@@ -738,13 +738,13 @@ public final class VideoController {
 		if (index < 0xa000) {
 			if (allow_writes_in_mode_2_3 || ((LCDC & 0x80) == 0) || ((STAT & 3) != 3))
 				return VRAM[index - 0x8000 + CurrentVRAMBank];
-			System.out.println("WARNING: Read from VRAM[" + String.format("0x%04x", index) + "] denied during mode " + (STAT & 3) + ", PC=" + String.format("0x%04x", (cpu.getPC())));
+			CPULogger.printf("WARNING: Read from VRAM[0x%04x] denied during mode " + (STAT & 3) + ", PC=0x%04x\n", index, cpu.getPC());
 			return 0xff;
 		}
 		if ((index > 0xfdff) && (index < 0xfea0)) {
 			if (allow_writes_in_mode_2_3 || ((LCDC & 0x80) == 0) || ((STAT & 2) == 0))
 				return OAM[index - 0xfe00];
-			System.out.println("WARNING: Read from OAM[" + String.format("0x%04x", index) + "] denied during mode " + (STAT & 3) + ", PC=" + String.format("0x%04x", (cpu.getPC())));
+			CPULogger.printf("WARNING: Read from OAM[0x%04x] denied during mode " + (STAT & 3) + ", PC=0x%04x\n", index, cpu.getPC());
 			return 0xff;
 		}
 		int b = 0xff;
@@ -808,11 +808,11 @@ public final class VideoController {
 			b = getOBColData();
 			break;
 		case 0x2c:
-			System.out.printf("WARNING: VC.read(): Read from *undocumented* IO port $%04x\n", index);
+			CPULogger.printf("WARNING: VC.read(): Read from *undocumented* IO port $%04x\n", index);
 			b = cpu.IOP[index - 0xff00] | 0xfe;
 			break;
 		default:
-			System.out.printf("TODO: VC.read(): Read from IO port $%04x\n", index);
+			CPULogger.printf("TODO: VC.read(): Read from IO port $%04x\n", index);
 		}
 		return b;
 	}
@@ -825,7 +825,7 @@ public final class VideoController {
 				anydirty = true;
 				return;
 			}
-			System.out.println("WARNING: Write to VRAM[" + String.format("0x%04x", index) + "] denied during mode " + (STAT & 3) + ", PC=" + String.format("0x%04x", (cpu.getPC())));
+			CPULogger.printf("WARNING: Write to VRAM[0x%04x] denied during mode " + (STAT & 3) + ", PC=0x%04x\n", index, cpu.getPC());
 			return;
 		}
 		if ((index > 0xfdff) && (index < 0xfea0)) {
@@ -833,7 +833,7 @@ public final class VideoController {
 				OAM[index - 0xfe00] = value;
 				return;
 			}
-			System.out.println("WARNING: Write to OAM[" + String.format("0x%04x", index) + "] denied during mode " + (STAT & 3) + ", PC=" + String.format("0x%04x", (cpu.getPC())));
+			CPULogger.printf("WARNING: Write to OAM[0x%04x] denied during mode " + (STAT & 3) + ", PC=0x%04x", index, cpu.getPC());
 			return;
 		}
 		switch (index & 0x3f) {
@@ -913,7 +913,7 @@ public final class VideoController {
 				int src = ((cpu.IOP[0x51] << 8) | cpu.IOP[0x52]) & 0xfff0;
 				int dst = (((cpu.IOP[0x53] << 8) | cpu.IOP[0x54]) & 0x1ff0) | 0x8000;
 				int len = ((value & 0x7f) + 1) << 4;
-				System.out.println("WARNING: cpu.write(): TODO: Untimed H-DMA Transfer");
+				CPULogger.log("WARNING: cpu.write(): TODO: Untimed H-DMA Transfer");
 
 				for (int i = 0; i < len; ++i)
 					write(dst++, cpu.read(src++));
@@ -943,11 +943,11 @@ public final class VideoController {
 			setOBColData(value);
 			break;
 		case 0x2c:
-			System.out.printf("WARNING: VC.write(): Write %02x to *undocumented* IO port $%04x\n", value, index);
+			CPULogger.printf("WARNING: VC.write(): Write %02x to *undocumented* IO port $%04x\n", value, index);
 			cpu.IOP[index - 0xff00] = value;
 			break;
 		default:
-			System.out.printf("TODO: VC.write(): Write %02x to IO port $%04x\n", value, index);
+			CPULogger.printf("TODO: VC.write(): Write %02x to IO port $%04x\n", value, index);
 			break;
 		}
 	}
@@ -955,7 +955,7 @@ public final class VideoController {
 	public void selectVRAMBank(int i) {
 		CurrentVRAMBank = i * 0x2000;
 		if ((i < 0) || (i > 1))
-			System.out.printf("current offset=%x\n", CurrentVRAMBank);
+			CPULogger.printf("current offset=%x\n", CurrentVRAMBank);
 	}
 
 	public int getcurVRAMBank() {

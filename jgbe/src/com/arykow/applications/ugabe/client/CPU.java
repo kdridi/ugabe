@@ -322,7 +322,7 @@ public final class CPU {
 		} else if (index < 0xfea0) {
 			b = videoController.read(index);
 		} else if (index < 0xff00) {
-			System.out.println("WARNING: CPU.read(): Read from unusable memory (0xfea0-0xfeff)");
+			CPULogger.log("WARNING: CPU.read(): Read from unusable memory (0xfea0-0xfeff)");
 			b = 0;
 		} else if ((index > 0xff0f) && (index < 0xff40)) {
 			b = audioController.read(index);
@@ -367,7 +367,7 @@ public final class CPU {
 				break;
 
 			case 0xff6c:
-				System.out.printf("WARNING: CPU.read(): Read from *undocumented* IO port $%04x\n", index);
+				CPULogger.printf("WARNING: CPU.read(): Read from *undocumented* IO port $%04x\n", index);
 				b = IOP[index - 0xff00] | 0xfe;
 				break;
 			case 0xff72:
@@ -376,16 +376,16 @@ public final class CPU {
 				b = IOP[index - 0xff00];
 				break;
 			case 0xff75:
-				System.out.printf("WARNING: CPU.read(): Read from *undocumented* IO port $%04x\n", index);
+				CPULogger.printf("WARNING: CPU.read(): Read from *undocumented* IO port $%04x\n", index);
 				b = IOP[index - 0xff00] | 0x8f;
 				break;
 			case 0xff76:
 			case 0xff77:
-				System.out.printf("WARNING: CPU.read(): Read from *undocumented* IO port $%04x\n", index);
+				CPULogger.printf("WARNING: CPU.read(): Read from *undocumented* IO port $%04x\n", index);
 				b = 0;
 				break;
 			default:
-				System.out.printf("TODO: CPU.read(): Read from IO port $%04x\n", index);
+				CPULogger.printf("TODO: CPU.read(): Read from IO port $%04x\n", index);
 				b = 0xff;
 				break;
 			}
@@ -394,7 +394,7 @@ public final class CPU {
 		} else if (index < 0x10000) {
 			b = IE;
 		} else {
-			System.out.println("ERROR: CPU.read(): Out of range memory access: $" + index);
+			CPULogger.log("ERROR: CPU.read(): Out of range memory access: $" + index);
 			b = 0;
 		}
 		return b;
@@ -520,15 +520,15 @@ public final class CPU {
 			case 0xff73:
 			case 0xff74:
 			case 0xff75:
-				System.out.printf("WARNING: CPU.write(): Write to *undocumented* IO port $%04x\n", index);
+				CPULogger.printf("WARNING: CPU.write(): Write to *undocumented* IO port $%04x\n", index);
 				IOP[index - 0xff00] = value;
 				break;
 			case 0xff76:
 			case 0xff77:
-				System.out.printf("WARNING: CPU.write(): Write to *undocumented* IO port $%04x\n", index);
+				CPULogger.printf("WARNING: CPU.write(): Write to *undocumented* IO port $%04x\n", index);
 				break;
 			default:
-				System.out.printf("TODO: CPU.write(): Write %02x to IO port $%04x\n", value, index);
+				CPULogger.printf("TODO: CPU.write(): Write %02x to IO port $%04x\n", value, index);
 				break;
 			}
 		} else if (index < 0xffff) {
@@ -537,7 +537,7 @@ public final class CPU {
 			IE = value;
 			preCheckInts();
 		} else {
-			System.out.println("ERROR: CPU.write(): Out of range memory access: $" + index);
+			CPULogger.log("ERROR: CPU.write(): Out of range memory access: $" + index);
 		}
 	}
 
@@ -632,11 +632,11 @@ public final class CPU {
 		flags += ((F & (1 << 2)) == (1 << 2)) ? "1 " : "0 ";
 		flags += ((F & (1 << 1)) == (1 << 1)) ? "1 " : "0 ";
 		flags += ((F & (1 << 0)) == (1 << 0)) ? "1 " : "0 ";
-		System.out.println("---CPU Status for cycle " + TotalCycleCount + " , instruction " + TotalInstrCount + "---");
-		System.out.printf("   A=$%02x    B=$%02x    C=$%02x    D=$%02x   E=$%02x   F=$%02x   H=$%02x   L=$%02x\n", A, B, C, D, E, F, H, L);
-		System.out.printf("  PC=$%04x SP=$%04x                           flags=" + flags + "\n", getPC(), SP);
+		CPULogger.log("---CPU Status for cycle " + TotalCycleCount + " , instruction " + TotalInstrCount + "---");
+		CPULogger.printf("   A=$%02x    B=$%02x    C=$%02x    D=$%02x   E=$%02x   F=$%02x   H=$%02x   L=$%02x\n", A, B, C, D, E, F, H, L);
+		CPULogger.printf("  PC=$%04x SP=$%04x                           flags=" + flags + "\n", getPC(), SP);
 
-		System.out.println("  " + deasm.disassemble(getPC()));
+		CPULogger.log("  " + deasm.disassemble(getPC()));
 
 	}
 
@@ -1483,7 +1483,7 @@ public final class CPU {
 			break;
 		case 0x10:
 			if (speedswitch) {
-				System.out.println("Speed switch!");
+				CPULogger.log("Speed switch!");
 				doublespeed = !doublespeed;
 				++localPC;
 				speedswitch = false;
@@ -3971,7 +3971,7 @@ public final class CPU {
 				;
 				break;
 			default:
-				System.out.printf("UNKNOWN PREFIX INSTRUCTION: $%02x (" + op + ")\n", op);
+				CPULogger.printf("UNKNOWN PREFIX INSTRUCTION: $%02x (" + op + ")\n", op);
 				localPC -= 2;
 				return 0;
 			}
@@ -3979,7 +3979,7 @@ public final class CPU {
 		default:
 
 		{
-			System.out.printf("UNKNOWN INSTRUCTION: $%02x (" + op + ")\n", op);
+			CPULogger.printf("UNKNOWN INSTRUCTION: $%02x (" + op + ")\n", op);
 			localPC -= 1;
 			return 0;
 		}
@@ -4098,7 +4098,7 @@ public final class CPU {
 							break;
 						case 0x8181: {
 
-							System.out.println("Link: clock conflict");
+							CPULogger.log("Link: clock conflict");
 						}
 							;
 							break;
@@ -4118,7 +4118,7 @@ public final class CPU {
 						}
 
 					} catch (IOException e) {
-						System.out.println("Link exception");
+						CPULogger.log("Link exception");
 						server.severLink(this);
 					}
 

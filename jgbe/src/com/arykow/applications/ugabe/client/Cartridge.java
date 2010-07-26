@@ -79,25 +79,25 @@ public final class Cartridge implements Serializable {
 					return (MM_RAM[0][index & 0xfff]) & 0xf;
 				}
 			} else {
-				System.out.println("Warning: Reading from disabled RAM!");
+				CPULogger.log("Warning: Reading from disabled RAM!");
 				return 0;
 			}
-			System.out.printf("Warning: Reading from bogus address: $%04x\n", index);
+			CPULogger.printf("Warning: Reading from bogus address: $%04x\n", index);
 			return 0xff;
 		case 3:
 
-			System.out.printf("Error: not using memmap, or reading from cartridge with a noncartridge address $%04x\n", index);
-			System.out.printf("CurRombank: %d CurrentRAMBank: %d\n", CurrentROMBank, CurrentRAMBank);
+			CPULogger.printf("Error: not using memmap, or reading from cartridge with a noncartridge address $%04x\n", index);
+			CPULogger.printf("CurRombank: %d CurrentRAMBank: %d\n", CurrentROMBank, CurrentRAMBank);
 
 			int x[] = new int[] {};
 			x[0] = 0;
 			return 0xff;
 		case 5:
 
-			System.out.println("Error: not using memmap, or reading from cartridge with a non cartridge address!");
+			CPULogger.log("Error: not using memmap, or reading from cartridge with a non cartridge address!");
 			return 0xff;
 		default:
-			System.out.println("Error: Cartridge memory bank controller type #" + MBC + " is not implemented!");
+			CPULogger.log("Error: Cartridge memory bank controller type #" + MBC + " is not implemented!");
 			return 0xff;
 		}
 	}
@@ -127,8 +127,8 @@ public final class Cartridge implements Serializable {
 
 					CurrentRAMBank = value & 0x03;
 					if (ram_mm_size == 0) {
-						System.out.println("WARNING! 'Bomberman Collection (J) [S]' hack'" + value);
-						System.out.printf("setting rom banks 0-15 to banks %d-%d\n", value * 16, (value * 16) + 15);
+						CPULogger.log("WARNING! 'Bomberman Collection (J) [S]' hack'" + value);
+						CPULogger.printf("setting rom banks 0-15 to banks %d-%d\n", value * 16, (value * 16) + 15);
 						for (int i = 0; i < 64; ++i)
 							MM_ROM[i] = MM_ROM[(value * 64) | i];
 					}
@@ -138,12 +138,12 @@ public final class Cartridge implements Serializable {
 			} else if ((index >= 0xA000) && (index <= 0xBFFF)) {
 
 			} else
-				System.out.printf("TODO: Cartridge writing to $%04x\n", index);
+				CPULogger.printf("TODO: Cartridge writing to $%04x\n", index);
 			break;
 		case 2:
 
 			if ((0xA0000 <= index) && (index <= 0xA1FF)) {
-				System.out.println("TODO: write to internal cartridge RAM.");
+				CPULogger.log("TODO: write to internal cartridge RAM.");
 			} else if ((0x0000 <= index) && (index <= 0x1FFF)) {
 				if ((index & (1 << 8)) == 0) {
 					ram_enabled = !ram_enabled;
@@ -178,17 +178,17 @@ public final class Cartridge implements Serializable {
 				}
 			}
 			if ((index >= 0x6000) && (index < 0x8000)) {
-				System.out.println("TODO: Cartridge.write(): Latch Clock Data!");
+				CPULogger.log("TODO: Cartridge.write(): Latch Clock Data!");
 			}
 			if ((index >= 0xa000) && (index < 0xc000)) {
 				if (RTCRegisterEnabled) {
-					System.out.println("TODO: Cartridge.write(): writing to RAM in RTC mode");
+					CPULogger.log("TODO: Cartridge.write(): writing to RAM in RTC mode");
 				} else {
-					System.out.println("Error: not using memmap!");
+					CPULogger.log("Error: not using memmap!");
 				}
 			}
 			if (((index >= 0x8000) && (index < 0xa000)) || ((index > 0xc000)))
-				System.out.printf("WARNING: Cartridge.write(): Unsupported address for write ($%04x)\n", index);
+				CPULogger.printf("WARNING: Cartridge.write(): Unsupported address for write ($%04x)\n", index);
 			break;
 
 		case 5:
@@ -212,13 +212,13 @@ public final class Cartridge implements Serializable {
 					CurrentRAMBank = value;
 			}
 			if ((index >= 0xa000) && (index < 0xc000)) {
-				System.out.println("Error: not using memmap!");
+				CPULogger.log("Error: not using memmap!");
 			}
 			if (((index >= 0x6000) && (index < 0xa000)) || ((index > 0xc000)))
-				System.out.printf("WARNING: Cartridge.write(): Unsupported address for write ($%04x)\n", index);
+				CPULogger.printf("WARNING: Cartridge.write(): Unsupported address for write ($%04x)\n", index);
 			break;
 		default:
-			System.out.println("ERROR: Cartridge.write(): Cartridge memory bank controller type #" + MBC + " is not implemented");
+			CPULogger.log("ERROR: Cartridge.write(): Cartridge memory bank controller type #" + MBC + " is not implemented");
 		}
 	}
 }
