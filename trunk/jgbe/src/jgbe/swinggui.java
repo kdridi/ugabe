@@ -245,18 +245,14 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 	public class DrawingArea extends JPanel implements VideoScreen {
 		private static final long serialVersionUID = 1L;
 
-		private final static int MIN_WIDTH = 160;
-		private final static int MIN_HEIGHT = 144;
-
 		private int curDrawImg = 0;
 		private BufferedImage drawImg[] = new BufferedImage[2];
 
-		public int scaleImage(int scale) {
+		public void scaleImage(int scale) {
 			int width = scale * MIN_WIDTH;
 			int height = scale * MIN_HEIGHT;
 			drawImg[0] = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 			drawImg[1] = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-			return scale;
 		}
 
 		public Image getImage() {
