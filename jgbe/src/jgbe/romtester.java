@@ -41,7 +41,7 @@ public class romtester {
 		CartridgeController cartridgeController = new CartridgeController();
 		cartridgeController.createCartridge(romfile, new CartridgeCreateHandler() {
 			public void onCreateCartridge(Cartridge cartridge) {
-				CPU cpu = new CPU(new CPUServerImpl(), new VideoScreenImpl());
+				CPU cpu = new CPU(new CPUServerImpl(), null);
 				Writer logwriter = null;
 				try {
 					if (!logfile.equals(""))

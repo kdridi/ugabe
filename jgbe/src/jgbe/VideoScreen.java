@@ -1,7 +1,10 @@
 package jgbe;
 
 public interface VideoScreen {
-	public abstract int scaleImage(int scale);
+	public final static int MIN_WIDTH = 160;
+	public final static int MIN_HEIGHT = 144;
+
+	public abstract void scaleImage(int scale);
 	public abstract int[] getPixels();
 	public void swapImage();
 }

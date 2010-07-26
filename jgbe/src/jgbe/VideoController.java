@@ -48,8 +48,8 @@ public final class VideoController {
 	boolean patdirty[] = new boolean[1024];
 	boolean anydirty = true;
 	private CPU cpu;
-	private int scale = 3;
-	public int nscale = 3;
+	private int scale = 1;
+	public int nscale = 1;
 	private int cfskip = 0;
 	public int fskip = 1;
 	public boolean MixFrames;
@@ -178,7 +178,7 @@ public final class VideoController {
 	public VideoController(CPU cpu, int image_width, int image_height, VideoScreen screen) {
 		this.cpu = cpu;
 		this.screen = screen;
-		scale = screen.scaleImage(nscale);
+		screen.scaleImage(scale = nscale);
 		reset();
 	}
 
@@ -195,7 +195,7 @@ public final class VideoController {
 		if (cfskip < 0) {
 			cfskip += fskip;
 			if (scale != nscale) {
-				scale = screen.scaleImage(nscale);
+				screen.scaleImage(scale = nscale);
 			}
 
 			int pixels[] = screen.getPixels();
@@ -214,7 +214,6 @@ public final class VideoController {
 					System.arraycopy(blitLine, 0, pixels, y * 160, 160);
 				}
 			} else if (scale == 2) {
-
 				int ti1 = -1, ti2 = -1;
 				ti2 += 160 * 2;
 				for (int y = 0; y < 144; ++y) {
@@ -348,12 +347,14 @@ public final class VideoController {
 			}
 			if (screen != null) {
 				screen.swapImage();
+				System.out.println(size++);
 			}
 		}
 		curBGY = 0;
 		curWNDY = 0;
 
 	}
+	private int size = 0;
 
 	public void updateMonoColData(int index) {
 
