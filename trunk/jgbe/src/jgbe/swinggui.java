@@ -49,6 +49,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferInt;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
@@ -102,7 +103,7 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 	private int mousehidden = 0;
 	protected VideoController VC;
 	protected CPUServer server = new CPUServerImpl();
-	protected CPU cpu = new CPU(server);
+	protected CPU cpu = new CPU(server, grfx);
 	protected AudioDriver audioDriver;
 	private int fps;
 	private boolean isApplet;
@@ -241,8 +242,30 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 		}
 	}
 
-	public class DrawingArea extends JPanel implements IVideoListener {
+	public class DrawingArea extends JPanel implements VideoScreen {
 		private static final long serialVersionUID = 1L;
+
+		private final static int MIN_WIDTH = 160;
+		private final static int MIN_HEIGHT = 144;
+
+		private int curDrawImg = 0;
+		private BufferedImage drawImg[] = new BufferedImage[2];
+
+		public int scaleImage(int scale) {
+			int width = scale * MIN_WIDTH;
+			int height = scale * MIN_HEIGHT;
+			drawImg[0] = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+			drawImg[1] = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+			return scale;
+		}
+
+		public Image getImage() {
+			return drawImg[curDrawImg];
+		}
+
+		public int[] getPixels() {
+			return DataBufferInt.class.cast(drawImg[curDrawImg ^ 1].getRaster().getDataBuffer()).getData();
+		}
 
 		public int interpolation;
 
@@ -251,8 +274,9 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 		int DrawingAreaFontSize = 10;
 		Font DrawingAreaFont = new Font("SansSerif", Font.BOLD, DrawingAreaFontSize);
 
-		public void newVideoImage() {
-			updateVideoImage(cpu.videoController.getImage());
+		public void swapImage() {
+			curDrawImg ^= 1;
+			updateVideoImage(getImage());
 		}
 
 		public void updateVideoImage(Image img) {
@@ -313,11 +337,11 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 				scaledLogo = null;
 
 			if (interpolation == 0) {
-				g.drawImage(cpu.videoController.getImage(), 0, 0, this);
+				g.drawImage(getImage(), 0, 0, this);
 			} else {
 				((Graphics2D) g).setRenderingHint(RenderingHints.KEY_INTERPOLATION, (interpolation == 1) ? RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR : (interpolation == 2) ? RenderingHints.VALUE_INTERPOLATION_BILINEAR : (interpolation == 3) ? RenderingHints.VALUE_INTERPOLATION_BICUBIC : null);
 
-				g.drawImage(cpu.videoController.getImage(), 0, 0, getWidth(), getHeight(), this);
+				g.drawImage(getImage(), 0, 0, getWidth(), getHeight(), this);
 			}
 			if (osdLines.size() > 0) {
 				while (osdLines.size() > 3 * VC.nscale)
@@ -892,11 +916,9 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 			} else {
 				gd.setFullScreenWindow(null);
 				fsframe.setVisible(false);
-
 				frame.setResizable(grfx.interpolation != 0);
 				frame.getContentPane().add(grfx);
 				frame.setJMenuBar(mainMenuBar);
-
 				frame.setVisible(true);
 			}
 			fulls = enableFullScreen.getState();
@@ -2262,7 +2284,6 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 			cart.loadBios(biosfilename, new BiosLoadingFunctionLocalImpl());
 		this.loadKeyBinds();
 
-		this.cpu.videoController.addListener(this.grfx);
 		if (!sound)
 			this.cpu.audioController.isMuted = true;
 

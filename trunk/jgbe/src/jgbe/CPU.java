@@ -12,7 +12,7 @@
  * $LastChangedBy$
  * $URL$
  * $Id$
- * ========================================================================== */ 
+ * ========================================================================== */
 package jgbe;
 
 import java.io.IOException;
@@ -72,8 +72,15 @@ public final class CPU {
 	public int decoderMaxCruise = 0;
 	private CPUServer server;
 
-	public CPU(CPUServer server) {
+	public final VideoScreen videoScreen;
+	public final VideoController videoController;
+	public final AudioController audioController;
+
+	public CPU(CPUServer server, VideoScreen videoScreen) {
 		this.server = server;
+		this.videoScreen = videoScreen;
+		this.videoController = new VideoController(this, 160, 144, videoScreen);
+		this.audioController = new AudioController(this);
 	}
 
 	public int getPC() {
@@ -164,8 +171,6 @@ public final class CPU {
 
 	public final Disassembler deasm = new Disassembler(this, Disassembler.SIMPLE_DISASSEMBLY);
 
-	public VideoController videoController = new VideoController(this, 160, 144);
-	public AudioController audioController = new AudioController(this);
 	int hblank_dma_state;
 
 	public int last_memory_access = -1;

@@ -17,7 +17,7 @@ package jgbe;
 
 import java.io.IOException;
 
-interface CPUServer {
+public interface CPUServer {
 
 	public abstract void severLink(CPU cpu);
 

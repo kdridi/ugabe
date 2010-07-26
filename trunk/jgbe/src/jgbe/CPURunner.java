@@ -15,7 +15,7 @@
  * ========================================================================== */ 
 package jgbe;
 
-interface CPURunner {
+public interface CPURunner {
 	public void suspend();
 
 	public void resume();

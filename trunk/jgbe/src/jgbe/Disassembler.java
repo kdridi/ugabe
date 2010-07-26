@@ -280,7 +280,7 @@ public class Disassembler {
 	}
 
 	public static void main(String[] args) {
-		CPU cpu = new CPU(new CPUServerImpl());
+		CPU cpu = new CPU(new CPUServerImpl(), new VideoScreenImpl());
 		Disassembler disassembler = new Disassembler(cpu, SIMPLE_DISASSEMBLY);
 		System.out.println(disassembler.disassemble(0));
 		System.out.println(disassembler.disassemble(0));
