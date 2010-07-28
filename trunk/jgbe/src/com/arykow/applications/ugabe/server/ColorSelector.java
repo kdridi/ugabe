@@ -12,7 +12,7 @@
  * $LastChangedBy$
  * $URL$
  * $Id$
- * ========================================================================== */ 
+ * ========================================================================== */
 package com.arykow.applications.ugabe.server;
 
 import java.awt.BorderLayout;
@@ -157,7 +157,7 @@ public class ColorSelector extends JFrame implements MouseListener, ChangeListen
 		if (e.getSource().equals(colorchooser.getSelectionModel())) {
 			Color c = colorchooser.getColor();
 			colorPanes[currentColorPane].setBackground(c);
-			vc.setGrayShade(currentColorPane / 4, currentColorPane % 4, c.getRed(), c.getGreen(), c.getBlue());
+			vc.setGrayShade(currentColorPane / 4, currentColorPane % 4, new int[] { c.getRed(), c.getGreen(), c.getBlue() });
 		}
 		gui.saveConfig();
 	}
@@ -166,10 +166,11 @@ public class ColorSelector extends JFrame implements MouseListener, ChangeListen
 		for (int i = 0; i < 12; ++i) {
 			if (event.getSource().equals(colorPanes[i])) {
 				currentColorPane = i;
-				if (event.getButton() == MouseEvent.BUTTON1)
+				if (event.getButton() == MouseEvent.BUTTON1) {
 					colorchooser.setColor(colorPanes[currentColorPane].getBackground());
-				else
+				} else {
 					stateChanged(new ChangeEvent(colorchooser.getSelectionModel()));
+				}
 				updateColorPanes();
 			}
 		}
