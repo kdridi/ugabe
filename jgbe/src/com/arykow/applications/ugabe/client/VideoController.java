@@ -59,8 +59,8 @@ public final class VideoController {
 	public boolean patdirty[] = new boolean[1024];
 	public boolean anydirty = true;
 	private CPU cpu;
-	private int scale = 1;
-	public int nscale = 1;
+	private int scale = 3;
+	public int nscale = 3;
 	private int cfskip = 0;
 	public int fskip = 1;
 	public boolean mixFrames;
