@@ -37,7 +37,7 @@ public class CartridgeController {
 			public void onFailure(Throwable caught) {
 				CPULogger.log("error loading cartridge from file!: " + caught.toString());
 				cartridge.status = Cartridge.STATUS_FATAL_ERROR;
-				cartridge.err_msg = caught.getMessage();
+				cartridge.errorMessage = caught.getMessage();
 //				if (caught instanceof EOFException) {
 //					cartridge.err_msg = "This ROM image should have " + (cartridge.rom_mm_size >> 2) + " banks of data,\nbut not all banks appear to be present in the ROM image.\nJGBE will try to emulate the ROM regardless, but beware\nthat this may cause the ROM to lockup or crash.";
 //					cartridge.status = Cartridge.STATUS_NONFATAL_ERROR;

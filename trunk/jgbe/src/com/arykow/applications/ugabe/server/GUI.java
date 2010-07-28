@@ -110,7 +110,7 @@ import com.arykow.applications.ugabe.client.VideoScreen;
 import com.arykow.applications.ugabe.server.Debugger.DebugRunner;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-public final class swinggui extends JApplet implements ActionListener, ItemListener, KeyListener, ComponentListener, WindowListener, MouseMotionListener, FocusListener {
+public final class GUI extends JApplet implements ActionListener, ItemListener, KeyListener, ComponentListener, WindowListener, MouseMotionListener, FocusListener {
 	private IntVector saveStateOrder = new IntVector();
 	private DrawingArea grfx = new DrawingArea();
 	private int lastmousex;
@@ -118,7 +118,7 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 	private int lastmousecnt;
 	private int mousehidden = 0;
 	protected VideoController VC;
-	protected CPUServer server = new CPUServerImpl();
+	protected transient CPUServer server = new CPUServerImpl();
 	protected CPU cpu = new CPU(server, grfx);
 	protected AudioDriver audioDriver;
 	private int fps;
@@ -129,9 +129,9 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 	ArrayList<String> rcFiles = new ArrayList<String>();
 	static int osdTimer = 1;
 	private static int titleUpdateCountDown = 0;
-	static public String curcartname;
-	static public String biosfilename;
-	static public DataOutputStream speedRunPlayWithOutputVideoStream;
+	public String curcartname;
+	public String biosfilename;
+	public DataOutputStream speedRunPlayWithOutputVideoStream;
 
 	JMenuItem menuitemExit;
 	MenuItemArrayGroup scaleRadioGroup;
@@ -179,8 +179,8 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 	JCheckBoxMenuItem menuitemSpeedRunPlayWithOutput;
 	JMenuItem menuitemShowAdvancedAudioPropertiesDialog;
 
-	static CheatCodeEditor cheatcodes;
-	static AdvancedAudioPropertiesDialog advancedAudioPropertiesDialog;
+	CheatCodeEditor cheatcodes;
+	AdvancedAudioPropertiesDialog advancedAudioPropertiesDialog;
 	CPURunner cpuRunner;
 
 	protected ColorSelector cs;
@@ -236,8 +236,9 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 					iconAndTextAndTextField.add(new JScrollPane(tf));
 					String s = "Type of error: \"" + e.toString() + "\"\n" + "Stacktrace:\n";
 					StackTraceElement[] ste = e.getStackTrace();
-					for (int i = 0; i < ste.length; ++i)
+					for (int i = 0; i < ste.length; ++i) {
 						s += ste[i] + "\n";
+					}
 					tf.setText(s);
 					errMsg.getContentPane().add(iconAndTextAndTextField);
 					errMsg.pack();
@@ -324,7 +325,7 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 			}
 		}
 
-		Image menuimage = null;
+		transient Image menuimage = null;
 		Image scaledLogo = null;
 
 		public void paintComponent(Graphics g) {
@@ -410,7 +411,7 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 		osdTimer = 4 * 2;
 	}
 
-	public swinggui() {
+	public GUI() {
 		isApplet = false;
 	}
 
@@ -747,7 +748,7 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 	public void showGUI() {
 		Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
 		Point p = new Point();
-		p.setLocation((d.getWidth() / 2) - (frame.getWidth() / 2), (d.getHeight() / 2) - (frame.getHeight() / 2));
+		p.setLocation((((double)d.getWidth()) / 2) - (((double)frame.getWidth()) / 2), (((double)d.getHeight()) / 2) - (((double)frame.getHeight()) / 2));
 		frame.setLocation(p);
 		frame.setVisible(true);
 	}
@@ -854,6 +855,7 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 					try {
 						Thread.sleep(100);
 					} catch (Exception e) {
+						e.printStackTrace();
 					}
 				}
 				;
@@ -907,8 +909,9 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 	public void focusLost(FocusEvent e) {
 		if (!debug) {
 			focus_pause = cpuRunner.isRunning();
-			if (!cs.isVisible() && cpuRunner != null)
+			if (!cs.isVisible()) {
 				pauseEmulation(false);
+			}
 		}
 	}
 
@@ -1044,8 +1047,8 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 			addOSDLine((enabled ? "Enabled" : "Disabled") + " soundchannel " + channel);
 			configStateChanged = true;
 		} else if (e.getSource().equals(menuitemEnableCheats)) {
-			cheatcodes.ToggleCheats(cart);
-			addOSDLine("Cheats codes are now " + (cheatcodes.UseCheats ? "enabled" : "disabled"));
+			cheatcodes.toggleCheats(cart);
+			addOSDLine("Cheats codes are now " + (cheatcodes.useCheats ? "enabled" : "disabled"));
 			configStateChanged = true;
 		} else if (e.getSource().equals(menuitemConfigKeys)) {
 			KeyConfigurationDialog k = new KeyConfigurationDialog(frame, keyStates);
@@ -1276,8 +1279,8 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 			cpu.audioController.setSpeed(1.0);
 			addOSDLine("EmuSpeed: 100%");
 		} else if (e.getSource().equals(menuitemMixFrame)) {
-			cpu.videoController.MixFrames = !cpu.videoController.MixFrames;
-			addOSDLine((cpu.videoController.MixFrames ? "Enabled" : "Disabled") + " Mix Frame mode");
+			cpu.videoController.mixFrames = !cpu.videoController.mixFrames;
+			addOSDLine((cpu.videoController.mixFrames ? "Enabled" : "Disabled") + " Mix Frame mode");
 			configStateChanged = true;
 		}
 
@@ -1348,8 +1351,8 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 				FPSTimeMillis = ctime;
 
 				double afps = fps / (timeLapse / 1000000000.0);
-				long ncycles = cpu.TotalCycleCount - FPSCPUCycles;
-				FPSCPUCycles = cpu.TotalCycleCount;
+				long ncycles = cpu.totalCycleCount - FPSCPUCycles;
+				FPSCPUCycles = cpu.totalCycleCount;
 				double emuspeed = ((int) ((((float) ncycles) / ((4194304 * timeLapse * (cpu.doublespeed ? 2 : 1)) / 1000000000.0f)) * 10000.0f)) / 100.0;
 				String titlestr = (cart != null) ? " - " + cart.getTitle() : "";
 				frame.setTitle(Format142.strformat("JGBE V" + Version.str + " - %05.02f fps / %06.02f%%" + titlestr, new double[] { (((int) (afps * 100)) / ((double) 100)), (double) emuspeed }));
@@ -1372,7 +1375,7 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 	}
 
 	long FPSTimeMillis = System.nanoTime();
-	long FPSCPUCycles = cpu.TotalCycleCount;
+	long FPSCPUCycles = cpu.totalCycleCount;
 	long deactcount = 0;
 
 	public void itemStateChanged(ItemEvent e) {
@@ -1619,7 +1622,7 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 		enableFullScreen.setEnabled(enableFullScreensetEnabled);
 		enableFullScreen.setState(enableFullScreensetState);
 		menuitemMixFrame.setState(menuitemMixFramesetState);
-		cpu.videoController.MixFrames = menuitemMixFramesetState;
+		cpu.videoController.mixFrames = menuitemMixFramesetState;
 		fsize = new Dimension(fsizewidth, fsizeheight);
 		frame.setPreferredSize(fsize);
 		frame.pack();
@@ -1843,7 +1846,7 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 			}
 		}
 		;
-		cpu.videoController.MixFrames = menuitemMixFrame.getState();
+		cpu.videoController.mixFrames = menuitemMixFrame.getState();
 
 		{
 			int[][][] gs = VC.getGrayShades();
@@ -1918,12 +1921,12 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 		{
 			{
 				if ((save))
-					dostream.writeBoolean(cheatcodes.UseCheats);
+					dostream.writeBoolean(cheatcodes.useCheats);
 				else
-					cheatcodes.UseCheats = distream.readBoolean();
+					cheatcodes.useCheats = distream.readBoolean();
 			}
 			;
-			menuitemEnableCheats.setState(cheatcodes.UseCheats);
+			menuitemEnableCheats.setState(cheatcodes.useCheats);
 		}
 
 		{
@@ -2114,7 +2117,7 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 					cart = tcart;
 					cpu.loadCartridge(cart);
 					updateCartName(filename);
-					boolean b = (cheatcodes == null) ? false : cheatcodes.UseCheats;
+					boolean b = (cheatcodes == null) ? false : cheatcodes.useCheats;
 					cheatcodes = new CheatCodeEditor(frame, curcartname);
 					cheatcodes.useCheats(b);
 					cheatcodes.applyCheatCodes(cart);
@@ -2246,7 +2249,7 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 	}
 
 	boolean debug = false;
-	static Image logo = null;
+	Image logo = null;
 
 	public void starter(String[] args) {
 		Thread.setDefaultUncaughtExceptionHandler(new GlobalExceptionCatcher());
@@ -2356,7 +2359,7 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 	}
 
 	public static void main(String[] args) {
-		final swinggui gui = new swinggui();
+		final GUI gui = new GUI();
 		gui.starter(args);
 	}
 

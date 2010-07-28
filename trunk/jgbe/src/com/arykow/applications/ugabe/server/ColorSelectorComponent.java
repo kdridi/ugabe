@@ -212,9 +212,9 @@ class RGBColorSelectorComponent extends JPanel implements ChangeListener {
 		int g = rgbSliders[1].getValue();
 		int b = rgbSliders[2].getValue();
 
-		rgbSpinners[0].setValue(new Integer(r));
-		rgbSpinners[1].setValue(new Integer(g));
-		rgbSpinners[2].setValue(new Integer(b));
+		rgbSpinners[0].setValue(Integer.valueOf(r));
+		rgbSpinners[1].setValue(Integer.valueOf(g));
+		rgbSpinners[2].setValue(Integer.valueOf(b));
 	}
 
 	public void stateChanged(ChangeEvent e) {
@@ -315,9 +315,9 @@ class HSVColorSelectorComponent extends JPanel implements ChangeListener {
 		int s = hsvSliders[1].getValue();
 		int v = hsvSliders[2].getValue();
 
-		hsvSpinners[0].setValue(new Integer(h));
-		hsvSpinners[1].setValue(new Integer(s));
-		hsvSpinners[2].setValue(new Integer(v));
+		hsvSpinners[0].setValue(Integer.valueOf(h));
+		hsvSpinners[1].setValue(Integer.valueOf(s));
+		hsvSpinners[2].setValue(Integer.valueOf(v));
 	}
 
 	public void stateChanged(ChangeEvent e) {
@@ -369,6 +369,7 @@ class HexRGBColorSelectorComponent extends JPanel implements ActionListener {
 			rgbHex = new JFormattedTextField(formatter);
 			rgbHex.addActionListener(this);
 		} catch (Exception pe) {
+			pe.printStackTrace();
 		}
 
 		this.creator = creator;
@@ -662,8 +663,8 @@ class ExtendedHSVColorSelectorComponent extends JPanel implements MouseListener,
 		xs[2] = getCenterX() + getX(Math.IEEEremainder(cAngle + 240f, 360f), getRadius());
 		ys[2] = getCenterY() + getY(Math.IEEEremainder(cAngle + 240f, 360f), getRadius());
 
-		xs[3] = (xs[0] + xs[1]) / 2;
-		ys[3] = (ys[0] + ys[1]) / 2;
+		xs[3] = (xs[0] + xs[1]) >>> 1;
+		ys[3] = (ys[0] + ys[1]) >>> 1;
 
 		int cw = 2;
 

@@ -81,7 +81,7 @@ public class Debugger implements ActionListener, ItemListener, KeyListener, Mous
 	private int memaddr = 0;
 	private Color UpdateColor = new Color(255, 200, 200);
 	public DebugRunner runner;
-	swinggui gui;
+	GUI gui;
 	private Font MonoFont = FHandler.getVeraMonoFont();
 	private RDParser parser;
 	private int[] oldRegVal;
@@ -90,7 +90,7 @@ public class Debugger implements ActionListener, ItemListener, KeyListener, Mous
 
 	private int bpm = -1;
 
-	public Debugger(swinggui gui, String logfilename) {
+	public Debugger(GUI gui, String logfilename) {
 		this.gui = gui;
 		try {
 			if (!logfilename.equals("")) {
@@ -218,6 +218,7 @@ public class Debugger implements ActionListener, ItemListener, KeyListener, Mous
 					try {
 						Thread.sleep(100);
 					} catch (Exception e) {
+						e.printStackTrace();
 					}
 				}
 				;
@@ -259,9 +260,9 @@ public class Debugger implements ActionListener, ItemListener, KeyListener, Mous
 						System.out.println("+=================================================+");
 						keeprunning = false;
 					}
-					if ((logwriter != null) && (gui.cpu.TotalCycleCount >= remoteDebugOffset)) {
-						System.out.println("" + gui.cpu.TotalCycleCount);
-						String out = String.format("cycles=" + gui.cpu.TotalCycleCount + " PC=$%04x AF=$%02x%02x BC=$%02x%02x DE=$%02x%02x HL=$%02x%02x SP=$%04x\n", gui.cpu.getPC(), gui.cpu.A, gui.cpu.F, gui.cpu.B, gui.cpu.C, gui.cpu.D, gui.cpu.E, gui.cpu.H, gui.cpu.L, gui.cpu.SP);
+					if ((logwriter != null) && (gui.cpu.totalCycleCount >= remoteDebugOffset)) {
+						System.out.println("" + gui.cpu.totalCycleCount);
+						String out = String.format("cycles=" + gui.cpu.totalCycleCount + " PC=$%04x AF=$%02x%02x BC=$%02x%02x DE=$%02x%02x HL=$%02x%02x SP=$%04x\n", gui.cpu.getPC(), gui.cpu.A, gui.cpu.F, gui.cpu.B, gui.cpu.C, gui.cpu.D, gui.cpu.E, gui.cpu.H, gui.cpu.L, gui.cpu.SP);
 
 						try {
 							logwriter.write(out);
@@ -270,13 +271,13 @@ public class Debugger implements ActionListener, ItemListener, KeyListener, Mous
 							logwriter = null;
 						}
 					}
-					if (dbg.gui.cpu.TotalInstrCount == instrstop) {
+					if (dbg.gui.cpu.totalInstrCount == instrstop) {
 						keeprunning = false;
 					}
 					if (dbg.gui.cpu.getPC() == stopaddr) {
 						keeprunning = false;
 					}
-					if (cyclestop != -1 && cyclestop <= dbg.gui.cpu.TotalCycleCount) {
+					if (cyclestop != -1 && cyclestop <= dbg.gui.cpu.totalCycleCount) {
 						keeprunning = false;
 					}
 					if ((watchaddr >= 0) && (wval != dbg.gui.cpu.read(watchaddr))) {

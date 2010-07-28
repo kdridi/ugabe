@@ -25,9 +25,9 @@ class VideoControllerStateSaveLoad implements StateSaveLoad<VideoController> {
 	public void stateSaveLoad(boolean save, int version, DataOutputStream dostream, DataInputStream distream, VideoController videoController) throws IOException {
 		{
 			if ((save))
-				dostream.writeInt((int) videoController.CurrentVRAMBank);
+				dostream.writeInt((int) videoController.currentVRAMBank);
 			else
-				videoController.CurrentVRAMBank = distream.readInt();
+				videoController.currentVRAMBank = distream.readInt();
 		}
 		;
 		{

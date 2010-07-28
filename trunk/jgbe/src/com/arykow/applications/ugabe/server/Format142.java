@@ -19,7 +19,7 @@ class Format142 {
 	public static final String strformat(String s, int[] iarr) {
 		Object oarr[] = new Object[iarr.length];
 		for (int i = 0; i < iarr.length; ++i)
-			oarr[i] = new Integer(iarr[i]);
+			oarr[i] = Integer.valueOf(iarr[i]);
 		return String.format(s, oarr);
 
 	}

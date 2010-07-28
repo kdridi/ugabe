@@ -114,7 +114,7 @@ public class CheatCodeEditor implements ComponentListener, ActionListener {
 		}
 	}
 
-	public class tableCodesRightClick extends MouseAdapter {
+	public class TableCodesRightClick extends MouseAdapter {
 		private void checkRightClick(MouseEvent e) {
 			if (e.isPopupTrigger()) {
 				JTable source = (JTable) e.getSource();
@@ -188,9 +188,11 @@ public class CheatCodeEditor implements ComponentListener, ActionListener {
 			strCode = s;
 			String c = "";
 
+			StringBuffer buffer = new StringBuffer();
 			for (int i = 0; i < s.length(); ++i) {
-				c += isHex(s.substring(i, i + 1)) ? s.substring(i, i + 1) : "";
+				buffer.append(isHex(s.substring(i, i + 1)) ? s.substring(i, i + 1) : "");
 			}
+			c= buffer.toString();
 			if (c.length() > 9)
 				c = c.substring(0, 8);
 			if (c.length() == 9) {
@@ -244,7 +246,7 @@ public class CheatCodeEditor implements ComponentListener, ActionListener {
 				return getValueAt(0, column).getClass();
 			}
 		};
-		tableCodes.addMouseListener(new tableCodesRightClick());
+		tableCodes.addMouseListener(new TableCodesRightClick());
 
 		tableCodes.getColumnModel().getColumn(tableCodes.convertColumnIndexToView(0)).setHeaderValue("Active");
 		tableCodes.getColumnModel().getColumn(tableCodes.convertColumnIndexToView(1)).setHeaderValue("Code");
@@ -348,7 +350,7 @@ public class CheatCodeEditor implements ComponentListener, ActionListener {
 		tablemodelcodes.setRowCount(0);
 		for (CheatCode ggc : codes) {
 			o = new Object[3];
-			o[0] = new Boolean(ggc.enabled);
+			o[0] = Boolean.valueOf(ggc.enabled);
 			o[1] = ggc.strCode;
 			o[2] = ggc.Description;
 			tablemodelcodes.addRow(o);
@@ -364,20 +366,20 @@ public class CheatCodeEditor implements ComponentListener, ActionListener {
 		System.out.printf("  Address=$%04x oldvalue=$%02x patch=$%02x\n", c.address, c.oldvalue, c.patch);
 	}
 
-	protected boolean UseCheats = true;
+	protected boolean useCheats = true;
 
 	public void useCheats(boolean b) {
-		UseCheats = b;
+		useCheats = b;
 	}
 
-	public void ToggleCheats(Cartridge cart) {
-		UseCheats = !UseCheats;
+	public void toggleCheats(Cartridge cart) {
+		useCheats = !useCheats;
 		applyCheatCodes(cart);
 	}
 
 	public void applyCheatCodes(Cartridge cart) {
 		for (CheatCode c : codes) {
-			if (c.enabled && UseCheats) {
+			if (c.enabled && useCheats) {
 				if (c.address >= 0) {
 					if (c.address < 0x4000) {
 						if (cart.MM_ROM[c.address >> 12][c.address & 0x0fff] == c.oldvalue) {
@@ -429,7 +431,7 @@ public class CheatCodeEditor implements ComponentListener, ActionListener {
 			codes.set(row, c);
 			tablemodelcodes.removeRow(row);
 			Object[] o = new Object[3];
-			o[0] = new Boolean(c.enabled);
+			o[0] = Boolean.valueOf(c.enabled);
 			o[1] = c.strCode;
 			o[2] = c.Description;
 			tablemodelcodes.insertRow(row, o);

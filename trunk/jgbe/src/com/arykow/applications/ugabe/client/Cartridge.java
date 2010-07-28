@@ -41,17 +41,17 @@ public final class Cartridge implements Serializable {
 	public int rom_mm_size;
 	public int ram_mm_size;
 
-	public String err_msg;
+	public String errorMessage;
 	public String title;
 
 	public int MBC;
 
-	public boolean ram_enabled = false;
-	public boolean RTCRegisterEnabled = false;
-	public int RomRamModeSelect = 0;
-	public int CurrentROMBank = 1;
-	public int CurrentRAMBank = 0;
-	public int CurrentRTCRegister = 0;
+	public boolean ramEnabled = false;
+	public boolean rtcRegisterEnabled = false;
+	public int romRamModeSelect = 0;
+	public int currentROMBank = 1;
+	public int currentRAMBank = 0;
+	public int currentRTCRegister = 0;
 
 	public static final int STATUS_OK = 0;
 	public static final int STATUS_NONFATAL_ERROR = STATUS_OK + 1;
@@ -61,7 +61,7 @@ public final class Cartridge implements Serializable {
 	public int getStatus(String[] s) {
 
 		if (s.length > 0) {
-			s[0] = err_msg;
+			s[0] = errorMessage;
 		}
 		return status;
 	}
@@ -74,7 +74,7 @@ public final class Cartridge implements Serializable {
 		switch (MBC) {
 		case 1:
 		case 2:
-			if (ram_enabled) {
+			if (ramEnabled) {
 				if ((index >= 0xa000) && (index < 0xa200)) {
 					return (MM_RAM[0][index & 0xfff]) & 0xf;
 				}
@@ -87,7 +87,7 @@ public final class Cartridge implements Serializable {
 		case 3:
 
 			CPULogger.printf("Error: not using memmap, or reading from cartridge with a noncartridge address $%04x\n", index);
-			CPULogger.printf("CurRombank: %d CurrentRAMBank: %d\n", CurrentROMBank, CurrentRAMBank);
+			CPULogger.printf("CurRombank: %d CurrentRAMBank: %d\n", currentROMBank, currentRAMBank);
 
 			int x[] = new int[] {};
 			x[0] = 0;
@@ -107,25 +107,25 @@ public final class Cartridge implements Serializable {
 		case 1:
 
 			if ((index >= 0x0000) && (index < 0x2000)) {
-				ram_enabled = false;
+				ramEnabled = false;
 				if ((value & 0x0f) == 0x0A)
-					ram_enabled = true;
+					ramEnabled = true;
 
 			} else if (index < 0x4000) {
 				int i = Math.max(1, value & 0x1f);
 
-				CurrentROMBank &= ~0x1f;
-				CurrentROMBank |= i;
-				CurrentROMBank %= (rom_mm_size >> 2);
+				currentROMBank &= ~0x1f;
+				currentROMBank |= i;
+				currentROMBank %= (rom_mm_size >> 2);
 
 			} else if (index < 0x6000) {
-				if (RomRamModeSelect == 0) {
-					int i = (CurrentROMBank & 0x1f) | ((value & 0x03) << 5);
-					CurrentROMBank = i;
-					CurrentROMBank %= (rom_mm_size >> 2);
+				if (romRamModeSelect == 0) {
+					int i = (currentROMBank & 0x1f) | ((value & 0x03) << 5);
+					currentROMBank = i;
+					currentROMBank %= (rom_mm_size >> 2);
 				} else {
 
-					CurrentRAMBank = value & 0x03;
+					currentRAMBank = value & 0x03;
 					if (ram_mm_size == 0) {
 						CPULogger.log("WARNING! 'Bomberman Collection (J) [S]' hack'" + value);
 						CPULogger.printf("setting rom banks 0-15 to banks %d-%d\n", value * 16, (value * 16) + 15);
@@ -134,7 +134,7 @@ public final class Cartridge implements Serializable {
 					}
 				}
 			} else if (index < 0x8000) {
-				RomRamModeSelect = value & 1;
+				romRamModeSelect = value & 1;
 			} else if ((index >= 0xA000) && (index <= 0xBFFF)) {
 
 			} else
@@ -146,13 +146,13 @@ public final class Cartridge implements Serializable {
 				CPULogger.log("TODO: write to internal cartridge RAM.");
 			} else if ((0x0000 <= index) && (index <= 0x1FFF)) {
 				if ((index & (1 << 8)) == 0) {
-					ram_enabled = !ram_enabled;
+					ramEnabled = !ramEnabled;
 
 				}
 			} else if ((0x2000 <= index) && (index <= 0x3FFFF)) {
 				if ((index & (1 << 8)) != 0) {
 					value &= 0xf;
-					CurrentROMBank = ((value) < (1) ? (1) : (value));
+					currentROMBank = ((value) < (1) ? (1) : (value));
 				}
 			}
 			break;
@@ -160,28 +160,28 @@ public final class Cartridge implements Serializable {
 
 			if ((index >= 0) && (index < 0x2000)) {
 				if ((value & 0x0f) == 0x0A)
-					ram_enabled = true;
+					ramEnabled = true;
 				else
-					ram_enabled = false;
+					ramEnabled = false;
 			}
 			if ((index >= 0x2000) && (index < 0x4000)) {
-				CurrentROMBank = Math.max(value & 0x7f, 1);
+				currentROMBank = Math.max(value & 0x7f, 1);
 			}
 			if ((index >= 0x4000) && (index < 0x6000)) {
 				if ((value >= 0) && (value < 0x4)) {
-					RTCRegisterEnabled = false;
-					CurrentRAMBank = value;
+					rtcRegisterEnabled = false;
+					currentRAMBank = value;
 				}
 				if ((value >= 0x08) && (value < 0x0c)) {
-					RTCRegisterEnabled = true;
-					CurrentRTCRegister = value - 0x08;
+					rtcRegisterEnabled = true;
+					currentRTCRegister = value - 0x08;
 				}
 			}
 			if ((index >= 0x6000) && (index < 0x8000)) {
 				CPULogger.log("TODO: Cartridge.write(): Latch Clock Data!");
 			}
 			if ((index >= 0xa000) && (index < 0xc000)) {
-				if (RTCRegisterEnabled) {
+				if (rtcRegisterEnabled) {
 					CPULogger.log("TODO: Cartridge.write(): writing to RAM in RTC mode");
 				} else {
 					CPULogger.log("Error: not using memmap!");
@@ -195,21 +195,21 @@ public final class Cartridge implements Serializable {
 
 			if ((index >= 0) && (index < 0x2000)) {
 				if ((value & 0x0f) == 0x0A)
-					ram_enabled = true;
+					ramEnabled = true;
 				else
-					ram_enabled = false;
+					ramEnabled = false;
 			}
 			if ((index >= 0x2000) && (index < 0x3000)) {
-				CurrentROMBank &= 0x100;
-				CurrentROMBank |= value;
+				currentROMBank &= 0x100;
+				currentROMBank |= value;
 			}
 			if ((index >= 0x3000) && (index < 0x4000)) {
-				CurrentROMBank &= 0xff;
-				CurrentROMBank |= (value & 1) << 8;
+				currentROMBank &= 0xff;
+				currentROMBank |= (value & 1) << 8;
 			}
 			if ((index >= 0x4000) && (index < 0x6000)) {
 				if (value < 0x10)
-					CurrentRAMBank = value;
+					currentRAMBank = value;
 			}
 			if ((index >= 0xa000) && (index < 0xc000)) {
 				CPULogger.log("Error: not using memmap!");

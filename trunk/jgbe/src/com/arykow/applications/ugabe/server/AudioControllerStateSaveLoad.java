@@ -64,16 +64,16 @@ class AudioControllerStateSaveLoad implements StateSaveLoad<AudioController> {
 		;
 		{
 			if ((save))
-				dostream.writeInt((int) audioController.TimerCountDown);
+				dostream.writeInt((int) audioController.timerCountDown);
 			else
-				audioController.TimerCountDown = distream.readInt();
+				audioController.timerCountDown = distream.readInt();
 		}
 		;
 		{
 			if ((save))
-				dostream.writeBoolean(audioController.SweepTimerTick);
+				dostream.writeBoolean(audioController.sweepTimerTick);
 			else
-				audioController.SweepTimerTick = distream.readBoolean();
+				audioController.sweepTimerTick = distream.readBoolean();
 		}
 		;
 

@@ -40,8 +40,8 @@ import com.arykow.applications.ugabe.client.VideoController;
 public class ColorSelector extends JFrame implements MouseListener, ChangeListener, ActionListener {
 	public static final long serialVersionUID = 1;
 
-	private VideoController vc;
-	private swinggui gui;
+	private transient VideoController vc;
+	private GUI gui;
 
 	JColorChooser colorchooser;
 	JPanel colorabletypes;
@@ -59,7 +59,7 @@ public class ColorSelector extends JFrame implements MouseListener, ChangeListen
 		colorPanes[currentColorPane].setBorder(BorderFactory.createLineBorder(Color.RED, 3));
 	}
 
-	public ColorSelector(swinggui gui) {
+	public ColorSelector(GUI gui) {
 		this.vc = gui.VC;
 		this.gui = gui;
 

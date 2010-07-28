@@ -46,8 +46,6 @@ public class AdvancedAudioPropertiesDialog implements ComponentListener, ChangeL
 	JFrame owner;
 	AudioDriver ad;
 	JDialog dialog;
-	JSlider audioWriteInterval;
-	JSlider audioBufferSize;
 
 	public AdvancedAudioPropertiesDialog(JFrame o) {
 		if (!(false))
@@ -64,9 +62,9 @@ public class AdvancedAudioPropertiesDialog implements ComponentListener, ChangeL
 	private JSpinner bufferSizeSpinner;
 	private JSlider outputIntervalSlider;
 	private JSpinner outputIntervalSpinner;
-	swinggui gui;
+	GUI gui;
 
-	public AdvancedAudioPropertiesDialog(JFrame o, AudioDriver ad, swinggui gui) {
+	public AdvancedAudioPropertiesDialog(JFrame o, AudioDriver ad, GUI gui) {
 		owner = o;
 		this.ad = ad;
 		this.gui = gui;
@@ -130,12 +128,12 @@ public class AdvancedAudioPropertiesDialog implements ComponentListener, ChangeL
 			outputIntervalSlider.setValue(ad.getOutputInterval());
 			outputIntervalSpinner.setValue(new Integer(ad.getOutputInterval()));
 
-			samplingRateSlider.setValue(samplingRates.indexOf(new Integer(ad.getSampleRate())));
-			samplingRateSpinner.setValue(new Integer(ad.getSampleRate()));
+			samplingRateSlider.setValue(samplingRates.indexOf(Integer.valueOf(ad.getSampleRate())));
+			samplingRateSpinner.setValue(Integer.valueOf(ad.getSampleRate()));
 			bufferSizeSlider.setValue(ad.getBufferSize());
-			bufferSizeSpinner.setValue(new Integer(ad.getBufferSize()));
+			bufferSizeSpinner.setValue(Integer.valueOf(ad.getBufferSize()));
 			outputIntervalSlider.setValue(ad.getOutputInterval());
-			outputIntervalSpinner.setValue(new Integer(ad.getOutputInterval()));
+			outputIntervalSpinner.setValue(Integer.valueOf(ad.getOutputInterval()));
 
 			useStereo.addChangeListener(this);
 			outputDevices.addActionListener(this);
@@ -223,12 +221,12 @@ public class AdvancedAudioPropertiesDialog implements ComponentListener, ChangeL
 			gui.saveConfig();
 		} else if (e.getSource().equals(outputIntervalSlider)) {
 			ad.setOutputInterval(outputIntervalSlider.getValue());
-			outputIntervalSpinner.setValue(new Integer(ad.getOutputInterval()));
+			outputIntervalSpinner.setValue(Integer.valueOf(ad.getOutputInterval()));
 			outputIntervalSlider.setValue(ad.getOutputInterval());
 			gui.saveConfig();
 		} else if (e.getSource().equals(outputIntervalSpinner)) {
 			ad.setOutputInterval(((Integer) outputIntervalSpinner.getValue()).intValue());
-			outputIntervalSpinner.setValue(new Integer(ad.getOutputInterval()));
+			outputIntervalSpinner.setValue(Integer.valueOf(ad.getOutputInterval()));
 			outputIntervalSlider.setValue(ad.getOutputInterval());
 			gui.saveConfig();
 		} else if (e.getSource().equals(useStereo)) {

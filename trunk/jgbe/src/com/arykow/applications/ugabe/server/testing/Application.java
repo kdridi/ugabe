@@ -39,7 +39,6 @@ public class Application {
 				final CPU cpu = new CPU(server, new VideoScreen() {
 					private int size = 0;
 					private int index = 0;
-					private int[][] pixels;
 					private BufferedImage[] images = new BufferedImage[2];
 
 					public void swapImage() {
@@ -54,9 +53,6 @@ public class Application {
 					}
 
 					public void scaleImage(int scale) {
-						pixels = new int[2][SCREEN_WIDTH * SCREEN_HEIGHT * scale * scale];
-						
-
 						int width = scale * SCREEN_WIDTH;
 						int height = scale * SCREEN_HEIGHT;
 						images[0] = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
@@ -83,9 +79,6 @@ public class Application {
 						return true;
 					}
 
-					public boolean hasThread(Thread t) {
-						return false;
-					}
 				};
 				if ((cpuRunner != null) && (cartridge != null)) {
 					cpuRunner.resume();
