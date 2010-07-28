@@ -13,7 +13,7 @@
  * $URL$
  * $Id$
  * ========================================================================== */ 
-package com.arykow.applications.ugabe.server;
+package com.arykow.applications.ugabe.standalone;
 
 class Format142 {
 	public static final String strformat(String s, int[] iarr) {

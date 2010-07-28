@@ -13,7 +13,7 @@
  * $URL$
  * $Id$
  * ========================================================================== */ 
-package com.arykow.applications.ugabe.server;
+package com.arykow.applications.ugabe.standalone;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JMenuItem;

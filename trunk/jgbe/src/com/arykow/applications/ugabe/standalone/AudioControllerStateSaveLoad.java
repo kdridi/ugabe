@@ -13,7 +13,7 @@
  * $URL$
  * $Id$
  * ========================================================================== */ 
-package com.arykow.applications.ugabe.server;
+package com.arykow.applications.ugabe.standalone;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -21,7 +21,7 @@ import java.io.IOException;
 
 
 import com.arykow.applications.ugabe.client.AudioController;
-import com.arykow.applications.ugabe.server.StateSaveLoad.Impl;
+import com.arykow.applications.ugabe.standalone.StateSaveLoad.Impl;
 
 class AudioControllerStateSaveLoad implements StateSaveLoad<AudioController> {
 	public void stateSaveLoad(boolean save, int version, DataOutputStream dostream, DataInputStream distream, AudioController audioController) throws IOException {

@@ -13,7 +13,7 @@
  * $URL$
  * $Id$
  * ========================================================================== */
-package com.arykow.applications.ugabe.server;
+package com.arykow.applications.ugabe.standalone;
 
 import java.awt.AWTException;
 import java.awt.Color;
@@ -107,7 +107,8 @@ import com.arykow.applications.ugabe.client.UGABEServiceAsync;
 import com.arykow.applications.ugabe.client.Version;
 import com.arykow.applications.ugabe.client.VideoController;
 import com.arykow.applications.ugabe.client.VideoScreen;
-import com.arykow.applications.ugabe.server.Debugger.DebugRunner;
+import com.arykow.applications.ugabe.server.UGABEServiceController;
+import com.arykow.applications.ugabe.standalone.Debugger.DebugRunner;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public final class GUI extends JApplet implements ActionListener, ItemListener, KeyListener, ComponentListener, WindowListener, MouseMotionListener, FocusListener {
