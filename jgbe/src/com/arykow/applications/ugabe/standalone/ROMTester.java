@@ -13,7 +13,7 @@
  * $URL$
  * $Id$
  * ========================================================================== */
-package com.arykow.applications.ugabe.server;
+package com.arykow.applications.ugabe.standalone;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -27,6 +27,7 @@ import com.arykow.applications.ugabe.client.CartridgeCreateHandler;
 import com.arykow.applications.ugabe.client.UGABEService;
 import com.arykow.applications.ugabe.client.UGABEServiceAsync;
 import com.arykow.applications.ugabe.client.VideoScreen;
+import com.arykow.applications.ugabe.server.UGABEServiceController;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class ROMTester {

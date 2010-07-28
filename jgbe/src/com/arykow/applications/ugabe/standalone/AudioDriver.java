@@ -13,7 +13,7 @@
  * $URL$
  * $Id$
  * ========================================================================== */ 
-package com.arykow.applications.ugabe.server;
+package com.arykow.applications.ugabe.standalone;
 
 import java.io.IOException;
 import java.io.OutputStream;

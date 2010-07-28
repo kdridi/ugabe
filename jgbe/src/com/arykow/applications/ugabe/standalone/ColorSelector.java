@@ -13,7 +13,7 @@
  * $URL$
  * $Id$
  * ========================================================================== */
-package com.arykow.applications.ugabe.server;
+package com.arykow.applications.ugabe.standalone;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
