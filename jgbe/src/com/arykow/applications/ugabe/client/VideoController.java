@@ -1104,6 +1104,28 @@ public final class VideoController {
 		;
 	}
 
+	public static enum SpriteType {
+		SMALL(8, 8, false), BIG(8, 16, true);
+
+		public final int width;
+		public final int height;
+		public final boolean big;
+
+		private SpriteType(int width, int height, boolean big) {
+			this.width = width;
+			this.height = height;
+			this.big = big;
+		}
+
+		public static SpriteType createSpriteType(int LCDC) {
+			SpriteType result = SMALL;
+			if(((LCDC & (1 << 2)) != 0)) {
+				result = BIG;
+			}
+			return result;
+		}
+	}
+	
 	/**
 	 * http://fms.komkon.org/GameBoy/Tech/Software.html
 	 * 
@@ -1129,7 +1151,7 @@ public final class VideoController {
 	 *                Sprite colors are taken from OBJ1PAL if this bit is set to 1 and from OBJ0PAL otherwise.
 	 */
 	private void renderScanlineSprites() {
-		boolean sprite8x16 = ((LCDC & (1 << 2)) != 0);
+		SpriteType spriteType = SpriteType.createSpriteType(LCDC);
 
 		for (int spriteIndex = 0; spriteIndex < 40; ++spriteIndex) {
 			int spritePositionY	= objectAttributeMemory[(spriteIndex * 4) + 0];
@@ -1139,11 +1161,11 @@ public final class VideoController {
 
 			int offsetY = LY - spritePositionY + 16;
 
-			if ((offsetY >= 0) && (offsetY < (sprite8x16 ? 16 : 8)) && (spritePositionX > 0) && (spritePositionX < 168)) {
+			if ((offsetY >= 0) && (offsetY < spriteType.height) && (spritePositionX > 0) && (spritePositionX < (VideoScreen.SCREEN_WIDTH + spriteType.width))) {
 				if ((spriteAttribute & (1 << 6)) != 0) {
-					offsetY = (sprite8x16 ? 15 : 7) - offsetY;
+					offsetY = spriteType.height - offsetY - 1;
 				}
-				if (sprite8x16) {
+				if (spriteType.big) {
 					spriteNumber &= ~1;
 					spriteNumber |= (offsetY >= 8) ? 1 : 0;
 					offsetY &= 7;
