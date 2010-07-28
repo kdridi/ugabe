@@ -15,7 +15,6 @@
  * ========================================================================== */
 package com.arykow.applications.ugabe.client;
 
-
 public final class VideoController {
 
 	private final VideoScreen screen;
@@ -201,14 +200,14 @@ public final class VideoController {
 
 			int pixels[] = screen.getPixels();
 
-			if (MixFrames)
+			if (MixFrames) {
 				for (int y = 0; y < 144; ++y) {
 					for (int x = 0; x < 160; ++x) {
 						blitImg[y][x] = (((((blitImg[y][x]) ^ (blitImg_prev[y][x])) & 0xfffefefe) >> 1) + ((blitImg[y][x]) & (blitImg_prev[y][x])));
 						blitImg_prev[y][x] = blitImg[y][x];
 					}
 				}
-
+			}
 			if (scale == 1) {
 				for (int y = 0; y < 144; ++y) {
 					int[] blitLine = blitImg[y];
