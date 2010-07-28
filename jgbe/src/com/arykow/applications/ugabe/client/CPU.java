@@ -30,18 +30,16 @@ public final class CPU {
 
 	public final static long MAX_CYCLE_COUNT = 0x7FFFFFFFFFFFFFFFL;
 
-	public long TotalInstrCount = 0;
-	public long TotalCycleCount = 0;
-
-	public long NextEventCycleCount = 0;
-	public long VCRenderEventCycleCount = 0;
+	public long totalInstrCount = 0;
+	public long totalCycleCount = 0;
+	public long nextEventCycleCount = 0;
+	public long videoControllerRenderEventCycleCount = 0;
 	public long lastVCRenderCycleCount = 0;
-	public long KeyBounceEventCycleCount = 0;
+	public long keyBounceEventCycleCount = 0;
 	public long TIMAEventCycleCount = 0;
 	public int cyclesPerTIMA = 0;
 	public int keyBounce = 0;
-
-	public boolean KeyBounceEventPending = false;
+	public boolean keyBounceEventPending = false;
 	public boolean TIMAEventPending = false;
 
 	public int A = 0;
@@ -57,7 +55,7 @@ public final class CPU {
 	public int[] HRAM = new int[0x7f];
 	public int[][] WRAM = new int[0x08][0x1000];
 	public int[] FWRAM = WRAM[0];
-	public int CurrentWRAMBank = 1;
+	public int currentWRAMBank = 1;
 
 	public boolean doublespeed = false;
 	public boolean speedswitch = false;
@@ -156,9 +154,9 @@ public final class CPU {
 	public boolean delayed_halt = false;
 	public boolean halt_fail_inc_pc = false;
 
-	public int KeyStatus = 0;
-	public int GUIKeyStatus = 0;
-	public int RemoteKeyStatus = 0;
+	public int keyStatus = 0;
+	public int guiKeyStatus = 0;
+	public int remoteKeyStatus = 0;
 	public boolean useRemoteKeys = false;
 
 	public boolean keyHistoryEnabled;
@@ -202,7 +200,7 @@ public final class CPU {
 
 	public void calcTIMAEventCycleCount() {
 		if ((IOP[0x07] & 4) != 0) {
-			TIMAEventCycleCount = TotalCycleCount + cyclesPerTIMA * (0x100 - IOP[0x05]);
+			TIMAEventCycleCount = totalCycleCount + cyclesPerTIMA * (0x100 - IOP[0x05]);
 			addEventCycleCount(TIMAEventCycleCount);
 			TIMAEventPending = true;
 		} else {
@@ -254,21 +252,21 @@ public final class CPU {
 		rMemMap[0x2] = cartridge.MM_ROM[2];
 		rMemMap[0x3] = cartridge.MM_ROM[3];
 
-		rMemMap[0x4] = cartridge.MM_ROM[(cartridge.CurrentROMBank << 2) | 0];
-		rMemMap[0x5] = cartridge.MM_ROM[(cartridge.CurrentROMBank << 2) | 1];
-		rMemMap[0x6] = cartridge.MM_ROM[(cartridge.CurrentROMBank << 2) | 2];
-		rMemMap[0x7] = cartridge.MM_ROM[(cartridge.CurrentROMBank << 2) | 3];
+		rMemMap[0x4] = cartridge.MM_ROM[(cartridge.currentROMBank << 2) | 0];
+		rMemMap[0x5] = cartridge.MM_ROM[(cartridge.currentROMBank << 2) | 1];
+		rMemMap[0x6] = cartridge.MM_ROM[(cartridge.currentROMBank << 2) | 2];
+		rMemMap[0x7] = cartridge.MM_ROM[(cartridge.currentROMBank << 2) | 3];
 
 		if (cartridge.MBC != 2) {
-			rMemMap[0xA] = wMemMap[0xA] = cartridge.MM_RAM[(cartridge.CurrentRAMBank << 1) | 0];
-			rMemMap[0xB] = wMemMap[0xB] = cartridge.MM_RAM[(cartridge.CurrentRAMBank << 1) | 1];
+			rMemMap[0xA] = wMemMap[0xA] = cartridge.MM_RAM[(cartridge.currentRAMBank << 1) | 0];
+			rMemMap[0xB] = wMemMap[0xB] = cartridge.MM_RAM[(cartridge.currentRAMBank << 1) | 1];
 		} else {
 			rMemMap[0xA] = wMemMap[0xA] = null;
 			rMemMap[0xB] = wMemMap[0xB] = null;
 		}
 
 		rMemMap[0xC] = wMemMap[0xC] = WRAM[0];
-		rMemMap[0xD] = wMemMap[0xD] = WRAM[CurrentWRAMBank];
+		rMemMap[0xD] = wMemMap[0xD] = WRAM[currentWRAMBank];
 
 		rMemMap[0xE] = wMemMap[0xE] = rMemMap[0xC];
 
@@ -316,7 +314,7 @@ public final class CPU {
 		} else if (index < 0xd000) {
 			b = (WRAM[0][index - 0xc000]);
 		} else if (index < 0xe000) {
-			b = (WRAM[CurrentWRAMBank][index - 0xd000]);
+			b = (WRAM[currentWRAMBank][index - 0xd000]);
 		} else if (index < 0xfe00) {
 			b = read(index - 0x2000);
 		} else if (index < 0xfea0) {
@@ -333,23 +331,23 @@ public final class CPU {
 			case 0xff00:
 				b = (IOP[index - 0xff00] & 0x30) | 0xc0;
 				if ((b & (1 << 4)) == 0) {
-					b |= (KeyStatus & 0x0f);
+					b |= (keyStatus & 0x0f);
 				}
 				if ((b & (1 << 5)) == 0) {
-					b |= (KeyStatus >> 4);
+					b |= (keyStatus >> 4);
 				}
 				b ^= 0x0f;
 				break;
 			case 0xff04:
 
-				return (int) ((((TotalCycleCount + CYCLES_PER_DIV - 1 - divReset) / CYCLES_PER_DIV)) & 0xff);
+				return (int) ((((totalCycleCount + CYCLES_PER_DIV - 1 - divReset) / CYCLES_PER_DIV)) & 0xff);
 			case 0xff01:
 			case 0xff02:
 				b = IOP[index - 0xff00];
 				break;
 			case 0xff05:
 				if (cyclesPerTIMA != 0) {
-					b = (int) (((TotalCycleCount - TIMAEventCycleCount + (cyclesPerTIMA * 0x100)) / cyclesPerTIMA) & 0xff);
+					b = (int) (((totalCycleCount - TIMAEventCycleCount + (cyclesPerTIMA * 0x100)) / cyclesPerTIMA) & 0xff);
 				} else {
 					b = IOP[0x05];
 				}
@@ -363,7 +361,7 @@ public final class CPU {
 				break;
 
 			case 0xff70:
-				b = CurrentWRAMBank;
+				b = currentWRAMBank;
 				break;
 
 			case 0xff6c:
@@ -439,7 +437,7 @@ public final class CPU {
 		} else if (index < 0xd000) {
 			WRAM[0][index - 0xc000] = (value);
 		} else if (index < 0xe000) {
-			WRAM[CurrentWRAMBank][index - 0xd000] = (value);
+			WRAM[currentWRAMBank][index - 0xd000] = (value);
 		} else if (index < 0xfe00) {
 			write(index - 0x2000, value);
 		} else if (index < 0xfea0) {
@@ -460,7 +458,7 @@ public final class CPU {
 				break;
 			case 0xff02:
 				IOP[0x02] = value;
-				if (LinkCableStatus == 0) {
+				if (linkCableStatus == 0) {
 					if ((value & (1 << 7)) != 0) {
 
 						if ((value & (1 << 0)) != 0) {
@@ -476,11 +474,11 @@ public final class CPU {
 				break;
 			case 0xff04:
 
-				int tcycle = (int) (TotalCycleCount & 0xff);
+				int tcycle = (int) (totalCycleCount & 0xff);
 				if (tcycle == 0)
-					divReset = TotalCycleCount;
+					divReset = totalCycleCount;
 				else
-					divReset = TotalCycleCount - tcycle + CYCLES_PER_DIV;
+					divReset = totalCycleCount - tcycle + CYCLES_PER_DIV;
 				break;
 			case 0xff05:
 				if (cyclesPerTIMA == 0) {
@@ -512,7 +510,7 @@ public final class CPU {
 				break;
 
 			case 0xff70:
-				CurrentWRAMBank = ((value & 0x07) < (1) ? (1) : (value & 0x07));
+				currentWRAMBank = ((value & 0x07) < (1) ? (1) : (value & 0x07));
 				refreshMemMap();
 				break;
 
@@ -550,8 +548,8 @@ public final class CPU {
 			return;
 		BIOS_enabled = bios;
 		videoController.reset();
-		cartridge.CurrentRAMBank = 0;
-		cartridge.CurrentROMBank = 1;
+		cartridge.currentRAMBank = 0;
+		cartridge.currentROMBank = 1;
 		refreshMemMap();
 
 		setPC(BIOS_enabled ? 0x00 : 0x100);
@@ -568,8 +566,8 @@ public final class CPU {
 
 		H = BIOS_enabled ? 0x00 : 0x01;
 		L = BIOS_enabled ? 0x00 : 0x4d;
-		TotalInstrCount = 0;
-		TotalCycleCount = 0;
+		totalInstrCount = 0;
+		totalCycleCount = 0;
 
 		SP = BIOS_enabled ? 0x0000 : 0xfffe;
 
@@ -582,7 +580,7 @@ public final class CPU {
 		write(0xff49, 0xff);
 		audioController.reset();
 
-		CurrentWRAMBank = 1;
+		currentWRAMBank = 1;
 		doublespeed = false;
 		speedswitch = false;
 		divReset = 0;
@@ -590,7 +588,7 @@ public final class CPU {
 		IE = 0;
 		IME = true;
 		halted = false;
-		KeyStatus = 0;
+		keyStatus = 0;
 		keyBounce = 0;
 		lastKeyChange = 0;
 		keyHistory.clear();
@@ -603,11 +601,11 @@ public final class CPU {
 
 		preCheckInts();
 
-		NextEventCycleCount = 0;
-		VCRenderEventCycleCount = 0;
+		nextEventCycleCount = 0;
+		videoControllerRenderEventCycleCount = 0;
 		lastVCRenderCycleCount = 0;
-		KeyBounceEventCycleCount = MAX_CYCLE_COUNT;
-		KeyBounceEventPending = false;
+		keyBounceEventCycleCount = MAX_CYCLE_COUNT;
+		keyBounceEventPending = false;
 
 		for (int i = 0; i < 0x80; ++i)
 			IOP[i] = 0;
@@ -619,7 +617,7 @@ public final class CPU {
 	}
 
 	public long cycles() {
-		return TotalInstrCount;
+		return totalInstrCount;
 	}
 
 	public void printCPUstatus() {
@@ -632,7 +630,7 @@ public final class CPU {
 		flags += ((F & (1 << 2)) == (1 << 2)) ? "1 " : "0 ";
 		flags += ((F & (1 << 1)) == (1 << 1)) ? "1 " : "0 ";
 		flags += ((F & (1 << 0)) == (1 << 0)) ? "1 " : "0 ";
-		CPULogger.log("---CPU Status for cycle " + TotalCycleCount + " , instruction " + TotalInstrCount + "---");
+		CPULogger.log("---CPU Status for cycle " + totalCycleCount + " , instruction " + totalInstrCount + "---");
 		CPULogger.printf("   A=$%02x    B=$%02x    C=$%02x    D=$%02x   E=$%02x   F=$%02x   H=$%02x   L=$%02x\n", A, B, C, D, E, F, H, L);
 		CPULogger.printf("  PC=$%04x SP=$%04x                           flags=" + flags + "\n", getPC(), SP);
 
@@ -686,19 +684,19 @@ public final class CPU {
 	}
 
 	public void pressButton(int i) {
-		GUIKeyStatus |= i;
+		guiKeyStatus |= i;
 	}
 
 	public void releaseButton(int i) {
-		GUIKeyStatus &= ~i;
+		guiKeyStatus &= ~i;
 	}
 
 	public void pressRemoteButton(int i) {
-		RemoteKeyStatus |= i;
+		remoteKeyStatus |= i;
 	}
 
 	public void releaseRemoteButton(int i) {
-		RemoteKeyStatus &= ~i;
+		remoteKeyStatus &= ~i;
 	}
 
 	private final int registerRead(int regNum) {
@@ -816,16 +814,16 @@ public final class CPU {
 		if (keyBounce > 0) {
 			triggerInterrupt(4);
 			--keyBounce;
-			KeyBounceEventCycleCount = TotalCycleCount + (doublespeed ? 20000 : 10000);
-			KeyBounceEventPending = true;
+			keyBounceEventCycleCount = totalCycleCount + (doublespeed ? 20000 : 10000);
+			keyBounceEventPending = true;
 		} else {
-			KeyBounceEventCycleCount = MAX_CYCLE_COUNT;
-			KeyBounceEventPending = false;
+			keyBounceEventCycleCount = MAX_CYCLE_COUNT;
+			keyBounceEventPending = false;
 		}
 	};
 
 	public void handleVCRenderEvent() {
-		int cycles = (int) (TotalCycleCount - lastVCRenderCycleCount);
+		int cycles = (int) (totalCycleCount - lastVCRenderCycleCount);
 
 		if (doublespeed)
 			cycles /= 2;
@@ -833,32 +831,30 @@ public final class CPU {
 		if (doublespeed)
 			cntdown *= 2;
 
-		lastVCRenderCycleCount = TotalCycleCount;
-		VCRenderEventCycleCount = TotalCycleCount + cntdown;
+		lastVCRenderCycleCount = totalCycleCount;
+		videoControllerRenderEventCycleCount = totalCycleCount + cntdown;
 
 	};
 
 	public void addEventCycleCount(long count) {
-		if (count < NextEventCycleCount)
-			NextEventCycleCount = count;
+		if (count < nextEventCycleCount)
+			nextEventCycleCount = count;
 	};
 
 	public void handleEvents() {
-		if (TotalCycleCount >= VCRenderEventCycleCount)
-			;
 		handleVCRenderEvent();
-		NextEventCycleCount = VCRenderEventCycleCount;
+		nextEventCycleCount = videoControllerRenderEventCycleCount;
 
 		if (TIMAEventPending) {
-			if (TotalCycleCount >= TIMAEventCycleCount)
+			if (totalCycleCount >= TIMAEventCycleCount)
 				handleTIMAEvent();
 			addEventCycleCount(TIMAEventCycleCount);
 		}
 
-		if (KeyBounceEventPending) {
-			if (TotalCycleCount >= KeyBounceEventCycleCount)
+		if (keyBounceEventPending) {
+			if (totalCycleCount >= keyBounceEventCycleCount)
 				handleKeyBounceEvent();
-			addEventCycleCount(KeyBounceEventCycleCount);
+			addEventCycleCount(keyBounceEventCycleCount);
 		}
 	};
 
@@ -888,7 +884,7 @@ public final class CPU {
 
 		if (halted) {
 
-			return (int) ((NextEventCycleCount - TotalCycleCount + 3) >> 2);
+			return (int) ((nextEventCycleCount - totalCycleCount + 3) >> 2);
 		}
 
 		if (halt_fail_inc_pc) {
@@ -2211,7 +2207,7 @@ public final class CPU {
 			;
 			break;
 		case (0x40 + (0 << 3) + (0)): {
-			B = B;
+//			B = B;
 		}
 			;
 			break;
@@ -2261,7 +2257,7 @@ public final class CPU {
 			;
 			break;
 		case (0x40 + (1 << 3) + (1)): {
-			C = C;
+//			C = C;
 		}
 			;
 			break;
@@ -2311,7 +2307,7 @@ public final class CPU {
 			;
 			break;
 		case (0x40 + (2 << 3) + (2)): {
-			D = D;
+//			D = D;
 		}
 			;
 			break;
@@ -2361,7 +2357,7 @@ public final class CPU {
 			;
 			break;
 		case (0x40 + (3 << 3) + (3)): {
-			E = E;
+//			E = E;
 		}
 			;
 			break;
@@ -2411,7 +2407,7 @@ public final class CPU {
 			;
 			break;
 		case (0x40 + (4 << 3) + (4)): {
-			H = H;
+//			H = H;
 		}
 			;
 			break;
@@ -2461,7 +2457,7 @@ public final class CPU {
 			;
 			break;
 		case (0x40 + (5 << 3) + (5)): {
-			L = L;
+//			L = L;
 		}
 			;
 			break;
@@ -2511,7 +2507,7 @@ public final class CPU {
 			;
 			break;
 		case (0x40 + (7 << 3) + (7)): {
-			A = A;
+//			A = A;
 		}
 			;
 			break;
@@ -3988,12 +3984,8 @@ public final class CPU {
 		return cycles;
 	}
 
-	long lastns = 0;
-	long lastuf = 0;
-	int samplesLeft = 0;
-
 	public void elapseTime(int cycles) {
-		TotalCycleCount += cycles;
+		totalCycleCount += cycles;
 	}
 
 	public boolean keeprunning;
@@ -4001,18 +3993,18 @@ public final class CPU {
 	public void runlooprun() {
 		int cycles;
 		do {
-			if (TotalCycleCount >= NextEventCycleCount)
+			if (totalCycleCount >= nextEventCycleCount)
 				handleEvents();
 
 			if (playbackHistoryIndex == -1) {
-				if (KeyStatus != GUIKeyStatus) {
+				if (keyStatus != guiKeyStatus) {
 					keyBounce = 1000;
 					handleKeyBounceEvent();
 				}
-				if (KeyStatus != GUIKeyStatus || lastKeyChange > 0x3fffffff) {
-					KeyStatus = GUIKeyStatus;
+				if (keyStatus != guiKeyStatus || lastKeyChange > 0x3fffffff) {
+					keyStatus = guiKeyStatus;
 					keyHistory.add(lastKeyChange);
-					keyHistory.add(KeyStatus);
+					keyHistory.add(keyStatus);
 					lastKeyChange = 0;
 				}
 			} else if (playbackHistoryIndex < keyHistory.size()) {
@@ -4022,8 +4014,8 @@ public final class CPU {
 					lastKeyChange = 0;
 					++playbackHistoryIndex;
 					d = keyHistory.get(playbackHistoryIndex++);
-					if (KeyStatus != d) {
-						KeyStatus = d;
+					if (keyStatus != d) {
+						keyStatus = d;
 						keyBounce = 1000;
 						handleKeyBounceEvent();
 					}
@@ -4037,7 +4029,7 @@ public final class CPU {
 
 			lastKeyChange += cycles;
 
-			TotalCycleCount += cycles;
+			totalCycleCount += cycles;
 
 			if (cycles > 0) {
 				if (doublespeed) {
@@ -4047,31 +4039,31 @@ public final class CPU {
 				}
 			}
 
-			if (LinkCableStatus != 0) {
-				LINKcntdwn -= cycles;
-				if (LINKcntdwn < 0) {
-					LINKcntdwn += (4096 / LINKmulti);
+			if (linkCableStatus != 0) {
+				linkCntDwn -= cycles;
+				if (linkCntDwn < 0) {
+					linkCntDwn += (4096 / linkMulti);
 
 					try {
 						int lstatus = IOP[0x02] | (IOP[0x01] << 8);
 						int rstatus = -1;
 
-						LINKbuf[LINKind++] = lstatus;
+						linkBuffer[linkInd++] = lstatus;
 
-						lstatus |= RemoteKeyStatus << 16;
+						lstatus |= remoteKeyStatus << 16;
 
 						rstatus = server.updateServer(lstatus);
 
 						if (useRemoteKeys) {
 							int rkeys = (rstatus >> 16) & 0xff;
-							if (GUIKeyStatus != rkeys) {
-								GUIKeyStatus = rkeys;
+							if (guiKeyStatus != rkeys) {
+								guiKeyStatus = rkeys;
 							}
 						}
 
-						if (LINKind > LINKdelay)
-							LINKind = 0;
-						lstatus = LINKbuf[LINKind];
+						if (linkInd > linkDdelay)
+							linkInd = 0;
+						lstatus = linkBuffer[linkInd];
 
 						int bstatus = (rstatus & 0xff) | ((lstatus & 0xff) << 8);
 						bstatus &= 0x8181;
@@ -4087,8 +4079,8 @@ public final class CPU {
 						case 0x8101:
 						case 0x8100: {
 
-							if (++LINKtimeout > LINKdelay) {
-								LINKtimeout = 0;
+							if (++linkTimeout > linkDdelay) {
+								linkTimeout = 0;
 								IOP[0x01] = 0xff;
 								IOP[0x02] &= ~0x80;
 								triggerInterrupt(3);
@@ -4108,7 +4100,7 @@ public final class CPU {
 							IOP[0x01] = (rstatus >> 8) & 0xff;
 							IOP[0x02] &= ~0x80;
 							triggerInterrupt(3);
-							LINKtimeout = 0;
+							linkTimeout = 0;
 						}
 							;
 							break;
@@ -4142,16 +4134,16 @@ public final class CPU {
 		runlooprun();
 	};
 
-	public int LINKmulti = 1;
-	public int LINKdelay = 0;
+	public int linkMulti = 1;
+	public int linkDdelay = 0;
 
-	private int LINKcntdwn = 0;
-	private int[] LINKbuf = new int[8];
-	private int LINKind = 0;
-	private int LINKtimeout = 0;
+	private int linkCntDwn = 0;
+	private int[] linkBuffer = new int[8];
+	private int linkInd = 0;
+	private int linkTimeout = 0;
 
-	public int LinkCableStatus = 0;
+	public int linkCableStatus = 0;
 
-	protected boolean LinkCableSendReceive = false;
+	protected boolean linkCableSendReceive = false;
 
 }

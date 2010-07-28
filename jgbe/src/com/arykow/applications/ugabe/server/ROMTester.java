@@ -12,7 +12,7 @@
  * $LastChangedBy$
  * $URL$
  * $Id$
- * ========================================================================== */ 
+ * ========================================================================== */
 package com.arykow.applications.ugabe.server;
 
 import java.io.BufferedWriter;
@@ -26,9 +26,10 @@ import com.arykow.applications.ugabe.client.CartridgeController;
 import com.arykow.applications.ugabe.client.CartridgeCreateHandler;
 import com.arykow.applications.ugabe.client.UGABEService;
 import com.arykow.applications.ugabe.client.UGABEServiceAsync;
+import com.arykow.applications.ugabe.client.VideoScreen;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-public class romtester {
+public class ROMTester {
 	private static String romfile = "", logfile = "";
 
 	public static void main(String[] args) {
@@ -60,11 +61,22 @@ public class romtester {
 		CartridgeController cartridgeController = new CartridgeController(service);
 		cartridgeController.createCartridge(romfile, new CartridgeCreateHandler() {
 			public void onCreateCartridge(Cartridge cartridge) {
-				CPU cpu = new CPU(new CPUServerImpl(), null);
+				CPU cpu = new CPU(new CPUServerImpl(), new VideoScreen() {
+					public void swapImage() {
+					}
+
+					public void scaleImage(int scale) {
+					}
+
+					public int[] getPixels() {
+						return null;
+					}
+				});
 				Writer logwriter = null;
 				try {
-					if (!logfile.equals(""))
+					if (!logfile.equals("")) {
 						logwriter = new BufferedWriter(new FileWriter(logfile));
+					}
 				} catch (java.io.IOException e) {
 					System.out.println("Error opening logfile:" + e.getMessage());
 					logwriter = null;
@@ -109,19 +121,19 @@ public class romtester {
 						s = s.toUpperCase();
 						ss = ss.toUpperCase();
 						if (logwriter != null) {
-							String out = String.format("invalid opcode 0x" + s + " at address 0x" + ss + ", rombank = " + cartridge.CurrentROMBank + "\n");
+							String out = String.format("invalid opcode 0x" + s + " at address 0x" + ss + ", rombank = " + cartridge.currentROMBank + "\n");
 							try {
 								logwriter.write(out);
 							} catch (java.io.IOException e) {
 								System.out.println("Error writing logfile:" + e.getMessage());
 								logwriter = null;
 							}
-						}
-						try {
-							logwriter.flush();
-						} catch (java.io.IOException e2) {
-							System.out.println("Error flushing logfile:" + e2.getMessage());
-							logwriter = null;
+							try {
+								logwriter.flush();
+							} catch (java.io.IOException e2) {
+								System.out.println("Error flushing logfile:" + e2.getMessage());
+								logwriter = null;
+							}
 						}
 						return;
 					}

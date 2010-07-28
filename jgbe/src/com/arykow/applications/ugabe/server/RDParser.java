@@ -26,17 +26,17 @@ public class RDParser {
 	private int[] presedence;
 	protected boolean parseError;
 
-	public class flup {
+	public static class Flup {
 		protected String s;
 		protected int i;
 
-		public flup(String str, int val) {
+		public Flup(String str, int val) {
 			this.s = str;
 			this.i = val;
 		}
 	}
 
-	ArrayList<flup> vars;
+	ArrayList<Flup> vars;
 
 	public RDParser() {
 		isLeftAssociative = new boolean[256];
@@ -75,7 +75,7 @@ public class RDParser {
 		presedence['*'] = 3;
 		presedence['/'] = 3;
 		presedence['^'] = 4;
-		vars = new ArrayList<flup>();
+		vars = new ArrayList<Flup>();
 	}
 
 	private int Next() {
@@ -102,11 +102,11 @@ public class RDParser {
 	}
 
 	public void addVariable(String str, int value) {
-		vars.add(new flup(str, value));
+		vars.add(new Flup(str, value));
 	}
 
 	public void removeVariables() {
-		vars = new ArrayList<flup>();
+		vars = new ArrayList<Flup>();
 	}
 
 	private boolean inBase(int Base, char c) {
@@ -172,16 +172,16 @@ public class RDParser {
 		}
 	}
 
-	private flup checkVariable() {
+	private Flup checkVariable() {
 		int i = 0;
-		flup f = null;
+		Flup f = null;
 		String s = "";
 		while ((i + parsingPosition < input.length) && inBase(0, input[parsingPosition + i])) {
 			s += input[parsingPosition + i];
 			++i;
 		}
 		for (int k = 0; k < vars.size(); ++k) {
-			flup ff = (flup) vars.get(k);
+			Flup ff = (Flup) vars.get(k);
 			if (ff.s.equals(s))
 				f = ff;
 		}
@@ -189,7 +189,7 @@ public class RDParser {
 	}
 
 	private int P(String ident) {
-		flup f = checkVariable();
+		Flup f = checkVariable();
 
 		if (isOperator[Next()] && (!isBinary[Next()])) {
 			int op = Next();

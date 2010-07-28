@@ -29,7 +29,7 @@ public final class VideoController {
 	}
 
 	private final VideoScreen screen;
-	public int CurrentVRAMBank = 0;
+	public int currentVRAMBank = 0;
 	public int VRAM[] = new int[0x4000];
 	public int OAM[] = new int[0xa0];
 	protected boolean isCGB;
@@ -45,7 +45,7 @@ public final class VideoController {
 	public boolean useSubscanlineRendering = false;
 	protected int curBGY;
 	public int curWNDY;
-	protected int[][][] Scalerx4 = new int[0x100][4][4];
+	protected int[][][] scalerx4 = new int[0x100][4][4];
 	private final static int GRAYSHADES[][] = { { 0xa0, 0xe0, 0x20 }, { 0x70, 0xb0, 0x40 }, { 0x40, 0x70, 0x32 }, { 0x10, 0x50, 0x26 } };
 	private int grayColors[][][] = { GRAYSHADES, GRAYSHADES, GRAYSHADES };
 	public int BGPI = 0;
@@ -63,7 +63,7 @@ public final class VideoController {
 	public int nscale = 1;
 	private int cfskip = 0;
 	public int fskip = 1;
-	public boolean MixFrames;
+	public boolean mixFrames;
 	public boolean allow_writes_in_mode_2_3 = true;
 
 	public void setGrayShade(int i, int j, int[] colors) {
@@ -115,7 +115,7 @@ public final class VideoController {
 	}
 
 	public void reset() {
-		CurrentVRAMBank = 0;
+		currentVRAMBank = 0;
 		LY = 0;
 		LYC = 0;
 		SCX = 0;
@@ -165,8 +165,6 @@ public final class VideoController {
 
 	}
 
-	long lastms;
-
 	private void blitImage() {
 		cfskip--;
 		if (cfskip < 0) {
@@ -177,7 +175,7 @@ public final class VideoController {
 
 			int pixels[] = screen.getPixels();
 
-			if (MixFrames) {
+			if (mixFrames) {
 				for (int y = 0; y < VideoScreen.SCREEN_HEIGHT; ++y) {
 					for (int x = 0; x < VideoScreen.SCREEN_WIDTH; ++x) {
 						blitImg[y][x] = (((((blitImg[y][x]) ^ (blitImg_prev[y][x])) & 0xfffefefe) >> 1) + ((blitImg[y][x]) & (blitImg_prev[y][x])));
@@ -454,7 +452,6 @@ public final class VideoController {
 
 	public int STAT_statemachine_state = 0;
 	public int mode3duration = 0;
-	int scanlinepos = 0;
 
 	public int render(int cycles) {
 		LCDCcntdwn -= cycles;
@@ -578,7 +575,7 @@ public final class VideoController {
 			return;
 		}
 
-		int newLCDCcntdwn = (int) (LCDCcntdwn - (int) (cpu.TotalCycleCount - cpu.lastVCRenderCycleCount));
+		int newLCDCcntdwn = (int) (LCDCcntdwn - (int) (cpu.totalCycleCount - cpu.lastVCRenderCycleCount));
 		int cyclesToRender = (mode3duration - newLCDCcntdwn - cyclepos - 4);
 		cyclepos += cyclesToRender;
 
@@ -709,7 +706,7 @@ public final class VideoController {
 	public int read(int index) {
 		if (index < 0xa000) {
 			if (allow_writes_in_mode_2_3 || ((LCDC & 0x80) == 0) || ((STAT & 3) != 3))
-				return VRAM[index - 0x8000 + CurrentVRAMBank];
+				return VRAM[index - 0x8000 + currentVRAMBank];
 			CPULogger.printf("WARNING: Read from VRAM[0x%04x] denied during mode " + (STAT & 3) + ", PC=0x%04x\n", index, cpu.getPC());
 			return 0xff;
 		}
@@ -792,8 +789,8 @@ public final class VideoController {
 	public void write(int index, int value) {
 		if (index < 0xa000) {
 			if (allow_writes_in_mode_2_3 || ((LCDC & 0x80) == 0) || ((STAT & 3) != 3)) {
-				VRAM[index - 0x8000 + CurrentVRAMBank] = value;
-				patdirty[(CurrentVRAMBank >> 4) + ((index - 0x8000) >> 4)] = true;
+				VRAM[index - 0x8000 + currentVRAMBank] = value;
+				patdirty[(currentVRAMBank >> 4) + ((index - 0x8000) >> 4)] = true;
 				anydirty = true;
 				return;
 			}
@@ -925,13 +922,13 @@ public final class VideoController {
 	}
 
 	public void selectVRAMBank(int i) {
-		CurrentVRAMBank = i * 0x2000;
+		currentVRAMBank = i * 0x2000;
 		if ((i < 0) || (i > 1))
-			CPULogger.printf("current offset=%x\n", CurrentVRAMBank);
+			CPULogger.printf("current offset=%x\n", currentVRAMBank);
 	}
 
 	public int getcurVRAMBank() {
-		return CurrentVRAMBank / 0x2000;
+		return currentVRAMBank / 0x2000;
 	}
 
 	private int TileData;

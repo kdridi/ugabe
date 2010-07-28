@@ -22,8 +22,8 @@ public final class AudioController {
 	public int WAVE[] = new int[16];
 	private int sampleRate = 44100;
 	public int cyclesLeftToRender;
-	public int TimerCountDown;
-	public boolean SweepTimerTick;
+	public int timerCountDown;
+	public boolean sweepTimerTick;
 	private int RATE;
 	public int CRATE;
 	public double currentEmulationSpeed = 1.0;
@@ -73,8 +73,8 @@ public final class AudioController {
 		S2 = new AudioControllerSoundRegister();
 		S3 = new AudioControllerSoundRegister();
 		S4 = new AudioControllerSoundRegister();
-		TimerCountDown = 16384;
-		SweepTimerTick = false;
+		timerCountDown = 16384;
+		sweepTimerTick = false;
 		RATE = (1 << 21) / sampleRate;
 		setSpeed(1.0);
 	}
@@ -228,8 +228,8 @@ public final class AudioController {
 		S2 = new AudioControllerSoundRegister();
 		S3 = new AudioControllerSoundRegister();
 		S4 = new AudioControllerSoundRegister();
-		TimerCountDown = 16384;
-		SweepTimerTick = false;
+		timerCountDown = 16384;
+		sweepTimerTick = false;
 
 		int[] w = cpu.isCGB() ? cgbwave : dmgwave;
 		for (int i = 0; i < 0x10; ++i)

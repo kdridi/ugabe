@@ -43,7 +43,7 @@ public class DebugServer {
 				historyA[historyIndex] = a;
 				historyB[historyIndex] = b;
 				historyIndex = (historyIndex + 1) & (32 - 1);
-				if (!a.equals(b)) {
+				if (a == null && b == null || !a.equals(b)) {
 					System.out.println("A: " + a);
 					System.out.println("B: " + b);
 					break;

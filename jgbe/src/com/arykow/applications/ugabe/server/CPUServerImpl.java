@@ -24,8 +24,7 @@ import java.net.Socket;
 import com.arykow.applications.ugabe.client.CPU;
 import com.arykow.applications.ugabe.client.CPUServer;
 
-class CPUServerImpl implements CPUServer {
-
+public class CPUServerImpl implements CPUServer {
 	protected ServerSocket LinkCablesrvr = null;
 	protected Socket LinkCablesktOut = null;
 	protected Socket LinkCablesktIn = null;
@@ -33,12 +32,12 @@ class CPUServerImpl implements CPUServer {
 	protected DataOutputStream LinkCableOut = null;
 
 	void setDelay(CPU cpu, int ndelay) throws IOException {
-		for (int i = 0; i < cpu.LINKdelay; ++i)
+		for (int i = 0; i < cpu.linkDdelay; ++i)
 			LinkCableIn.readInt();
-		cpu.LINKdelay = ndelay;
-		for (int i = 0; i < cpu.LINKdelay; ++i)
+		cpu.linkDdelay = ndelay;
+		for (int i = 0; i < cpu.linkDdelay; ++i)
 			LinkCableOut.writeInt(0);
-		cpu.LINKmulti = cpu.LINKdelay + 1;
+		cpu.linkMulti = cpu.linkDdelay + 1;
 	}
 
 	/*
@@ -72,7 +71,7 @@ class CPUServerImpl implements CPUServer {
 			System.out.println("Error while closing socket(s)");
 			e.printStackTrace();
 		} finally {
-			cpu.LinkCableStatus = 0;
+			cpu.linkCableStatus = 0;
 		}
 	}
 
@@ -82,14 +81,14 @@ class CPUServerImpl implements CPUServer {
 	 * @see jgbe.CPUServer#serveLink(jgbe.CPU)
 	 */
 	public final void serveLink(CPU cpu) throws IOException {
-		if (cpu.LinkCableStatus == 0) {
+		if (cpu.linkCableStatus == 0) {
 			LinkCablesrvr = new ServerSocket(0x4321);
 			LinkCablesktOut = LinkCablesrvr.accept();
 			System.out.println("Connection established");
 			LinkCablesktOut.setTcpNoDelay(true);
 			LinkCableIn = new DataInputStream(LinkCablesktOut.getInputStream());
 			LinkCableOut = new DataOutputStream(LinkCablesktOut.getOutputStream());
-			cpu.LinkCableStatus = 1;
+			cpu.linkCableStatus = 1;
 			setDelay(cpu, 0);
 		} else
 			throw new IOException("WARNING: Can't serve while not offline");
@@ -101,12 +100,12 @@ class CPUServerImpl implements CPUServer {
 	 * @see jgbe.CPUServer#clientLink(jgbe.CPU, java.lang.String)
 	 */
 	public final void clientLink(CPU cpu, String target) throws IOException {
-		if (cpu.LinkCableStatus == 0) {
+		if (cpu.linkCableStatus == 0) {
 			LinkCablesktIn = new Socket(target, 0x4321);
 			LinkCablesktIn.setTcpNoDelay(true);
 			LinkCableIn = new DataInputStream(LinkCablesktIn.getInputStream());
 			LinkCableOut = new DataOutputStream(LinkCablesktIn.getOutputStream());
-			cpu.LinkCableStatus = 2;
+			cpu.linkCableStatus = 2;
 			setDelay(cpu, 0);
 		} else
 			throw new IOException("WARNING: Can't client while not offline");

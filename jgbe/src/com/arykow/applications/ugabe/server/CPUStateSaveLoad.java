@@ -152,9 +152,9 @@ class CPUStateSaveLoad implements StateSaveLoad<CPU> {
 		;
 		{
 			if ((save))
-				dostream.writeInt((int) cpu.CurrentWRAMBank);
+				dostream.writeInt((int) cpu.currentWRAMBank);
 			else
-				cpu.CurrentWRAMBank = distream.readInt();
+				cpu.currentWRAMBank = distream.readInt();
 		}
 		;
 		{
@@ -298,9 +298,9 @@ class CPUStateSaveLoad implements StateSaveLoad<CPU> {
 		;
 		if (((11 == -1) || (11 <= version)) && ((-1 == -1) || (version <= -1))) {
 			if ((save))
-				dostream.writeByte((cpu.KeyStatus) & 0xff);
+				dostream.writeByte((cpu.keyStatus) & 0xff);
 			else
-				cpu.KeyStatus = distream.readUnsignedByte();
+				cpu.keyStatus = distream.readUnsignedByte();
 		}
 		;
 		if (((12 == -1) || (12 <= version)) && ((-1 == -1) || (version <= -1))) {
@@ -312,9 +312,9 @@ class CPUStateSaveLoad implements StateSaveLoad<CPU> {
 		;
 		if (((22 == -1) || (22 <= version)) && ((-1 == -1) || (version <= -1))) {
 			if ((save))
-				dostream.writeLong(cpu.KeyBounceEventCycleCount);
+				dostream.writeLong(cpu.keyBounceEventCycleCount);
 			else
-				cpu.KeyBounceEventCycleCount = distream.readLong();
+				cpu.keyBounceEventCycleCount = distream.readLong();
 		}
 		;
 		int keyBounceWaitNextFix = 0;
@@ -362,30 +362,30 @@ class CPUStateSaveLoad implements StateSaveLoad<CPU> {
 
 		if (((0 == -1) || (0 <= version)) && ((8 == -1) || (version <= 8))) {
 			if ((save))
-				dostream.writeInt((int) cpu.TotalInstrCount);
+				dostream.writeInt((int) cpu.totalInstrCount);
 			else
-				cpu.TotalInstrCount = distream.readInt();
+				cpu.totalInstrCount = distream.readInt();
 		}
 		;
 		if (((0 == -1) || (0 <= version)) && ((8 == -1) || (version <= 8))) {
 			if ((save))
-				dostream.writeInt((int) cpu.TotalCycleCount);
+				dostream.writeInt((int) cpu.totalCycleCount);
 			else
-				cpu.TotalCycleCount = distream.readInt();
+				cpu.totalCycleCount = distream.readInt();
 		}
 		;
 		if (((9 == -1) || (9 <= version)) && ((-1 == -1) || (version <= -1))) {
 			if ((save))
-				dostream.writeLong(cpu.TotalInstrCount);
+				dostream.writeLong(cpu.totalInstrCount);
 			else
-				cpu.TotalInstrCount = distream.readLong();
+				cpu.totalInstrCount = distream.readLong();
 		}
 		;
 		if (((9 == -1) || (9 <= version)) && ((-1 == -1) || (version <= -1))) {
 			if ((save))
-				dostream.writeLong(cpu.TotalCycleCount);
+				dostream.writeLong(cpu.totalCycleCount);
 			else
-				cpu.TotalCycleCount = distream.readLong();
+				cpu.totalCycleCount = distream.readLong();
 		}
 		;
 
@@ -457,11 +457,11 @@ class CPUStateSaveLoad implements StateSaveLoad<CPU> {
 		if ((!save)) {
 			cpu.refreshMemMap();
 			cpu.calcCyclesPerTIMA();
-			cpu.NextEventCycleCount = 0;
-			cpu.VCRenderEventCycleCount = 0;
+			cpu.nextEventCycleCount = 0;
+			cpu.videoControllerRenderEventCycleCount = 0;
 			if (((-1 == -1) || (-1 <= version)) && ((18 == -1) || (version <= 18))) {
 
-				cpu.divReset = (cpu.TotalCycleCount + CPU.CYCLES_PER_DIV - 1) - (cpu.IOP[0x04] * CPU.CYCLES_PER_DIV);
+				cpu.divReset = (cpu.totalCycleCount + CPU.CYCLES_PER_DIV - 1) - (cpu.IOP[0x04] * CPU.CYCLES_PER_DIV);
 				cpu.divReset -= CPU.CYCLES_PER_DIV;
 				cpu.divReset += DIVcntdwnFix;
 			}
@@ -473,15 +473,15 @@ class CPUStateSaveLoad implements StateSaveLoad<CPU> {
 				cpu.addEventCycleCount(cpu.TIMAEventCycleCount);
 			}
 			if (((-1 == -1) || (-1 <= version)) && ((20 == -1) || (version <= 20)))
-				cpu.lastVCRenderCycleCount = cpu.TotalCycleCount;
+				cpu.lastVCRenderCycleCount = cpu.totalCycleCount;
 			if (((-1 == -1) || (-1 <= version)) && ((21 == -1) || (version <= 21)))
-				cpu.KeyBounceEventCycleCount = (cpu.keyBounce > 0) ? cpu.TotalCycleCount + keyBounceWaitNextFix * ((cpu.doublespeed) ? 10 : 20) : CPU.MAX_CYCLE_COUNT;
+				cpu.keyBounceEventCycleCount = (cpu.keyBounce > 0) ? cpu.totalCycleCount + keyBounceWaitNextFix * ((cpu.doublespeed) ? 10 : 20) : CPU.MAX_CYCLE_COUNT;
 			if (((22 == -1) || (22 <= version)) && ((22 == -1) || (version <= 22))) {
-				cpu.TIMAEventCycleCount = cpu.TotalCycleCount;
-				cpu.KeyBounceEventCycleCount = cpu.TotalCycleCount;
+				cpu.TIMAEventCycleCount = cpu.totalCycleCount;
+				cpu.keyBounceEventCycleCount = cpu.totalCycleCount;
 			}
 			cpu.TIMAEventPending = (cpu.TIMAEventCycleCount != CPU.MAX_CYCLE_COUNT);
-			cpu.KeyBounceEventPending = (cpu.KeyBounceEventCycleCount != CPU.MAX_CYCLE_COUNT);
+			cpu.keyBounceEventPending = (cpu.keyBounceEventCycleCount != CPU.MAX_CYCLE_COUNT);
 		}
 	}
 }

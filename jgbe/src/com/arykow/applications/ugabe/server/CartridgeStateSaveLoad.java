@@ -59,44 +59,44 @@ class CartridgeStateSaveLoad implements StateSaveLoad<Cartridge> {
 
 		{
 			if ((save))
-				dostream.writeBoolean(cartridge.ram_enabled);
+				dostream.writeBoolean(cartridge.ramEnabled);
 			else
-				cartridge.ram_enabled = distream.readBoolean();
+				cartridge.ramEnabled = distream.readBoolean();
 		}
 		;
 		{
 			if ((save))
-				dostream.writeBoolean(cartridge.RTCRegisterEnabled);
+				dostream.writeBoolean(cartridge.rtcRegisterEnabled);
 			else
-				cartridge.RTCRegisterEnabled = distream.readBoolean();
+				cartridge.rtcRegisterEnabled = distream.readBoolean();
 		}
 		;
 		{
 			if ((save))
-				dostream.writeInt((int) cartridge.RomRamModeSelect);
+				dostream.writeInt((int) cartridge.romRamModeSelect);
 			else
-				cartridge.RomRamModeSelect = distream.readInt();
+				cartridge.romRamModeSelect = distream.readInt();
 		}
 		;
 		{
 			if ((save))
-				dostream.writeInt((int) cartridge.CurrentROMBank);
+				dostream.writeInt((int) cartridge.currentROMBank);
 			else
-				cartridge.CurrentROMBank = distream.readInt();
+				cartridge.currentROMBank = distream.readInt();
 		}
 		;
 		{
 			if ((save))
-				dostream.writeInt((int) cartridge.CurrentRAMBank);
+				dostream.writeInt((int) cartridge.currentRAMBank);
 			else
-				cartridge.CurrentRAMBank = distream.readInt();
+				cartridge.currentRAMBank = distream.readInt();
 		}
 		;
 		{
 			if ((save))
-				dostream.writeInt((int) cartridge.CurrentRTCRegister);
+				dostream.writeInt((int) cartridge.currentRTCRegister);
 			else
-				cartridge.CurrentRTCRegister = distream.readInt();
+				cartridge.currentRTCRegister = distream.readInt();
 		}
 		;
 	}
