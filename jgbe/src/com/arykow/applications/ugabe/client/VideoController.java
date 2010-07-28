@@ -16,6 +16,17 @@
 package com.arykow.applications.ugabe.client;
 
 public final class VideoController {
+	public static enum RGB {
+		RED, GREEN, BLUE;
+	}
+
+	public static enum ColorIndex {
+		FIRST, SECOND, THIRD, FOURTH
+	}
+
+	public static enum ColorType {
+		BACKGROUND, SPRITE1, SPRITE2
+	}
 
 	private final VideoScreen screen;
 	public int CurrentVRAMBank = 0;
@@ -36,7 +47,7 @@ public final class VideoController {
 	public int curWNDY;
 	protected int[][][] Scalerx4 = new int[0x100][4][4];
 	private final static int GRAYSHADES[][] = { { 0xa0, 0xe0, 0x20 }, { 0x70, 0xb0, 0x40 }, { 0x40, 0x70, 0x32 }, { 0x10, 0x50, 0x26 } };
-	private int GrayColors[][][] = { GRAYSHADES, GRAYSHADES, GRAYSHADES };
+	private int grayColors[][][] = { GRAYSHADES, GRAYSHADES, GRAYSHADES };
 	public int BGPI = 0;
 	public int BGPD[] = new int[8 * 4 * 2];
 	public int OBPI = 0;
@@ -55,79 +66,45 @@ public final class VideoController {
 	public boolean MixFrames;
 	public boolean allow_writes_in_mode_2_3 = true;
 
-	public void setGrayShade(int i, int j, int red, int green, int blue) {
-		GrayColors[i][j][0] = red;
-		GrayColors[i][j][1] = green;
-		GrayColors[i][j][2] = blue;
-		updateMonoColData(0);
-		updateMonoColData(1);
-		updateMonoColData(2);
+	public void setGrayShade(int i, int j, int[] colors) {
+		System.arraycopy(colors, 0, grayColors[i][j], 0, RGB.values().length);
+		updateMonoColDatas();
+	}
+
+	private void updateMonoColDatas() {
+		for (int index = 0; index < ColorType.values().length; index++) {
+			updateMonoColData(index);
+		}
 	}
 
 	public void setGrayShades(int[][][] g) {
-		setGrayShades(g[0], g[1], g[2]);
+		for (int i = 0; i < g.length; i++) {
+			setGrayShades(i, g[i]);
+		}
+		updateMonoColDatas();
+
 	}
 
 	public void setGrayShades(int[][] g) {
-		{
-			GrayColors[0] = new int[4][3];
-			for (int abc = 0; abc < 4; ++abc)
-				for (int bca = 0; bca < 3; ++bca)
-					GrayColors[0][abc][bca] = g[abc][bca];
+		for (int index = 0; index < ColorType.values().length; index++) {
+			setGrayShades(index, g);
 		}
-		;
-		{
-			GrayColors[1] = new int[4][3];
-			for (int abc = 0; abc < 4; ++abc)
-				for (int bca = 0; bca < 3; ++bca)
-					GrayColors[1][abc][bca] = g[abc][bca];
-		}
-		;
-		{
-			GrayColors[2] = new int[4][3];
-			for (int abc = 0; abc < 4; ++abc)
-				for (int bca = 0; bca < 3; ++bca)
-					GrayColors[2][abc][bca] = g[abc][bca];
-		}
-		;
-		updateMonoColData(0);
-		updateMonoColData(1);
-		updateMonoColData(2);
+		updateMonoColDatas();
 	}
 
-	public void setGrayShades(int[][] g1, int[][] g2, int[][] g3) {
-		{
-			GrayColors[0] = new int[4][3];
-			for (int abc = 0; abc < 4; ++abc)
-				for (int bca = 0; bca < 3; ++bca)
-					GrayColors[0][abc][bca] = g1[abc][bca];
+	private void setGrayShades(int index, int[][] values) {
+		grayColors[index] = new int[ColorIndex.values().length][RGB.values().length];
+		for (int i = 0; i < ColorIndex.values().length; ++i) {
+			System.arraycopy(values[i], 0, grayColors[index][i], 0, RGB.values().length);
 		}
-		;
-		{
-			GrayColors[1] = new int[4][3];
-			for (int abc = 0; abc < 4; ++abc)
-				for (int bca = 0; bca < 3; ++bca)
-					GrayColors[1][abc][bca] = g2[abc][bca];
-		}
-		;
-		{
-			GrayColors[2] = new int[4][3];
-			for (int abc = 0; abc < 4; ++abc)
-				for (int bca = 0; bca < 3; ++bca)
-					GrayColors[2][abc][bca] = g3[abc][bca];
-		}
-		;
-		updateMonoColData(0);
-		updateMonoColData(1);
-		updateMonoColData(2);
 	}
 
 	public int[][] getGrayShade(int i) {
-		return GrayColors[i];
+		return grayColors[i];
 	}
 
 	public int[][][] getGrayShades() {
-		return GrayColors;
+		return grayColors;
 	}
 
 	public void restart() {
@@ -355,19 +332,15 @@ public final class VideoController {
 	}
 
 	public void updateMonoColData(int index) {
-
 		if (isCGB)
 			return;
 
-		int[][] curColors = GrayColors[index];
-
+		int[][] curColors = grayColors[index];
 		int value = cpu.IOP[index + 0x47];
-
 		if (index == 0)
 			index = (0x20 >> 2);
 		else
 			--index;
-
 		int temp[] = null;
 		temp = curColors[(value >> 0) & 3];
 		palChange((index << 2) | 0, temp[0], temp[1], temp[2]);
