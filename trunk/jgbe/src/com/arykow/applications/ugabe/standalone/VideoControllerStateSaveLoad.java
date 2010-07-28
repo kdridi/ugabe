@@ -39,18 +39,14 @@ class VideoControllerStateSaveLoad implements StateSaveLoad<VideoController> {
 			}
 			;
 		}
-		;
 		{
-			for (int sl_i = 0; sl_i < (0xa0); ++sl_i) {
+			for (int index = 0; index < (0xa0); ++index) {
 				if ((save))
-					dostream.writeByte((videoController.OAM[sl_i]) & 0xff);
+					dostream.writeByte((videoController.objectAttributeMemory[index]) & 0xff);
 				else
-					videoController.OAM[sl_i] = distream.readUnsignedByte();
+					videoController.objectAttributeMemory[index] = distream.readUnsignedByte();
 			}
-			;
 		}
-		;
-
 		{
 			if ((save))
 				dostream.writeByte((videoController.LY) & 0xff);

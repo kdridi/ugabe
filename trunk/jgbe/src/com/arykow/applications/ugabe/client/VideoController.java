@@ -31,7 +31,7 @@ public final class VideoController {
 	private final VideoScreen screen;
 	public int currentVRAMBank = 0;
 	public int VRAM[] = new int[0x4000];
-	public int OAM[] = new int[40 * 4];
+	public int objectAttributeMemory[] = new int[40 * 4];
 	protected boolean isCGB;
 	public int LY = 0;
 	public int LYC = 0;
@@ -147,7 +147,7 @@ public final class VideoController {
 		updateMonoColData(2);
 
 		for (int i = 0; i < 0xa0; ++i)
-			OAM[i] = 0;
+			objectAttributeMemory[i] = 0;
 		for (int i = 0; i < 0x4000; ++i)
 			VRAM[i] = 0;
 	}
@@ -579,7 +579,7 @@ public final class VideoController {
 		cyclepos += cyclesToRender;
 
 		while (cyclesToRender > 0) {
-			int sprXPos = OAM[spritesOnScanline[curSprite] | 1] - 8 - pixpos;
+			int sprXPos = objectAttributeMemory[spritesOnScanline[curSprite] | 1] - 8 - pixpos;
 			if ((sprXPos >= 0) && (sprXPos < 8) && (curSprite < spriteCountOnScanline - 1)) {
 				cyclesToRender -= 2;
 				++curSprite;
@@ -634,10 +634,10 @@ public final class VideoController {
 
 				if (!isCGB) {
 
-					int line = LY - (OAM[spritesOnScanline[curSprite]] - 16);
-					int xpos = OAM[spritesOnScanline[curSprite] | 1] - 8;
-					int tile = OAM[spritesOnScanline[curSprite] | 2];
-					int attr = OAM[spritesOnScanline[curSprite] | 3];
+					int line = LY - (objectAttributeMemory[spritesOnScanline[curSprite]] - 16);
+					int xpos = objectAttributeMemory[spritesOnScanline[curSprite] | 1] - 8;
+					int tile = objectAttributeMemory[spritesOnScanline[curSprite] | 2];
+					int attr = objectAttributeMemory[spritesOnScanline[curSprite] | 3];
 					if (spr8x16) {
 
 						tile &= ~1;
@@ -679,7 +679,7 @@ public final class VideoController {
 		int sprYSize = ((LCDC & (1 << 2)) != 0) ? 16 : 8;
 		int count = 0;
 		for (int spr = 0; (spr < 40 * 4); spr += 4) {
-			int sprPos = LY - (OAM[spr] - 16);
+			int sprPos = LY - (objectAttributeMemory[spr] - 16);
 
 			if ((sprPos >= 0) && (sprPos < sprYSize)) {
 				spritesOnScanline[count] = spr;
@@ -690,7 +690,7 @@ public final class VideoController {
 		for (int i = count - 1; i >= 0; --i) {
 			for (int j = i - 1; j >= 0; --j) {
 				int k = spritesOnScanline[i];
-				if (OAM[spritesOnScanline[j] | 1] > OAM[k | 1]) {
+				if (objectAttributeMemory[spritesOnScanline[j] | 1] > objectAttributeMemory[k | 1]) {
 					spritesOnScanline[i] = spritesOnScanline[j];
 					spritesOnScanline[j] = k;
 				}
@@ -704,14 +704,16 @@ public final class VideoController {
 
 	public int read(int index) {
 		if (index < 0xa000) {
-			if (allow_writes_in_mode_2_3 || ((LCDC & 0x80) == 0) || ((STAT & 3) != 3))
+			if (allow_writes_in_mode_2_3 || ((LCDC & 0x80) == 0) || ((STAT & 3) != 3)) {
 				return VRAM[index - 0x8000 + currentVRAMBank];
+			}
 			CPULogger.printf("WARNING: Read from VRAM[0x%04x] denied during mode " + (STAT & 3) + ", PC=0x%04x\n", index, cpu.getPC());
 			return 0xff;
 		}
 		if ((index > 0xfdff) && (index < 0xfea0)) {
-			if (allow_writes_in_mode_2_3 || ((LCDC & 0x80) == 0) || ((STAT & 2) == 0))
-				return OAM[index - 0xfe00];
+			if (allow_writes_in_mode_2_3 || ((LCDC & 0x80) == 0) || ((STAT & 2) == 0)) {
+				return objectAttributeMemory[index - 0xfe00];
+			}
 			CPULogger.printf("WARNING: Read from OAM[0x%04x] denied during mode " + (STAT & 3) + ", PC=0x%04x\n", index, cpu.getPC());
 			return 0xff;
 		}
@@ -798,7 +800,7 @@ public final class VideoController {
 		}
 		if ((index > 0xfdff) && (index < 0xfea0)) {
 			if (allow_writes_in_mode_2_3 || ((LCDC & 0x80) == 0) || ((STAT & 2) == 0)) {
-				OAM[index - 0xfe00] = value;
+				objectAttributeMemory[index - 0xfe00] = value;
 				return;
 			}
 			CPULogger.printf("WARNING: Write to OAM[0x%04x] denied during mode " + (STAT & 3) + ", PC=0x%04x", index, cpu.getPC());
@@ -1102,14 +1104,38 @@ public final class VideoController {
 		;
 	}
 
+	/**
+	 * http://fms.komkon.org/GameBoy/Tech/Software.html
+	 * 
+	 * Sprites
+	 * GameBoy video controller can display up to 40 sprites either in 8x8 or in 8x16 mode.
+	 * Sprite patterns have the same format as tiles, but they are taken from the Sprite Pattern Table located at 8000-8FFF and therefore have unsigned numbers.
+	 * Sprite attributes reside in the Sprite Attribute Table (aka OAM) at FE00-FE9F.
+	 * OAM (Object Attribute Memory) is divided into 40 4-byte blocks each of which corresponds to a sprite.
+	 * 
+	 * Blocks have the following format:
+	 *   Byte0  Y position on the screen
+	 *   Byte1  X position on the screen
+	 *   Byte2  Pattern number 0-255 [notice that unlike tile numbers, sprite pattern numbers are unsigned] 
+	 *   Byte3  Flags:
+	 *          Bit7  Priority
+	 *                Sprite is displayed in front of the window if this bit is set to 1.
+	 *                Otherwise, sprite is shown behind the window but in front of the background.
+	 *          Bit6  Y flip
+	 *                Sprite pattern is flipped vertically if this bit is set to 1.
+	 *          Bit5  X flip
+	 *                Sprite pattern is flipped horizontally if this bit is set to 1.
+	 *          Bit4  Palette number
+	 *                Sprite colors are taken from OBJ1PAL if this bit is set to 1 and from OBJ0PAL otherwise.
+	 */
 	private void renderScanlineSprites() {
 		boolean sprite8x16 = ((LCDC & (1 << 2)) != 0);
 
 		for (int spriteIndex = 0; spriteIndex < 40; ++spriteIndex) {
-			int spritePositionY = OAM[(spriteIndex * 4) + 0];
-			int spritePositionX = OAM[(spriteIndex * 4) + 1];
-			int spriteNumber = OAM[(spriteIndex * 4) + 2];
-			int spriteAttribute = OAM[(spriteIndex * 4) + 3];
+			int spritePositionY	= objectAttributeMemory[(spriteIndex * 4) + 0];
+			int spritePositionX	= objectAttributeMemory[(spriteIndex * 4) + 1];
+			int spriteNumber	= objectAttributeMemory[(spriteIndex * 4) + 2];
+			int spriteAttribute	= objectAttributeMemory[(spriteIndex * 4) + 3];
 
 			int offsetY = LY - spritePositionY + 16;
 
