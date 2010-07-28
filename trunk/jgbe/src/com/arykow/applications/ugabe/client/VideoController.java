@@ -52,8 +52,8 @@ public final class VideoController {
 	public int BGPD[] = new int[8 * 4 * 2];
 	public int OBPI = 0;
 	public int OBPD[] = new int[8 * 4 * 2];
-	private int blitImg[][] = new int[144][160];
-	private int blitImg_prev[][] = new int[144][160];
+	private int blitImg[][] = new int[VideoScreen.SCREEN_HEIGHT][VideoScreen.SCREEN_WIDTH];
+	private int blitImg_prev[][] = new int[VideoScreen.SCREEN_HEIGHT][VideoScreen.SCREEN_WIDTH];
 	private int palColors[] = new int[8 * 4 * 2];
 	private int patpix[][][] = new int[4096][][];
 	public boolean patdirty[] = new boolean[1024];
@@ -178,28 +178,28 @@ public final class VideoController {
 			int pixels[] = screen.getPixels();
 
 			if (MixFrames) {
-				for (int y = 0; y < 144; ++y) {
-					for (int x = 0; x < 160; ++x) {
+				for (int y = 0; y < VideoScreen.SCREEN_HEIGHT; ++y) {
+					for (int x = 0; x < VideoScreen.SCREEN_WIDTH; ++x) {
 						blitImg[y][x] = (((((blitImg[y][x]) ^ (blitImg_prev[y][x])) & 0xfffefefe) >> 1) + ((blitImg[y][x]) & (blitImg_prev[y][x])));
 						blitImg_prev[y][x] = blitImg[y][x];
 					}
 				}
 			}
 			if (scale == 1) {
-				for (int y = 0; y < 144; ++y) {
+				for (int y = 0; y < VideoScreen.SCREEN_HEIGHT; ++y) {
 					int[] blitLine = blitImg[y];
-					System.arraycopy(blitLine, 0, pixels, y * 160, 160);
+					System.arraycopy(blitLine, 0, pixels, y * VideoScreen.SCREEN_WIDTH, VideoScreen.SCREEN_WIDTH);
 				}
 			} else if (scale == 2) {
 				int ti1 = -1, ti2 = -1;
-				ti2 += 160 * 2;
-				for (int y = 0; y < 144; ++y) {
+				ti2 += VideoScreen.SCREEN_WIDTH * 2;
+				for (int y = 0; y < VideoScreen.SCREEN_HEIGHT; ++y) {
 					int yn = (y == 0) ? 0 : y - 1;
 					int yp = (y == 143) ? 143 : y + 1;
 					int[] blitLine2 = blitImg[y];
 					int[] blitLine1 = blitImg[yn];
 					int[] blitLine3 = blitImg[yp];
-					for (int x = 0; x < 160; ++x) {
+					for (int x = 0; x < VideoScreen.SCREEN_WIDTH; ++x) {
 						int xn = (x == 0) ? 0 : x - 1;
 						int xp = (x == 159) ? 159 : x + 1;
 						if (!((blitLine2[xn]) == (blitLine2[xp])) && !((blitLine1[x]) == (blitLine3[x]))) {
@@ -215,21 +215,21 @@ public final class VideoController {
 							pixels[++ti2] = col;
 						}
 					}
-					ti1 += 160 * 2;
-					ti2 += 160 * 2;
+					ti1 += VideoScreen.SCREEN_WIDTH * 2;
+					ti2 += VideoScreen.SCREEN_WIDTH * 2;
 				}
 			} else if (scale == 3) {
 
 				int ti1 = -1, ti2 = -1, ti3 = -1;
-				ti2 += 160 * 3;
-				ti3 += 160 * 3 * 2;
-				for (int y = 0; y < 144; ++y) {
+				ti2 += VideoScreen.SCREEN_WIDTH * 3;
+				ti3 += VideoScreen.SCREEN_WIDTH * 3 * 2;
+				for (int y = 0; y < VideoScreen.SCREEN_HEIGHT; ++y) {
 					int yn = (y == 0) ? 0 : y - 1;
 					int yp = (y == 143) ? 143 : y + 1;
 					int[] blitLine2 = blitImg[y];
 					int[] blitLine1 = blitImg[yn];
 					int[] blitLine3 = blitImg[yp];
-					for (int x = 0; x < 160; ++x) {
+					for (int x = 0; x < VideoScreen.SCREEN_WIDTH; ++x) {
 						int xn = (x == 0) ? 0 : x - 1;
 						int xp = (x == 159) ? 159 : x + 1;
 						if (!((blitLine1[x]) == (blitLine3[x])) && !((blitLine2[xn]) == (blitLine2[xp]))) {
@@ -255,23 +255,23 @@ public final class VideoController {
 							pixels[++ti3] = col;
 						}
 					}
-					ti1 += 160 * 3 * 2;
-					ti2 += 160 * 3 * 2;
-					ti3 += 160 * 3 * 2;
+					ti1 += VideoScreen.SCREEN_WIDTH * 3 * 2;
+					ti2 += VideoScreen.SCREEN_WIDTH * 3 * 2;
+					ti3 += VideoScreen.SCREEN_WIDTH * 3 * 2;
 				}
 			} else if (scale == 4) {
 
 				int ti1 = -1, ti2 = -1, ti3 = -1, ti4 = -1;
-				ti2 += 160 * 4;
-				ti3 += 160 * 4 * 2;
-				ti4 += 160 * 4 * 3;
-				for (int y = 0; y < 144; ++y) {
+				ti2 += VideoScreen.SCREEN_WIDTH * 4;
+				ti3 += VideoScreen.SCREEN_WIDTH * 4 * 2;
+				ti4 += VideoScreen.SCREEN_WIDTH * 4 * 3;
+				for (int y = 0; y < VideoScreen.SCREEN_HEIGHT; ++y) {
 					int yn = (y == 0) ? 0 : y - 1;
 					int yp = (y == 143) ? 143 : y + 1;
 					int[] blitLine2 = blitImg[y];
 					int[] blitLine1 = blitImg[yn];
 					int[] blitLine3 = blitImg[yp];
-					for (int x = 0; x < 160; ++x) {
+					for (int x = 0; x < VideoScreen.SCREEN_WIDTH; ++x) {
 						int xn = (x == 0) ? 0 : x - 1;
 						int xp = (x == 159) ? 159 : x + 1;
 
@@ -316,10 +316,10 @@ public final class VideoController {
 							pixels[++ti4] = blitLine2[x];
 						}
 					}
-					ti1 += 160 * 4 * 3;
-					ti2 += 160 * 4 * 3;
-					ti3 += 160 * 4 * 3;
-					ti4 += 160 * 4 * 3;
+					ti1 += VideoScreen.SCREEN_WIDTH * 4 * 3;
+					ti2 += VideoScreen.SCREEN_WIDTH * 4 * 3;
+					ti3 += VideoScreen.SCREEN_WIDTH * 4 * 3;
+					ti4 += VideoScreen.SCREEN_WIDTH * 4 * 3;
 				}
 			}
 			if (screen != null) {
@@ -483,7 +483,7 @@ public final class VideoController {
 				STAT &= 0xFC;
 				if ((STAT & (1 << 3)) != 0)
 					cpu.triggerInterrupt(1);
-				if (LY < 144)
+				if (LY < VideoScreen.SCREEN_HEIGHT)
 					cpu.elapseTime(cpu.hblank_dma());
 				++STAT_statemachine_state;
 				break;
@@ -494,7 +494,7 @@ public final class VideoController {
 				++STAT_statemachine_state;
 				break;
 			case 3:
-				if (LY < 144) {
+				if (LY < VideoScreen.SCREEN_HEIGHT) {
 					LCDCcntdwn += 80;
 					STAT = (STAT & 0xFC) | 2;
 					if (LY == LYC) {
@@ -559,7 +559,7 @@ public final class VideoController {
 
 	int pixpos = 0;
 	int cyclepos = 0;
-	int[] zbuffer = new int[160];
+	int[] zbuffer = new int[VideoScreen.SCREEN_WIDTH];
 	int curSprite = 0;
 
 	private void renderScanLinePart() {
@@ -567,14 +567,14 @@ public final class VideoController {
 			return;
 		blitLine = blitImg[LY];
 		if ((LCDC & 0x80) == 0) {
-			for (int i = pixpos; i < 160; ++i) {
+			for (int i = pixpos; i < VideoScreen.SCREEN_WIDTH; ++i) {
 				int x = pixpos + i;
-				if ((x >= 0) && (x < 160)) {
+				if ((x >= 0) && (x < VideoScreen.SCREEN_WIDTH)) {
 					blitLine[x] = palColors[32 | 0];
 				}
 				;
 			}
-			pixpos = 160;
+			pixpos = VideoScreen.SCREEN_WIDTH;
 			return;
 		}
 
@@ -591,7 +591,7 @@ public final class VideoController {
 			} else if ((!isCGB) && ((LCDC & (1 << 0)) == 0)) {
 				for (int i = 0; i < 8; ++i) {
 					int x = pixpos + i;
-					if ((x >= 0) && (x < 160)) {
+					if ((x >= 0) && (x < VideoScreen.SCREEN_WIDTH)) {
 						{
 							blitLine[x] = palColors[0 | 0];
 						}
@@ -617,7 +617,7 @@ public final class VideoController {
 				int[] patLine = patpix[bgtile][bgline & 7];
 				for (int i = 0; i < 8; ++i) {
 					int x = pixpos + i;
-					if ((x >= 0) && (x < 160)) {
+					if ((x >= 0) && (x < VideoScreen.SCREEN_WIDTH)) {
 						{
 							blitLine[x] = palColors[bgpal | patLine[i]];
 						}
@@ -658,7 +658,7 @@ public final class VideoController {
 					for (int i = 0; i < 8; ++i) {
 						int color = patLine[i];
 
-						if ((xpos >= 0) && (xpos < 160) && (color != 0) && ((zbuffer[xpos] == 0) || priority)) {
+						if ((xpos >= 0) && (xpos < VideoScreen.SCREEN_WIDTH) && (color != 0) && ((zbuffer[xpos] == 0) || priority)) {
 							{
 								blitLine[xpos] = palColors[pallette | color];
 							}
@@ -961,13 +961,13 @@ public final class VideoController {
 			BGTileMap = ((LCDC & (1 << 3)) == 0) ? 0x1800 : 0x1c00;
 			WindowTileMap = ((LCDC & (1 << 6)) == 0) ? 0x1800 : 0x1c00;
 
-			windX = 160;
-			if (((LCDC & (1 << 5)) != 0) && (WX >= 0) && (WX < 167) && (WY >= 0) && (WY < 144) && (LY >= WY))
+			windX = VideoScreen.SCREEN_WIDTH;
+			if (((LCDC & (1 << 5)) != 0) && (WX >= 0) && (WX < 167) && (WY >= 0) && (WY < VideoScreen.SCREEN_HEIGHT) && (LY >= WY))
 				windX = (WX - 7);
 
 			renderScanlineBG();
 
-			if (windX < 160) {
+			if (windX < VideoScreen.SCREEN_WIDTH) {
 				renderScanlineWindow();
 			}
 
@@ -1048,7 +1048,7 @@ public final class VideoController {
 		int tileMap = WindowTileMap + (bgTileY * 32);
 		int attrMap = tileMap + 0x2000;
 		int bufMap = 0;
-		int cnt = ((160 - (windX + 7)) >> 3) + 2;
+		int cnt = ((VideoScreen.SCREEN_WIDTH - (windX + 7)) >> 3) + 2;
 
 		for (int i = 0; i < cnt; ++i) {
 			int tile = VRAM[tileMap++];
@@ -1070,7 +1070,7 @@ public final class VideoController {
 	private void renderScanlineWindow() {
 		int bufMap = 0;
 		int curX = ((windX) < (0) ? (0) : (windX));
-		int cnt = 160 - curX;
+		int cnt = VideoScreen.SCREEN_WIDTH - curX;
 		if (cnt == 0)
 			return;
 		bgY = curWNDY++;
@@ -1143,7 +1143,7 @@ public final class VideoController {
 					int rx = sprX - 8 + ofsX;
 
 					int col = PatLine[ofsX];
-					if ((col != 0) && (rx >= 0) && (rx < 160)) {
+					if ((col != 0) && (rx >= 0) && (rx < VideoScreen.SCREEN_WIDTH)) {
 						{
 							blitLine[rx] = palColors[(palnr << 2) | col];
 						}

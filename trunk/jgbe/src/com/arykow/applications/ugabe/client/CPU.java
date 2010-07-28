@@ -80,7 +80,7 @@ public final class CPU {
 	public CPU(CPUServer server, VideoScreen videoScreen) {
 		this.server = server;
 		this.videoScreen = videoScreen;
-		this.videoController = new VideoController(this, 160, 144, videoScreen);
+		this.videoController = new VideoController(this, VideoScreen.SCREEN_WIDTH, VideoScreen.SCREEN_HEIGHT, videoScreen);
 		this.audioController = new AudioController(this);
 	}
 

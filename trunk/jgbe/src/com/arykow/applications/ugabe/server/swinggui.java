@@ -275,8 +275,8 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 		private BufferedImage drawImg[] = new BufferedImage[2];
 
 		public void scaleImage(int scale) {
-			int width = scale * MIN_WIDTH;
-			int height = scale * MIN_HEIGHT;
+			int width = scale * SCREEN_WIDTH;
+			int height = scale * SCREEN_HEIGHT;
 			drawImg[0] = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 			drawImg[1] = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 		}
@@ -950,7 +950,7 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 		Dimension csize;
 		csize = (fulls ? fsframe : frame.getContentPane()).getSize();
 		if (grfx.interpolation == 0) {
-			psize = new Dimension(VC.nscale * 160, VC.nscale * 144);
+			psize = new Dimension(VC.nscale * VideoScreen.SCREEN_WIDTH, VC.nscale * VideoScreen.SCREEN_HEIGHT);
 			if (!fulls) {
 				Dimension fsize = frame.getSize();
 				Dimension bsize = new Dimension();
@@ -963,7 +963,7 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 			psize = new Dimension(csize);
 			if (keepAspectRatio.getState()) {
 				double ratio = psize.getWidth() / psize.getHeight();
-				double target = 160.0 / 144.0;
+				double target = ((double) VideoScreen.SCREEN_WIDTH) / ((double) VideoScreen.SCREEN_HEIGHT);
 				if (ratio < target)
 					psize.height = (int) Math.round(psize.getWidth() / target);
 				else
@@ -1588,8 +1588,8 @@ public final class swinggui extends JApplet implements ActionListener, ItemListe
 		Dimension fsize = frame.getSize();
 		int fsizewidth = fsize.width;
 		int fsizeheight = fsize.height;
-		grfx.setPreferredSize(new Dimension(160 * cpu.videoController.nscale, 144 * cpu.videoController.nscale));
-		grfx.setSize(new Dimension(160 * cpu.videoController.nscale, 144 * cpu.videoController.nscale));
+		grfx.setPreferredSize(new Dimension(VideoScreen.SCREEN_WIDTH * cpu.videoController.nscale, VideoScreen.SCREEN_HEIGHT * cpu.videoController.nscale));
+		grfx.setSize(new Dimension(VideoScreen.SCREEN_WIDTH * cpu.videoController.nscale, VideoScreen.SCREEN_HEIGHT * cpu.videoController.nscale));
 		menuitemIgnoreSTAT.setState(cpu.videoController.allow_writes_in_mode_2_3);
 		frame.pack();
 		menuitemUseBIOS.setState(runbiosonreset);

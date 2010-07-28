@@ -54,11 +54,11 @@ public class Application {
 					}
 
 					public void scaleImage(int scale) {
-						pixels = new int[2][160 * 144 * scale * scale];
+						pixels = new int[2][SCREEN_WIDTH * SCREEN_HEIGHT * scale * scale];
 						
 
-						int width = scale * MIN_WIDTH;
-						int height = scale * MIN_HEIGHT;
+						int width = scale * SCREEN_WIDTH;
+						int height = scale * SCREEN_HEIGHT;
 						images[0] = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 						images[1] = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 					}
