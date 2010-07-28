@@ -31,7 +31,7 @@ public final class VideoController {
 	private final VideoScreen screen;
 	public int currentVRAMBank = 0;
 	public int VRAM[] = new int[0x4000];
-	public int OAM[] = new int[0xa0];
+	public int OAM[] = new int[40 * 4];
 	protected boolean isCGB;
 	public int LY = 0;
 	public int LYC = 0;
@@ -160,9 +160,7 @@ public final class VideoController {
 	}
 
 	private void palChange(int palcol, int r, int g, int b) {
-
 		palColors[palcol] = ((r << 16) | (g << 8) | (b << 0));
-
 	}
 
 	private void blitImage() {
@@ -471,10 +469,11 @@ public final class VideoController {
 				curSprite = 0;
 				break;
 			case 1:
-				if (useSubscanlineRendering)
+				if (useSubscanlineRendering) {
 					renderScanLinePart();
-				else
+				} else {
 					renderScanLine();
+				}
 
 				LCDCcntdwn += (isCGB ? 376 : 372) - mode3duration;
 				STAT &= 0xFC;
@@ -1000,8 +999,9 @@ public final class VideoController {
 	private void renderScanlineBG() {
 		int bufMap = 0;
 		int cnt = windX;
-		if (cnt == 0)
+		if (cnt == 0) {
 			return;
+		}
 
 		bgY = (SCY + LY) & 0xFF;
 		bgTileY = bgY >> 3;
@@ -1019,7 +1019,6 @@ public final class VideoController {
 		for (int t = bgOffsX; t < 8; ++t, --cnt) {
 			blitLine[curX++] = palColors[TilePal | PatLine[t]];
 		}
-		;
 
 		if (cnt == 0)
 			return;
@@ -1104,47 +1103,45 @@ public final class VideoController {
 	}
 
 	private void renderScanlineSprites() {
-		boolean spr8x16 = ((LCDC & (1 << 2)) != 0);
+		boolean sprite8x16 = ((LCDC & (1 << 2)) != 0);
 
-		for (int spr = 0; spr < 40; ++spr) {
-			int sprY = OAM[(spr * 4) + 0];
-			int sprX = OAM[(spr * 4) + 1];
-			int sprNum = OAM[(spr * 4) + 2];
-			int sprAttr = OAM[(spr * 4) + 3];
+		for (int spriteIndex = 0; spriteIndex < 40; ++spriteIndex) {
+			int spritePositionY = OAM[(spriteIndex * 4) + 0];
+			int spritePositionX = OAM[(spriteIndex * 4) + 1];
+			int spriteNumber = OAM[(spriteIndex * 4) + 2];
+			int spriteAttribute = OAM[(spriteIndex * 4) + 3];
 
-			int ofsY = LY - sprY + 16;
+			int offsetY = LY - spritePositionY + 16;
 
-			if ((ofsY >= 0) && (ofsY < (spr8x16 ? 16 : 8)) && (sprX > 0) && (sprX < 168)) {
-				if ((sprAttr & (1 << 6)) != 0)
-					ofsY = (spr8x16 ? 15 : 7) - ofsY;
-				if (spr8x16) {
-					sprNum &= ~1;
-					sprNum |= (ofsY >= 8) ? 1 : 0;
-					ofsY &= 7;
+			if ((offsetY >= 0) && (offsetY < (sprite8x16 ? 16 : 8)) && (spritePositionX > 0) && (spritePositionX < 168)) {
+				if ((spriteAttribute & (1 << 6)) != 0) {
+					offsetY = (sprite8x16 ? 15 : 7) - offsetY;
+				}
+				if (sprite8x16) {
+					spriteNumber &= ~1;
+					spriteNumber |= (offsetY >= 8) ? 1 : 0;
+					offsetY &= 7;
 				}
 
-				if ((sprAttr & (1 << 5)) != 0)
-					sprNum |= (1 << 10);
+				if ((spriteAttribute & (1 << 5)) != 0) {
+					spriteNumber |= (1 << 10);
+				}
 
-				int palnr;
+				int palnr = (spriteAttribute >> 4) & 1;
 				if (isCGB) {
-					if ((sprAttr & (1 << 3)) != 0)
-						sprNum |= (1 << 9);
-					palnr = sprAttr & 7;
-				} else
-					palnr = (sprAttr >> 4) & 1;
+					if ((spriteAttribute & (1 << 3)) != 0) {
+						spriteNumber |= (1 << 9);
+					}
+					palnr = spriteAttribute & 7;
+				}
 
-				int[] PatLine = patpix[sprNum][ofsY];
+				int[] PatLine = patpix[spriteNumber][offsetY];
 
-				for (int ofsX = 0; ofsX < 8; ++ofsX) {
-					int rx = sprX - 8 + ofsX;
-
-					int col = PatLine[ofsX];
-					if ((col != 0) && (rx >= 0) && (rx < VideoScreen.SCREEN_WIDTH)) {
-						{
-							blitLine[rx] = palColors[(palnr << 2) | col];
-						}
-						;
+				for (int offsetX = 0; offsetX < 8; ++offsetX) {
+					int columnIndex = spritePositionX - 8 + offsetX;
+					int col = PatLine[offsetX];
+					if (col != 0 && columnIndex >= 0 && columnIndex < VideoScreen.SCREEN_WIDTH) {
+						System.arraycopy(palColors, (palnr << 2) | col, blitLine, columnIndex, 1);
 					}
 				}
 			}
