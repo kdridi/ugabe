@@ -12,7 +12,7 @@
  * $LastChangedBy$
  * $URL$
  * $Id$
- * ========================================================================== */ 
+ * ========================================================================== */
 package com.arykow.applications.ugabe.standalone;
 
 import java.io.DataInputStream;
@@ -110,7 +110,6 @@ class VideoControllerStateSaveLoad implements StateSaveLoad<VideoController> {
 				else
 					videoController.mode3duration = distream.readInt();
 			}
-			;
 		}
 		if (18 <= version) {
 			{
@@ -119,7 +118,6 @@ class VideoControllerStateSaveLoad implements StateSaveLoad<VideoController> {
 				else
 					videoController.STAT_statemachine_state = distream.readInt();
 			}
-			;
 		}
 		{
 			if ((save))
@@ -127,7 +125,6 @@ class VideoControllerStateSaveLoad implements StateSaveLoad<VideoController> {
 			else
 				videoController.STAT = distream.readUnsignedByte();
 		}
-		;
 		if (version <= 17) {
 
 			switch (videoController.STAT & 3) {
@@ -156,7 +153,6 @@ class VideoControllerStateSaveLoad implements StateSaveLoad<VideoController> {
 			else
 				videoController.BGPI = distream.readUnsignedByte();
 		}
-		;
 		{
 			for (int sl_i = 0; sl_i < (8 * 4 * 2); ++sl_i) {
 				if ((save))
@@ -164,17 +160,13 @@ class VideoControllerStateSaveLoad implements StateSaveLoad<VideoController> {
 				else
 					videoController.BGPD[sl_i] = distream.readUnsignedByte();
 			}
-			;
 		}
-		;
-
 		{
 			if ((save))
 				dostream.writeByte((videoController.OBPI) & 0xff);
 			else
 				videoController.OBPI = distream.readUnsignedByte();
 		}
-		;
 		{
 			for (int sl_i = 0; sl_i < (8 * 4 * 2); ++sl_i) {
 				if ((save))
@@ -182,18 +174,13 @@ class VideoControllerStateSaveLoad implements StateSaveLoad<VideoController> {
 				else
 					videoController.OBPD[sl_i] = distream.readUnsignedByte();
 			}
-			;
 		}
-		;
-
 		if (8 <= version) {
 			if ((save))
 				dostream.writeByte((videoController.curWNDY) & 0xff);
 			else
 				videoController.curWNDY = distream.readUnsignedByte();
 		}
-		;
-
 		if ((!save)) {
 			for (int i = 0; i < 1024; ++i) {
 				videoController.patdirty[i] = true;
@@ -203,7 +190,6 @@ class VideoControllerStateSaveLoad implements StateSaveLoad<VideoController> {
 				videoController.updateBGColData(i);
 				videoController.updateOBColData(i);
 			}
-			;
 			videoController.updateMonoColData(0);
 			videoController.updateMonoColData(1);
 			videoController.updateMonoColData(2);
