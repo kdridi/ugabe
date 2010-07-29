@@ -18,13 +18,17 @@ package com.arykow.applications.ugabe.client;
 public final class VideoController {
 
 	/**
-	 * LCD Control Register Bits 0000 0000 ABCD EFGH
+	 * LCD Control Register
+	 * Bits 0000 0000 ABCD EFGH
 	 * 
-	 * A : LCD Display => Enabled / Disabled B : Window Tile Map Address =>
-	 * 9C00-9FFF / 9800-9BFF C : Display Window => Yes / No D : BG & Window Tile
-	 * Data Address => 8000-8FFF / 8800-97FF E : BG Tile Map Display Address =>
-	 * 9800-9BFF / 9C00-9FFF F : Sprite Size => 8x16 / 8x8 G : Display Sprites
-	 * => Yes / No H : Display Background => Yes / No
+	 * A : LCD Display						=> Enabled / Disabled
+	 * B : Window Tile Map Address			=> 9C00-9FFF / 9800-9BFF
+	 * C : Display Window					=> Yes / No
+	 * D : BG & Window Tile Data Address	=> 8000-8FFF / 8800-97FF
+	 * E : BG Tile Map Display Address		=> 9800-9BFF / 9C00-9FFF
+	 * F : Sprite Size						=> 8x16 / 8x8
+	 * G : Display Sprites					=> Yes / No
+	 * H : Display Background				=> Yes / No
 	 */
 	public int LCDC = 0;
 	public int currentVRAMBank = 0;
