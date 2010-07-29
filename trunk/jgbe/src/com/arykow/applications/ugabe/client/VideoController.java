@@ -54,7 +54,27 @@ public final class VideoController {
 	public int OBPD[] = new int[8 * 4 * 2];
 	private int blitImg[][] = new int[VideoScreen.SCREEN_HEIGHT][VideoScreen.SCREEN_WIDTH];
 	private int blitImg_prev[][] = new int[VideoScreen.SCREEN_HEIGHT][VideoScreen.SCREEN_WIDTH];
-	private int paletteColors[] = new int[8 * 4 * 2];
+
+	private static final int ARRAY_SIZE = 1;
+
+	private static final void arrayCopy(int[] src, int srcPos, int[] dest, int destPos) {
+		System.arraycopy(src, srcPos, dest, destPos, ARRAY_SIZE);
+	}
+
+	private final void copyFromPaletteColors(int srcPos, int[] dest, int destPos) {
+		arrayCopy(paletteColors, srcPos, dest, destPos);
+	}
+
+	private void updatePaletteColors(int index, int r, int g, int b) {
+		paletteColors[index] = ((r << 16) | (g << 8) | (b << 0));
+		// paletteColors[4 * index + 0] = r & 0x0FF;
+		// paletteColors[4 * index + 1] = g & 0x0FF;
+		// paletteColors[4 * index + 2] = b & 0x0FF;
+		// paletteColors[4 * index + 3] = 0x0FF;
+	}
+
+	private int paletteColors[] = new int[8 * 4 * 2 * ARRAY_SIZE];
+
 	private int patternPixels[][][] = new int[4096][][];
 	public boolean patdirty[] = new boolean[1024];
 	public boolean anydirty = true;
@@ -157,10 +177,6 @@ public final class VideoController {
 		this.screen = screen;
 		screen.scaleImage(scale = nscale);
 		reset();
-	}
-
-	private void updatePaletteColors(int index, int r, int g, int b) {
-		paletteColors[index] = ((r << 16) | (g << 8) | (b << 0));
 	}
 
 	private void blitImage() {
@@ -566,9 +582,8 @@ public final class VideoController {
 			for (int i = pixpos; i < VideoScreen.SCREEN_WIDTH; ++i) {
 				int x = pixpos + i;
 				if ((x >= 0) && (x < VideoScreen.SCREEN_WIDTH)) {
-					blitLine[x] = paletteColors[32 | 0];
+					copyFromPaletteColors(32 | 0, blitLine, x);
 				}
-				;
 			}
 			pixpos = VideoScreen.SCREEN_WIDTH;
 			return;
@@ -588,25 +603,17 @@ public final class VideoController {
 				for (int i = 0; i < 8; ++i) {
 					int x = pixpos + i;
 					if ((x >= 0) && (x < VideoScreen.SCREEN_WIDTH)) {
-						{
-							blitLine[x] = paletteColors[0 | 0];
-						}
-						;
+						copyFromPaletteColors(0 | 0, blitLine, x);
 						zbuffer[x] = 0;
 					}
 				}
 			} else {
-
 				int BGTileMap = ((LCDC & (1 << 3)) == 0) ? 0x1800 : 0x1c00;
-
 				int bgline = SCY + LY;
-
 				int bgtilemapindex = (((SCX + pixpos) & 0xff) >> 3) + ((bgline & 0xf8) << 2);
 				int bgtile = VRAM[BGTileMap + bgtilemapindex];
 				int bgpal = 0x08 << 2;
-
 				if (((LCDC & (1 << 4)) == 0)) {
-
 					bgtile ^= 0x80;
 					bgtile += 0x80;
 				}
@@ -614,10 +621,7 @@ public final class VideoController {
 				for (int i = 0; i < 8; ++i) {
 					int x = pixpos + i;
 					if ((x >= 0) && (x < VideoScreen.SCREEN_WIDTH)) {
-						{
-							blitLine[x] = paletteColors[bgpal | patLine[i]];
-						}
-						;
+						copyFromPaletteColors(bgpal | patLine[i], blitLine, x);
 						zbuffer[x] = patLine[i];
 					}
 				}
@@ -655,11 +659,7 @@ public final class VideoController {
 						int color = patLine[i];
 
 						if ((xpos >= 0) && (xpos < VideoScreen.SCREEN_WIDTH) && (color != 0) && ((zbuffer[xpos] == 0) || priority)) {
-							{
-								blitLine[xpos] = paletteColors[pallette | color];
-							}
-							;
-
+							copyFromPaletteColors(pallette | color, blitLine, xpos);
 						}
 						++xpos;
 					}
@@ -1019,7 +1019,7 @@ public final class VideoController {
 		int curX = 0;
 
 		for (int t = bgOffsX; t < 8; ++t, --cnt) {
-			blitLine[curX++] = paletteColors[tilePal | patternLine[t]];
+			copyFromPaletteColors(tilePal | patternLine[t], blitLine, curX++);
 		}
 
 		if (cnt == 0)
@@ -1029,14 +1029,14 @@ public final class VideoController {
 			patternLine = patternPixels[tilebufBG[bufMap++]][bgOffsY];
 			tilePal = tilebufBG[bufMap++];
 			for (int t = 0; t < 8; ++t) {
-				blitLine[curX++] = paletteColors[tilePal | patternLine[t]];
+				copyFromPaletteColors(tilePal | patternLine[t], blitLine, curX++);
 			}
 			cnt -= 8;
 		}
 		patternLine = patternPixels[tilebufBG[bufMap++]][bgOffsY];
 		tilePal = tilebufBG[bufMap++];
 		for (int t = 0; cnt > 0; --cnt, ++t) {
-			blitLine[curX++] = paletteColors[tilePal | patternLine[t]];
+			copyFromPaletteColors(tilePal | patternLine[t], blitLine, curX++);
 		}
 		;
 	}
@@ -1082,25 +1082,21 @@ public final class VideoController {
 		int TilePal = tilebufBG[bufMap++];
 
 		for (int t = bgOffsX; (t < 8) && (cnt > 0); ++t, --cnt) {
-			blitLine[curX++] = paletteColors[TilePal | PatLine[t]];
+			copyFromPaletteColors(TilePal | PatLine[t], blitLine, curX++);
 		}
-		;
-
 		while (cnt >= 8) {
 			PatLine = patternPixels[tilebufBG[bufMap++]][bgOffsY];
 			TilePal = tilebufBG[bufMap++];
 			for (int t = 0; t < 8; ++t) {
-				blitLine[curX++] = paletteColors[TilePal | PatLine[t]];
+				copyFromPaletteColors(TilePal | PatLine[t], blitLine, curX++);
 			}
-			;
 			cnt -= 8;
 		}
 		PatLine = patternPixels[tilebufBG[bufMap++]][bgOffsY];
 		TilePal = tilebufBG[bufMap++];
 		for (int t = 0; cnt > 0; --cnt, ++t) {
-			blitLine[curX++] = paletteColors[TilePal | PatLine[t]];
+			copyFromPaletteColors(TilePal | PatLine[t], blitLine, curX++);
 		}
-		;
 	}
 
 	public static enum SpriteType {
@@ -1118,7 +1114,7 @@ public final class VideoController {
 
 		public static SpriteType createSpriteType(int LCDC) {
 			SpriteType result = SMALL;
-			if(((LCDC & (1 << 2)) != 0)) {
+			if (((LCDC & (1 << 2)) != 0)) {
 				result = BIG;
 			}
 			return result;
@@ -1188,7 +1184,7 @@ public final class VideoController {
 					int columnIndex = spritePositionX - 8 + offsetX;
 					int color = patternLine[offsetX];
 					if (color != 0 && columnIndex >= 0 && columnIndex < VideoScreen.SCREEN_WIDTH) {
-						System.arraycopy(paletteColors, (paletteNumber << 2) | color, blitLine, columnIndex, 1);
+						copyFromPaletteColors((paletteNumber << 2) | color, blitLine, columnIndex);
 					}
 				}
 			}
