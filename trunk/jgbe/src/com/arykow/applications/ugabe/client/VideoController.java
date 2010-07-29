@@ -57,8 +57,8 @@ public final class VideoController {
 
 	private static final int ARRAY_SIZE = 1;
 
-	private final void updateBLITFromPaletteColors(int fromPosition, int toPosition) {
-		System.arraycopy(paletteColors, fromPosition, blitImg[LY], toPosition, ARRAY_SIZE);
+	private final void updateBLITFromPaletteColors(int srcPos, int dstPos) {
+		System.arraycopy(paletteColors, srcPos, blitImg[LY], dstPos, ARRAY_SIZE);
 	}
 
 	private void updatePaletteColors(int index, int r, int g, int b) {
@@ -368,26 +368,6 @@ public final class VideoController {
 			++BGPI;
 	}
 
-	public void updateBGColData(int bnum) {
-		int base = bnum << 1;
-
-		int data = BGPD[base] | (BGPD[base + 1] << 8);
-		int palnum = (base >> 3);
-		int colnum = (base >> 1) & 3;
-		int r = (data >> 0) & 0x1F;
-		int g = (data >> 5) & 0x1F;
-		int b = (data >> 10) & 0x1F;
-
-		r <<= 3;
-		r |= (r >> 5);
-		g <<= 3;
-		g |= (g >> 5);
-		b <<= 3;
-		b |= (b >> 5);
-
-		updatePaletteColors((palnum << 2) | colnum | 0x20, r, g, b);
-	}
-
 	public int getBGColData() {
 		return BGPD[BGPI & 0x3f];
 	}
@@ -400,12 +380,20 @@ public final class VideoController {
 			++OBPI;
 	}
 
+	public void updateBGColData(int bnum) {
+		updateColorsData(bnum, 0x20, BGPD);
+	}
+
 	public void updateOBColData(int bnum) {
+		updateColorsData(bnum, null, OBPD);
+	}
+
+	private void updateColorsData(int bnum, Integer value, int[] dataTable) {
 		int base = bnum << 1;
 
-		int data = OBPD[base] | (OBPD[base + 1] << 8);
-		int palnum = base >> 3;
-		int colnum = (base >> 1) & 3;
+		int data = dataTable[base] | (dataTable[base + 1] << 8);
+		int paletteNumber = (base >> 3);
+		int colorNumber = (base >> 1) & 3;
 		int r = (data >> 0) & 0x1F;
 		int g = (data >> 5) & 0x1F;
 		int b = (data >> 10) & 0x1F;
@@ -417,7 +405,11 @@ public final class VideoController {
 		b <<= 3;
 		b |= (b >> 5);
 
-		updatePaletteColors((palnum << 2) | colnum, r, g, b);
+		int paletteColorIndex = (paletteNumber << 2) | colorNumber;
+		if (value != null) {
+			paletteColorIndex |= value.intValue();
+		}
+		updatePaletteColors(paletteColorIndex, r, g, b);
 	}
 
 	public int getOBColData() {
