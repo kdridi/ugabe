@@ -359,18 +359,17 @@ public class Debugger implements ActionListener, ItemListener, KeyListener, Mous
 					s += " <BR>";
 					s += "</PRE></HTML>";
 				} else if (table == hwregs && row == 0 && column == 0) {
-					int j = gui.cpu.videoController.LCDC;
 					s = "<HTML><PRE>";
 					s += " " + String.format(((regs2 == table) ? "%dd  %04xh " : "%dd  %02xh ") + brep + "b", i, i) + "<BR>";
 					s += " ----------------------------------------- <BR>";
-					s += " LCD Display                   : " + (((j & (1 << 7)) != 0) ? "Enabled" : "Disabled") + " <BR>";
-					s += " Window Tile Map Address       : " + (((j & (1 << 6)) != 0) ? "9C00-9FFF" : "9800-9BFF") + " <BR>";
-					s += " Display Window                : " + (((j & (1 << 5)) != 0) ? "Yes" : "No") + " <BR>";
-					s += " BG & Window Tile Data Address : " + (((j & (1 << 4)) != 0) ? "8000-8FFF" : "8800-97FF") + " <BR>";
-					s += " BG Tile Map Display Address   : " + (((j & (1 << 3)) != 0) ? "9800-9BFF" : "9C00-9FFF") + " <BR>";
-					s += " Sprite Size                   : " + (((j & (1 << 2)) != 0) ? "8x16" : "8x8") + " <BR>";
-					s += " Display Sprites               : " + (((j & (1 << 1)) != 0) ? "Yes" : "No") + " <BR>";
-					s += " Display Background            : " + (((j & (1 << 0)) != 0) ? "Yes" : "No") + " <BR>";
+					s += " LCD Display                   : " + ((gui.cpu.videoController.checkLCDCBitEnabled(7)) ? "Enabled" : "Disabled") + " <BR>";
+					s += " Window Tile Map Address       : " + ((gui.cpu.videoController.checkLCDCBitEnabled(6)) ? "9C00-9FFF" : "9800-9BFF") + " <BR>";
+					s += " Display Window                : " + ((gui.cpu.videoController.checkLCDCBitEnabled(5)) ? "Yes" : "No") + " <BR>";
+					s += " BG & Window Tile Data Address : " + ((gui.cpu.videoController.checkLCDCBitEnabled(4)) ? "8000-8FFF" : "8800-97FF") + " <BR>";
+					s += " BG Tile Map Display Address   : " + ((gui.cpu.videoController.checkLCDCBitEnabled(3)) ? "9800-9BFF" : "9C00-9FFF") + " <BR>";
+					s += " Sprite Size                   : " + ((gui.cpu.videoController.checkLCDCBitEnabled(2)) ? "8x16" : "8x8") + " <BR>";
+					s += " Display Sprites               : " + ((gui.cpu.videoController.checkLCDCBitEnabled(1)) ? "Yes" : "No") + " <BR>";
+					s += " Display Background            : " + ((gui.cpu.videoController.checkLCDCBitEnabled(0)) ? "Yes" : "No") + " <BR>";
 					s += "</PRE></HTML>";
 				} else if (table == hwregs && row == 0 && column == 1) {
 					int j = gui.cpu.videoController.STAT;

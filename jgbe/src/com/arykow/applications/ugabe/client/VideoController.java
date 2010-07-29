@@ -16,45 +16,66 @@
 package com.arykow.applications.ugabe.client;
 
 public final class VideoController {
-	public static enum RGB {
-		RED, GREEN, BLUE;
-	}
 
-	public static enum ColorIndex {
-		FIRST, SECOND, THIRD, FOURTH
-	}
-
-	public static enum ColorType {
-		BACKGROUND, SPRITE1, SPRITE2
-	}
-
-	private final VideoScreen screen;
+	/**
+	 * LCD Control Register Bits 0000 0000 ABCD EFGH
+	 * 
+	 * A : LCD Display => Enabled / Disabled B : Window Tile Map Address =>
+	 * 9C00-9FFF / 9800-9BFF C : Display Window => Yes / No D : BG & Window Tile
+	 * Data Address => 8000-8FFF / 8800-97FF E : BG Tile Map Display Address =>
+	 * 9800-9BFF / 9C00-9FFF F : Sprite Size => 8x16 / 8x8 G : Display Sprites
+	 * => Yes / No H : Display Background => Yes / No
+	 */
+	public int LCDC = 0;
 	public int currentVRAMBank = 0;
 	public int VRAM[] = new int[0x4000];
 	public int objectAttributeMemory[] = new int[40 * 4];
-	protected boolean isCGB;
 	public int LY = 0;
 	public int LYC = 0;
 	public int SCX = 0;
 	public int SCY = 0;
 	public int WX = 0;
 	public int WY = 0;
-	public int LCDC = 0;
-	public int STAT = 0;
 	public int LCDCcntdwn = 0;
-	public boolean useSubscanlineRendering = false;
-	protected int curBGY;
-	public int curWNDY;
-	protected int[][][] scalerx4 = new int[0x100][4][4];
-	private final static int GRAYSHADES[][] = { { 0xa0, 0xe0, 0x20 }, { 0x70, 0xb0, 0x40 }, { 0x40, 0x70, 0x32 }, { 0x10, 0x50, 0x26 } };
-	private int grayColors[][][] = { GRAYSHADES, GRAYSHADES, GRAYSHADES };
+	public int mode3duration = 0;
+	public int STAT_statemachine_state = 0;
+	public int STAT = 0;
 	public int BGPI = 0;
 	public int BGPD[] = new int[8 * 4 * 2];
 	public int OBPI = 0;
 	public int OBPD[] = new int[8 * 4 * 2];
+	public int curWNDY;
+	public boolean patdirty[] = new boolean[1024];
+	public boolean anydirty = true;
+
+	public static enum RGB { RED, GREEN, BLUE; }
+	public static enum ColorIndex { FIRST, SECOND, THIRD, FOURTH }
+	public static enum ColorType { BACKGROUND, SPRITE1, SPRITE2 }
+
+	public int nscale = 3;
+	public boolean allow_writes_in_mode_2_3 = true;
+	public int fskip = 1;
+	public boolean mixFrames;
+	protected boolean isCGB;
+
+	
+	private final static boolean useSubscanlineRendering = false;
+	private final static int GRAYSHADES[][] = { { 0xa0, 0xe0, 0x20 }, { 0x70, 0xb0, 0x40 }, { 0x40, 0x70, 0x32 }, { 0x10, 0x50, 0x26 } };
+
+	private VideoScreen screen;
+	private CPU cpu;
+
+	private int grayColors[][][] = { GRAYSHADES, GRAYSHADES, GRAYSHADES };
 	private int blitImg[][] = new int[VideoScreen.SCREEN_HEIGHT][VideoScreen.SCREEN_WIDTH];
 	private int blitImg_prev[][] = new int[VideoScreen.SCREEN_HEIGHT][VideoScreen.SCREEN_WIDTH];
+	private int paletteColors[] = new int[8 * 4 * 2 * ARRAY_SIZE];
+	private int patternPixels[][][] = new int[4096][][];
+	private int scale = 3;
+	private int cfskip = 0;
 
+	
+	
+	
 	private static final int ARRAY_SIZE = 1;
 
 	private final void updateBLITFromPaletteColors(int srcPos, int dstPos) {
@@ -69,18 +90,6 @@ public final class VideoController {
 		// paletteColors[4 * index + 3] = 0x0FF;
 	}
 
-	private int paletteColors[] = new int[8 * 4 * 2 * ARRAY_SIZE];
-
-	private int patternPixels[][][] = new int[4096][][];
-	public boolean patdirty[] = new boolean[1024];
-	public boolean anydirty = true;
-	private CPU cpu;
-	private int scale = 3;
-	public int nscale = 3;
-	private int cfskip = 0;
-	public int fskip = 1;
-	public boolean mixFrames;
-	public boolean allow_writes_in_mode_2_3 = true;
 
 	public void setGrayShade(int i, int j, int[] colors) {
 		System.arraycopy(colors, 0, grayColors[i][j], 0, RGB.values().length);
@@ -334,7 +343,6 @@ public final class VideoController {
 				screen.swapImage();
 			}
 		}
-		curBGY = 0;
 		curWNDY = 0;
 
 	}
@@ -452,8 +460,6 @@ public final class VideoController {
 		anydirty = false;
 	}
 
-	public int STAT_statemachine_state = 0;
-	public int mode3duration = 0;
 
 	public int render(int cycles) {
 		LCDCcntdwn -= cycles;
@@ -509,7 +515,7 @@ public final class VideoController {
 				} else {
 					STAT = (STAT & 0xFC) | 1;
 					++STAT_statemachine_state;
-					if ((LCDC & 0x80) != 0)
+					if (lcdOperationEnabled())
 						cpu.triggerInterrupt(0);
 					if ((STAT & (1 << 4)) != 0)
 						cpu.triggerInterrupt(1);
@@ -565,7 +571,7 @@ public final class VideoController {
 	private void renderScanLinePart() {
 		if ((STAT_statemachine_state != 1))
 			return;
-		if ((LCDC & 0x80) == 0) {
+		if (!lcdOperationEnabled()) {
 			for (int i = pixpos; i < VideoScreen.SCREEN_WIDTH; ++i) {
 				int x = pixpos + i;
 				if ((x >= 0) && (x < VideoScreen.SCREEN_WIDTH)) {
@@ -586,7 +592,7 @@ public final class VideoController {
 				cyclesToRender -= 2;
 				++curSprite;
 				pixpos -= 8;
-			} else if ((!isCGB) && ((LCDC & (1 << 0)) == 0)) {
+			} else if ((!isCGB) && !checkLCDCBitEnabled(1)) {
 				for (int i = 0; i < 8; ++i) {
 					int x = pixpos + i;
 					if ((x >= 0) && (x < VideoScreen.SCREEN_WIDTH)) {
@@ -595,12 +601,11 @@ public final class VideoController {
 					}
 				}
 			} else {
-				int BGTileMap = ((LCDC & (1 << 3)) == 0) ? 0x1800 : 0x1c00;
 				int bgline = SCY + LY;
 				int bgtilemapindex = (((SCX + pixpos) & 0xff) >> 3) + ((bgline & 0xf8) << 2);
-				int bgtile = VRAM[BGTileMap + bgtilemapindex];
+				int bgtile = VRAM[getBackgroundTileMapAddress() + bgtilemapindex];
 				int bgpal = 0x08 << 2;
-				if (((LCDC & (1 << 4)) == 0)) {
+				if (!checkLCDCBitEnabled(4)) {
 					bgtile ^= 0x80;
 					bgtile += 0x80;
 				}
@@ -620,7 +625,6 @@ public final class VideoController {
 
 		if (pixpos >= 159) {
 			int pricol = 0xff0000;
-			boolean spr8x16 = ((LCDC & (1 << 2)) != 0);
 			for (int curSprite = spriteCountOnScanline - 1; curSprite >= 0; --curSprite) {
 
 				if (!isCGB) {
@@ -629,7 +633,7 @@ public final class VideoController {
 					int xpos = objectAttributeMemory[spritesOnScanline[curSprite] | 1] - 8;
 					int tile = objectAttributeMemory[spritesOnScanline[curSprite] | 2];
 					int attr = objectAttributeMemory[spritesOnScanline[curSprite] | 3];
-					if (spr8x16) {
+					if (checkLCDCBitEnabled(2)) {
 
 						tile &= ~1;
 						tile |= (line >= 8) ? 1 : 0;
@@ -663,7 +667,7 @@ public final class VideoController {
 	int[] spritesOnScanline = new int[40];
 
 	private int setSpritesOnScanline() {
-		int sprYSize = ((LCDC & (1 << 2)) != 0) ? 16 : 8;
+		int sprYSize = checkLCDCBitEnabled(2) ? 16 : 8;
 		int count = 0;
 		for (int spr = 0; (spr < 40 * 4); spr += 4) {
 			int sprPos = LY - (objectAttributeMemory[spr] - 16);
@@ -691,14 +695,14 @@ public final class VideoController {
 
 	public int read(int index) {
 		if (index < 0xa000) {
-			if (allow_writes_in_mode_2_3 || ((LCDC & 0x80) == 0) || ((STAT & 3) != 3)) {
+			if (allow_writes_in_mode_2_3 || !lcdOperationEnabled() || ((STAT & 3) != 3)) {
 				return VRAM[index - 0x8000 + currentVRAMBank];
 			}
 			CPULogger.printf("WARNING: Read from VRAM[0x%04x] denied during mode " + (STAT & 3) + ", PC=0x%04x\n", index, cpu.getPC());
 			return 0xff;
 		}
 		if ((index > 0xfdff) && (index < 0xfea0)) {
-			if (allow_writes_in_mode_2_3 || ((LCDC & 0x80) == 0) || ((STAT & 2) == 0)) {
+			if (allow_writes_in_mode_2_3 || !lcdOperationEnabled() || ((STAT & 2) == 0)) {
 				return objectAttributeMemory[index - 0xfe00];
 			}
 			CPULogger.printf("WARNING: Read from OAM[0x%04x] denied during mode " + (STAT & 3) + ", PC=0x%04x\n", index, cpu.getPC());
@@ -710,8 +714,7 @@ public final class VideoController {
 			b = LCDC;
 			break;
 		case 0x01:
-
-			b = ((LCDC & 0x80) == 0) ? (STAT & 0x7c) | 0x00 : STAT;
+			b = lcdOperationEnabled() ? STAT : (STAT & 0x7c) | 0x00;
 			b = STAT;
 			break;
 		case 0x02:
@@ -721,9 +724,7 @@ public final class VideoController {
 			b = SCX;
 			break;
 		case 0x04:
-
-			b = ((LCDC & 0x80) == 0) ? 0 : LY;
-
+			b = lcdOperationEnabled() ? LY : 0;
 			break;
 		case 0x05:
 			b = LYC;
@@ -776,7 +777,7 @@ public final class VideoController {
 
 	public void write(int index, int value) {
 		if (index < 0xa000) {
-			if (allow_writes_in_mode_2_3 || ((LCDC & 0x80) == 0) || ((STAT & 3) != 3)) {
+			if (allow_writes_in_mode_2_3 || !lcdOperationEnabled() || ((STAT & 3) != 3)) {
 				VRAM[index - 0x8000 + currentVRAMBank] = value;
 				patdirty[(currentVRAMBank >> 4) + ((index - 0x8000) >> 4)] = true;
 				anydirty = true;
@@ -786,7 +787,7 @@ public final class VideoController {
 			return;
 		}
 		if ((index > 0xfdff) && (index < 0xfea0)) {
-			if (allow_writes_in_mode_2_3 || ((LCDC & 0x80) == 0) || ((STAT & 2) == 0)) {
+			if (allow_writes_in_mode_2_3 || !lcdOperationEnabled() || ((STAT & 2) == 0)) {
 				objectAttributeMemory[index - 0xfe00] = value;
 				return;
 			}
@@ -795,14 +796,14 @@ public final class VideoController {
 		}
 		switch (index & 0x3f) {
 		case 0x00:
-			if (((value & 0x80) != 0) && ((LCDC & 0x80) == 0))
+			if (((value & 0x80) != 0) && !lcdOperationEnabled()) {
 				restart();
+			}
 			LCDC = value;
 			break;
 		case 0x01:
 			STAT = (STAT & 0x87) | (value & 0x78);
-			if (!isCGB && ((STAT & 2) == 0) && ((LCDC & 0x80) != 0)) {
-
+			if (!isCGB && ((STAT & 2) == 0) && lcdOperationEnabled()) {
 				cpu.triggerInterrupt(1);
 			}
 			break;
@@ -919,49 +920,51 @@ public final class VideoController {
 		return currentVRAMBank / 0x2000;
 	}
 
-	private int TileData;
-	private int BGTileMap;
-	private int WindowTileMap;
-	private int bgY;
-	private int bgTileY;
-	private int bgOffsY;
-	private int bgX;
-	private int bgTileX;
-	private int bgOffsX;
-	private int windX;
-	private int tilebufBG[] = new int[0x200];
+	public boolean checkLCDCBitEnabled(int index) {
+		return (LCDC & (1 << index)) != 0;
+	}
+
+	private int getWindowTileMapAddress() {
+		return checkLCDCBitEnabled(6) ? 0x1C00 : 0x1800;
+	}
+
+	private int getTileMapAddress() {
+		return checkLCDCBitEnabled(4) ? 0x0000 : 0x0800;
+	}
+
+	private int getBackgroundTileMapAddress() {
+		return checkLCDCBitEnabled(3) ? 0x1C00 : 0x1800;
+	}
+
+	private boolean lcdOperationEnabled() {
+		return checkLCDCBitEnabled(7);
+	}
+
+	private boolean windowDisplayEnabled() {
+		return checkLCDCBitEnabled(5);
+	}
 
 	public void renderScanLine() {
-
-		if (cfskip != 0)
-			return;
-		if ((LCDC & (1 << 7)) != 0) {
-
+		int tilebufBG[] = new int[0x200];
+		if (cfskip == 0 && lcdOperationEnabled()) {
 			updatePatternPixels();
-
-			TileData = ((LCDC & (1 << 4)) == 0) ? 0x0800 : 0x0000;
-			BGTileMap = ((LCDC & (1 << 3)) == 0) ? 0x1800 : 0x1c00;
-			WindowTileMap = ((LCDC & (1 << 6)) == 0) ? 0x1800 : 0x1c00;
-
-			windX = VideoScreen.SCREEN_WIDTH;
-			if (((LCDC & (1 << 5)) != 0) && (WX >= 0) && (WX < 167) && (WY >= 0) && (WY < VideoScreen.SCREEN_HEIGHT) && (LY >= WY))
+			int windX = VideoScreen.SCREEN_WIDTH;
+			if (windowDisplayEnabled() && (WX >= 0) && (WX < 167) && (WY >= 0) && (WY < VideoScreen.SCREEN_HEIGHT) && (LY >= WY)) {
 				windX = (WX - 7);
-
-			renderScanlineBG();
-
-			if (windX < VideoScreen.SCREEN_WIDTH) {
-				renderScanlineWindow();
 			}
-
-			if ((LCDC & (1 << 1)) != 0) {
+			renderScanlineBG(windX, tilebufBG);
+			if (windX < VideoScreen.SCREEN_WIDTH) {
+				renderScanlineWindow(windX, tilebufBG);
+			}
+			if (checkLCDCBitEnabled(1)) {
 				renderScanlineSprites();
 			}
 		}
 	}
 
-	private void calcBGTileBuf() {
+	private void calcBGTileBuf(int bgTileX, int bgTileY, int windX, int tilebufBG[]) {
 
-		int tileMap = BGTileMap + bgTileX + (bgTileY * 32);
+		int tileMap = getBackgroundTileMapAddress() + bgTileX + (bgTileY * 32);
 		int attrMap = tileMap + 0x2000;
 		int bufMap = 0;
 		int cnt = ((windX + 7) >> 3) + 1;
@@ -969,7 +972,7 @@ public final class VideoController {
 		for (int i = 0; i < cnt; ++i) {
 			int tile = VRAM[tileMap++];
 			int attr = VRAM[attrMap++];
-			if (TileData == 0x0800) {
+			if (getTileMapAddress() == 0x0800) {
 				tile ^= 0x80;
 				tile += 0x80;
 			}
@@ -982,21 +985,21 @@ public final class VideoController {
 		}
 	}
 
-	private void renderScanlineBG() {
+	private void renderScanlineBG(int windX, int tilebufBG[]) {
 		int bufMap = 0;
 		int cnt = windX;
 		if (cnt == 0) {
 			return;
 		}
 
-		bgY = (SCY + LY) & 0xFF;
-		bgTileY = bgY >> 3;
-		bgOffsY = bgY & 7;
-		bgX = SCX;
-		bgTileX = bgX >> 3;
-		bgOffsX = bgX & 7;
+		int bgY = (SCY + LY) & 0xFF;
+		int bgTileY = bgY >> 3;
+		int bgOffsY = bgY & 7;
+		int bgX = SCX;
+		int bgTileX = bgX >> 3;
+		int bgOffsX = bgX & 7;
 
-		calcBGTileBuf();
+		calcBGTileBuf(bgTileX, bgTileY, windX, tilebufBG);
 
 		int patternLine[] = patternPixels[tilebufBG[bufMap++]][bgOffsY];
 		int tilePal = tilebufBG[bufMap++];
@@ -1025,8 +1028,8 @@ public final class VideoController {
 		;
 	}
 
-	private void calcWindTileBuf() {
-		int tileMap = WindowTileMap + (bgTileY * 32);
+	private void calcWindTileBuf(int bgTileY, int windX, int tilebufBG[]) {
+		int tileMap = getWindowTileMapAddress() + (bgTileY * 32);
 		int attrMap = tileMap + 0x2000;
 		int bufMap = 0;
 		int cnt = ((VideoScreen.SCREEN_WIDTH - (windX + 7)) >> 3) + 2;
@@ -1035,7 +1038,7 @@ public final class VideoController {
 			int tile = VRAM[tileMap++];
 
 			int attr = VRAM[attrMap++];
-			if (TileData == 0x0800) {
+			if (getTileMapAddress() == 0x0800) {
 				tile ^= 0x80;
 				tile += 0x80;
 			}
@@ -1048,19 +1051,19 @@ public final class VideoController {
 		}
 	}
 
-	private void renderScanlineWindow() {
+	private void renderScanlineWindow(int windX, int tilebufBG[]) {
 		int bufMap = 0;
 		int curX = ((windX) < (0) ? (0) : (windX));
 		int cnt = VideoScreen.SCREEN_WIDTH - curX;
 		if (cnt == 0)
 			return;
-		bgY = curWNDY++;
-		bgTileY = bgY >> 3;
-		bgOffsY = bgY & 7;
+		int bgY = curWNDY++;
+		int bgTileY = bgY >> 3;
+		int bgOffsY = bgY & 7;
 
-		bgOffsX = curX - windX;
+		int bgOffsX = curX - windX;
 
-		calcWindTileBuf();
+		calcWindTileBuf(bgTileY, windX, tilebufBG);
 
 		int PatLine[] = patternPixels[tilebufBG[bufMap++]][bgOffsY];
 		int TilePal = tilebufBG[bufMap++];
@@ -1096,12 +1099,8 @@ public final class VideoController {
 			this.big = big;
 		}
 
-		public static SpriteType createSpriteType(int LCDC) {
-			SpriteType result = SMALL;
-			if (((LCDC & (1 << 2)) != 0)) {
-				result = BIG;
-			}
-			return result;
+		public static SpriteType createSpriteType(boolean big) {
+			return big ? BIG : SMALL;
 		}
 	}
 
@@ -1130,7 +1129,7 @@ public final class VideoController {
 	 *                Sprite colors are taken from OBJ1PAL if this bit is set to 1 and from OBJ0PAL otherwise.
 	 */
 	private void renderScanlineSprites() {
-		SpriteType spriteType = SpriteType.createSpriteType(LCDC);
+		SpriteType spriteType = SpriteType.createSpriteType(checkLCDCBitEnabled(2));
 
 		for (int spriteIndex = 0; spriteIndex < 40; ++spriteIndex) {
 			int spritePositionY = objectAttributeMemory[(spriteIndex * 4) + 0];
