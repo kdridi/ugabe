@@ -281,14 +281,22 @@ public final class GUI extends JApplet implements ActionListener, ItemListener, 
 			int height = scale * SCREEN_HEIGHT;
 			drawImg[0] = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 			drawImg[1] = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+			pixels = new int[width * height * VideoController.ARRAY_SIZE];
 		}
 
 		public Image getImage() {
-			return drawImg[curDrawImg];
+			BufferedImage result = drawImg[curDrawImg];
+			int[] data = DataBufferInt.class.cast(result.getRaster().getDataBuffer()).getData();
+			for (int index = 0; index < data.length; index++) {
+				data[index] = ((pixels[4 * index + 0] << 16) | (pixels[4 * index + 1] << 8) | (pixels[4 * index + 2] << 0));
+			}
+			return result;
 		}
 
+		private int[] pixels;
+
 		public int[] getPixels() {
-			return DataBufferInt.class.cast(drawImg[curDrawImg ^ 1].getRaster().getDataBuffer()).getData();
+			return pixels;
 		}
 
 		public int interpolation;
@@ -749,7 +757,7 @@ public final class GUI extends JApplet implements ActionListener, ItemListener, 
 	public void showGUI() {
 		Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
 		Point p = new Point();
-		p.setLocation((((double)d.getWidth()) / 2) - (((double)frame.getWidth()) / 2), (((double)d.getHeight()) / 2) - (((double)frame.getHeight()) / 2));
+		p.setLocation((((double) d.getWidth()) / 2) - (((double) frame.getWidth()) / 2), (((double) d.getHeight()) / 2) - (((double) frame.getHeight()) / 2));
 		frame.setLocation(p);
 		frame.setVisible(true);
 	}

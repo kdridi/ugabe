@@ -56,7 +56,7 @@ public final class VideoController {
 	public static enum ColorIndex { FIRST, SECOND, THIRD, FOURTH }
 	public static enum ColorType { BACKGROUND, SPRITE1, SPRITE2 }
 
-	public int nscale = 3;
+	public int nscale = 1;
 	public boolean allow_writes_in_mode_2_3 = true;
 	public int fskip = 1;
 	public boolean mixFrames;
@@ -74,21 +74,20 @@ public final class VideoController {
 	private int blitImg_prev[] = new int[VideoScreen.SCREEN_HEIGHT * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE];
 	private int paletteColors[] = new int[8 * 4 * 2 * ARRAY_SIZE];
 	private int patternPixels[][][] = new int[4096][][];
-	private int scale = 3;
+	private int scale = 1;
 	private int cfskip = 0;
 
-	private static final int ARRAY_SIZE = 1;
+	public static final int ARRAY_SIZE = 4;
 
 	private final void updateBLITFromPaletteColors(int srcPos, int dstPos) {
-		System.arraycopy(paletteColors, srcPos * ARRAY_SIZE, blitImg, LY * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + dstPos, ARRAY_SIZE);
+		System.arraycopy(paletteColors, srcPos * ARRAY_SIZE, blitImg, ARRAY_SIZE * (LY * VideoScreen.SCREEN_WIDTH + dstPos), ARRAY_SIZE);
 	}
 
 	private void updatePaletteColors(int index, int r, int g, int b) {
-		paletteColors[index] = ((r << 16) | (g << 8) | (b << 0));
-		// paletteColors[4 * index + 0] = r & 0x0FF;
-		// paletteColors[4 * index + 1] = g & 0x0FF;
-		// paletteColors[4 * index + 2] = b & 0x0FF;
-		// paletteColors[4 * index + 3] = 0x0FF;
+		paletteColors[4 * index + 0] = r & 0x0FF;
+		paletteColors[4 * index + 1] = g & 0x0FF;
+		paletteColors[4 * index + 2] = b & 0x0FF;
+		paletteColors[4 * index + 3] = 0x0FF;
 	}
 
 
