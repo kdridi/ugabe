@@ -70,20 +70,17 @@ public final class VideoController {
 	private CPU cpu;
 
 	private int grayColors[][][] = { GRAYSHADES, GRAYSHADES, GRAYSHADES };
-	private int blitImg[][] = new int[VideoScreen.SCREEN_HEIGHT][VideoScreen.SCREEN_WIDTH];
-	private int blitImg_prev[][] = new int[VideoScreen.SCREEN_HEIGHT][VideoScreen.SCREEN_WIDTH];
+	private int blitImg[] = new int[VideoScreen.SCREEN_HEIGHT * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE];
+	private int blitImg_prev[] = new int[VideoScreen.SCREEN_HEIGHT * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE];
 	private int paletteColors[] = new int[8 * 4 * 2 * ARRAY_SIZE];
 	private int patternPixels[][][] = new int[4096][][];
 	private int scale = 3;
 	private int cfskip = 0;
 
-	
-	
-	
 	private static final int ARRAY_SIZE = 1;
 
 	private final void updateBLITFromPaletteColors(int srcPos, int dstPos) {
-		System.arraycopy(paletteColors, srcPos, blitImg[LY], dstPos, ARRAY_SIZE);
+		System.arraycopy(paletteColors, srcPos * ARRAY_SIZE, blitImg, LY * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + dstPos, ARRAY_SIZE);
 	}
 
 	private void updatePaletteColors(int index, int r, int g, int b) {
@@ -201,35 +198,29 @@ public final class VideoController {
 			if (mixFrames) {
 				for (int y = 0; y < VideoScreen.SCREEN_HEIGHT; ++y) {
 					for (int x = 0; x < VideoScreen.SCREEN_WIDTH; ++x) {
-						blitImg[y][x] = (((((blitImg[y][x]) ^ (blitImg_prev[y][x])) & 0xfffefefe) >> 1) + ((blitImg[y][x]) & (blitImg_prev[y][x])));
-						blitImg_prev[y][x] = blitImg[y][x];
+						blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x] = (((((blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x]) ^ (blitImg_prev[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x])) & 0xfffefefe) >> 1) + ((blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x]) & (blitImg_prev[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x])));
+						blitImg_prev[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x] = blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
 					}
 				}
 			}
 			if (scale == 1) {
-				for (int y = 0; y < VideoScreen.SCREEN_HEIGHT; ++y) {
-					int[] blitLine = blitImg[y];
-					System.arraycopy(blitLine, 0, pixels, y * VideoScreen.SCREEN_WIDTH, VideoScreen.SCREEN_WIDTH);
-				}
+				System.arraycopy(blitImg, 0, pixels, 0, blitImg.length);
 			} else if (scale == 2) {
 				int ti1 = -1, ti2 = -1;
 				ti2 += VideoScreen.SCREEN_WIDTH * 2;
 				for (int y = 0; y < VideoScreen.SCREEN_HEIGHT; ++y) {
 					int yn = (y == 0) ? 0 : y - 1;
 					int yp = (y == 143) ? 143 : y + 1;
-					int[] blitLine2 = blitImg[y];
-					int[] blitLine1 = blitImg[yn];
-					int[] blitLine3 = blitImg[yp];
 					for (int x = 0; x < VideoScreen.SCREEN_WIDTH; ++x) {
 						int xn = (x == 0) ? 0 : x - 1;
 						int xp = (x == 159) ? 159 : x + 1;
-						if (!((blitLine2[xn]) == (blitLine2[xp])) && !((blitLine1[x]) == (blitLine3[x]))) {
-							pixels[++ti1] = ((blitLine1[x]) == (blitLine2[xn])) ? blitLine2[xn] : blitLine2[x];
-							pixels[++ti1] = ((blitLine1[x]) == (blitLine2[xp])) ? blitLine2[xp] : blitLine2[x];
-							pixels[++ti2] = ((blitLine3[x]) == (blitLine2[xn])) ? blitLine2[xn] : blitLine2[x];
-							pixels[++ti2] = ((blitLine3[x]) == (blitLine2[xp])) ? blitLine2[xp] : blitLine2[x];
+						if (!((blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xn]) == (blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xp])) && !((blitImg[yn * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x]) == (blitImg[yp * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x]))) {
+							pixels[++ti1] = ((blitImg[yn * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x]) == (blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xn])) ? blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xn] : blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
+							pixels[++ti1] = ((blitImg[yn * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x]) == (blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xp])) ? blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xp] : blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
+							pixels[++ti2] = ((blitImg[yp * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x]) == (blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xn])) ? blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xn] : blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
+							pixels[++ti2] = ((blitImg[yp * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x]) == (blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xp])) ? blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xp] : blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
 						} else {
-							int col = blitLine2[x];
+							int col = blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
 							pixels[++ti1] = col;
 							pixels[++ti1] = col;
 							pixels[++ti2] = col;
@@ -247,24 +238,21 @@ public final class VideoController {
 				for (int y = 0; y < VideoScreen.SCREEN_HEIGHT; ++y) {
 					int yn = (y == 0) ? 0 : y - 1;
 					int yp = (y == 143) ? 143 : y + 1;
-					int[] blitLine2 = blitImg[y];
-					int[] blitLine1 = blitImg[yn];
-					int[] blitLine3 = blitImg[yp];
 					for (int x = 0; x < VideoScreen.SCREEN_WIDTH; ++x) {
 						int xn = (x == 0) ? 0 : x - 1;
 						int xp = (x == 159) ? 159 : x + 1;
-						if (!((blitLine1[x]) == (blitLine3[x])) && !((blitLine2[xn]) == (blitLine2[xp]))) {
-							pixels[++ti1] = ((blitLine2[xn]) == (blitLine1[x])) ? blitLine2[xn] : blitLine2[x];
-							pixels[++ti1] = (((blitLine2[xn]) == (blitLine1[x])) && !((blitLine2[x]) == (blitLine1[xp]))) || (((blitLine1[x]) == (blitLine2[xp])) && !((blitLine2[x]) == (blitLine1[xn]))) ? blitLine1[x] : blitLine2[x];
-							pixels[++ti1] = ((blitLine1[x]) == (blitLine2[xp])) ? blitLine2[xp] : blitLine2[x];
-							pixels[++ti2] = (((blitLine2[xn]) == (blitLine1[x])) && !((blitLine2[x]) == (blitLine3[xn]))) || (((blitLine2[xn]) == (blitLine3[x])) && !((blitLine2[x]) == (blitLine1[xn]))) ? blitLine2[xn] : blitLine2[x];
-							pixels[++ti2] = blitLine2[x];
-							pixels[++ti2] = (((blitLine1[x]) == (blitLine2[xp])) && !((blitLine2[x]) == (blitLine3[xp]))) || (((blitLine3[x]) == (blitLine2[xp])) && !((blitLine2[x]) == (blitLine1[xp]))) ? blitLine2[xp] : blitLine2[x];
-							pixels[++ti3] = ((blitLine2[xn]) == (blitLine3[x])) ? blitLine2[xn] : blitLine2[x];
-							pixels[++ti3] = (((blitLine2[xn]) == (blitLine3[x])) && !((blitLine2[x]) == (blitLine3[xp]))) || (((blitLine3[x]) == (blitLine2[xp])) && !((blitLine2[x]) == (blitLine3[xn]))) ? blitLine3[x] : blitLine2[x];
-							pixels[++ti3] = ((blitLine3[x]) == (blitLine2[xp])) ? blitLine2[xp] : blitLine2[x];
+						if (!((blitImg[yn * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x]) == (blitImg[yp * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x])) && !((blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xn]) == (blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xp]))) {
+							pixels[++ti1] = ((blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xn]) == (blitImg[yn * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x])) ? blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xn] : blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
+							pixels[++ti1] = (((blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xn]) == (blitImg[yn * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x])) && !((blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x]) == (blitImg[yn * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xp]))) || (((blitImg[yn * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x]) == (blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xp])) && !((blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x]) == (blitImg[yn * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xn]))) ? blitImg[yn * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x] : blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
+							pixels[++ti1] = ((blitImg[yn * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x]) == (blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xp])) ? blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xp] : blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
+							pixels[++ti2] = (((blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xn]) == (blitImg[yn * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x])) && !((blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x]) == (blitImg[yp * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xn]))) || (((blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xn]) == (blitImg[yp * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x])) && !((blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x]) == (blitImg[yn * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xn]))) ? blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xn] : blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
+							pixels[++ti2] = blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
+							pixels[++ti2] = (((blitImg[yn * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x]) == (blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xp])) && !((blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x]) == (blitImg[yp * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xp]))) || (((blitImg[yp * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x]) == (blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xp])) && !((blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x]) == (blitImg[yn * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xp]))) ? blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xp] : blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
+							pixels[++ti3] = ((blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xn]) == (blitImg[yp * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x])) ? blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xn] : blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
+							pixels[++ti3] = (((blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xn]) == (blitImg[yp * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x])) && !((blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x]) == (blitImg[yp * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xp]))) || (((blitImg[yp * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x]) == (blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xp])) && !((blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x]) == (blitImg[yp * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xn]))) ? blitImg[yp * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x] : blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
+							pixels[++ti3] = ((blitImg[yp * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x]) == (blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xp])) ? blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xp] : blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
 						} else {
-							int col = blitLine2[x];
+							int col = blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
 							pixels[++ti1] = col;
 							pixels[++ti1] = col;
 							pixels[++ti1] = col;
@@ -289,52 +277,49 @@ public final class VideoController {
 				for (int y = 0; y < VideoScreen.SCREEN_HEIGHT; ++y) {
 					int yn = (y == 0) ? 0 : y - 1;
 					int yp = (y == 143) ? 143 : y + 1;
-					int[] blitLine2 = blitImg[y];
-					int[] blitLine1 = blitImg[yn];
-					int[] blitLine3 = blitImg[yp];
 					for (int x = 0; x < VideoScreen.SCREEN_WIDTH; ++x) {
 						int xn = (x == 0) ? 0 : x - 1;
 						int xp = (x == 159) ? 159 : x + 1;
 
-						if (((blitLine1[x]) == (blitLine2[xn]))) {
-							pixels[++ti1] = blitLine1[x];
-							pixels[++ti1] = blitLine1[x];
-							pixels[++ti2] = blitLine1[x];
+						if (((blitImg[yn * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x]) == (blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xn]))) {
+							pixels[++ti1] = blitImg[yn * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
+							pixels[++ti1] = blitImg[yn * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
+							pixels[++ti2] = blitImg[yn * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
 						} else {
-							pixels[++ti1] = blitLine2[x];
-							pixels[++ti1] = blitLine2[x];
-							pixels[++ti2] = blitLine2[x];
+							pixels[++ti1] = blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
+							pixels[++ti1] = blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
+							pixels[++ti2] = blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
 						}
-						pixels[++ti2] = blitLine2[x];
-						pixels[++ti2] = blitLine2[x];
-						if (((blitLine1[x]) == (blitLine2[xp]))) {
-							pixels[++ti1] = blitLine1[x];
-							pixels[++ti1] = blitLine1[x];
-							pixels[++ti2] = blitLine1[x];
+						pixels[++ti2] = blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
+						pixels[++ti2] = blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
+						if (((blitImg[yn * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x]) == (blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xp]))) {
+							pixels[++ti1] = blitImg[yn * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
+							pixels[++ti1] = blitImg[yn * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
+							pixels[++ti2] = blitImg[yn * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
 						} else {
-							pixels[++ti1] = blitLine2[x];
-							pixels[++ti1] = blitLine2[x];
-							pixels[++ti2] = blitLine2[x];
+							pixels[++ti1] = blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
+							pixels[++ti1] = blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
+							pixels[++ti2] = blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
 						}
-						if (((blitLine3[x]) == (blitLine2[xn]))) {
-							pixels[++ti3] = blitLine3[x];
-							pixels[++ti4] = blitLine3[x];
-							pixels[++ti4] = blitLine3[x];
+						if (((blitImg[yp * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x]) == (blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xn]))) {
+							pixels[++ti3] = blitImg[yp * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
+							pixels[++ti4] = blitImg[yp * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
+							pixels[++ti4] = blitImg[yp * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
 						} else {
-							pixels[++ti3] = blitLine2[x];
-							pixels[++ti4] = blitLine2[x];
-							pixels[++ti4] = blitLine2[x];
+							pixels[++ti3] = blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
+							pixels[++ti4] = blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
+							pixels[++ti4] = blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
 						}
-						pixels[++ti3] = blitLine2[x];
-						pixels[++ti3] = blitLine2[x];
-						if (((blitLine3[x]) == (blitLine2[xp]))) {
-							pixels[++ti3] = blitLine3[x];
-							pixels[++ti4] = blitLine3[x];
-							pixels[++ti4] = blitLine3[x];
+						pixels[++ti3] = blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
+						pixels[++ti3] = blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
+						if (((blitImg[yp * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x]) == (blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + xp]))) {
+							pixels[++ti3] = blitImg[yp * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
+							pixels[++ti4] = blitImg[yp * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
+							pixels[++ti4] = blitImg[yp * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
 						} else {
-							pixels[++ti3] = blitLine2[x];
-							pixels[++ti4] = blitLine2[x];
-							pixels[++ti4] = blitLine2[x];
+							pixels[++ti3] = blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
+							pixels[++ti4] = blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
+							pixels[++ti4] = blitImg[y * VideoScreen.SCREEN_WIDTH * ARRAY_SIZE + x];
 						}
 					}
 					ti1 += VideoScreen.SCREEN_WIDTH * 4 * 3;
