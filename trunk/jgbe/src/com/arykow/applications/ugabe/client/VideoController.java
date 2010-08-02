@@ -16,15 +16,18 @@
 package com.arykow.applications.ugabe.client;
 
 public final class VideoController {
-
 	/**
-	 * LCD Control Register Bits 0000 0000 ABCD EFGH
+	 * LCD Control Register
+	 * Bits 0000 0000 ABCD EFGH
 	 * 
-	 * A : LCD Display => Enabled / Disabled B : Window Tile Map Address =>
-	 * 9C00-9FFF / 9800-9BFF C : Display Window => Yes / No D : BG & Window Tile
-	 * Data Address => 8000-8FFF / 8800-97FF E : BG Tile Map Display Address =>
-	 * 9800-9BFF / 9C00-9FFF F : Sprite Size => 8x16 / 8x8 G : Display Sprites
-	 * => Yes / No H : Display Background => Yes / No
+	 * A : LCD Display						=> Enabled / Disabled
+	 * B : Window Tile Map Address			=> 9C00-9FFF / 9800-9BFF
+	 * C : Display Window					=> Yes / No
+	 * D : BG & Window Tile Data Address	=> 8000-8FFF / 8800-97FF
+	 * E : BG Tile Map Display Address		=> 9800-9BFF / 9C00-9FFF
+	 * F : Sprite Size						=> 8x16 / 8x8
+	 * G : Display Sprites					=> Yes / No
+	 * H : Display Background				=> Yes / No
 	 */
 	public int LCDC = 0;
 	public int currentVRAMBank = 0;
@@ -48,6 +51,7 @@ public final class VideoController {
 
 	public boolean dirtyPatternPixel[] = new boolean[1024];
 	public boolean dirtyPatternPixels = true;
+
 	public void setDirtyPatternPixels(boolean dirty, boolean propagation) {
 		dirtyPatternPixels = dirty;
 		if (propagation) {
@@ -56,9 +60,10 @@ public final class VideoController {
 			}
 		}
 	}
+
 	private void setDirtyPatternPixel(int index, boolean dirty) {
 		dirtyPatternPixel[index] = dirty;
-		if(dirty) {
+		if (dirty) {
 			setDirtyPatternPixels(dirty, false);
 		}
 	}
@@ -1121,22 +1126,26 @@ public final class VideoController {
 	/**
 	 * http://fms.komkon.org/GameBoy/Tech/Software.html
 	 * 
-	 * Sprites GameBoy video controller can display up to 40 sprites either in
-	 * 8x8 or in 8x16 mode. Sprite patterns have the same format as tiles, but
-	 * they are taken from the Sprite Pattern Table located at 8000-8FFF and
-	 * therefore have unsigned numbers. Sprite attributes reside in the Sprite
-	 * Attribute Table (aka OAM) at FE00-FE9F. OAM (Object Attribute Memory) is
-	 * divided into 40 4-byte blocks each of which corresponds to a sprite.
+	 * Sprites
+	 * GameBoy video controller can display up to 40 sprites either in 8x8 or in 8x16 mode.
+	 * Sprite patterns have the same format as tiles, but they are taken from the Sprite Pattern Table located at 8000-8FFF and therefore have unsigned numbers.
+	 * Sprite attributes reside in the Sprite Attribute Table (aka OAM) at FE00-FE9F.
+	 * OAM (Object Attribute Memory) is divided into 40 4-byte blocks each of which corresponds to a sprite.
 	 * 
-	 * Blocks have the following format: Byte0 Y position on the screen Byte1 X
-	 * position on the screen Byte2 Pattern number 0-255 [notice that unlike
-	 * tile numbers, sprite pattern numbers are unsigned] Byte3 Flags: Bit7
-	 * Priority Sprite is displayed in front of the window if this bit is set to
-	 * 1. Otherwise, sprite is shown behind the window but in front of the
-	 * background. Bit6 Y flip Sprite pattern is flipped vertically if this bit
-	 * is set to 1. Bit5 X flip Sprite pattern is flipped horizontally if this
-	 * bit is set to 1. Bit4 Palette number Sprite colors are taken from OBJ1PAL
-	 * if this bit is set to 1 and from OBJ0PAL otherwise.
+	 * Blocks have the following format:
+	 *   Byte0  Y position on the screen
+	 *   Byte1  X position on the screen
+	 *   Byte2  Pattern number 0-255 [notice that unlike tile numbers, sprite pattern numbers are unsigned] 
+	 *   Byte3  Flags:
+	 *          Bit7  Priority
+	 *                Sprite is displayed in front of the window if this bit is set to 1.
+	 *                Otherwise, sprite is shown behind the window but in front of the background.
+	 *          Bit6  Y flip
+	 *                Sprite pattern is flipped vertically if this bit is set to 1.
+	 *          Bit5  X flip
+	 *                Sprite pattern is flipped horizontally if this bit is set to 1.
+	 *          Bit4  Palette number
+	 *                Sprite colors are taken from OBJ1PAL if this bit is set to 1 and from OBJ0PAL otherwise.
 	 */
 	private void renderScanlineSprites() {
 		SpriteType spriteType = SpriteType.createSpriteType(checkLCDCBitEnabled(2));
