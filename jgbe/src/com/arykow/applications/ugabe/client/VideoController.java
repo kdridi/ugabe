@@ -58,10 +58,7 @@ public final class VideoController {
 		BACKGROUND, SPRITE1, SPRITE2
 	}
 
-	public int nscale = 3;
 	public boolean allow_writes_in_mode_2_3 = true;
-	public int fskip = 1;
-	public boolean mixFrames;
 	protected boolean isCGB;
 
 	private final static boolean useSubscanlineRendering = false;
@@ -71,7 +68,7 @@ public final class VideoController {
 	private ImageRenderer imageRenderer;
 
 	private int grayColors[][][] = { GRAYSHADES, GRAYSHADES, GRAYSHADES };
-	int scale = 3;
+	public int fskip = 1;
 	int cfskip = 0;
 
 	
@@ -159,10 +156,9 @@ public final class VideoController {
 			VRAM[i] = 0;
 	}
 
-	public VideoController(CPU cpu, int image_width, int image_height, ImageRenderer imageController) {
+	public VideoController(CPU cpu, ImageRenderer imageController) {
 		this.cpu = cpu;
 		this.imageRenderer = imageController;
-//		screen.scaleImage(scale = nscale);
 		reset();
 	}
 
@@ -178,13 +174,13 @@ public final class VideoController {
 			--index;
 		int temp[] = null;
 		temp = curColors[(value >> 0) & 3];
-		imageRenderer.updatePaletteColors((index << 2) | 0, temp[0], temp[1], temp[2]);
+		imageRenderer.updatePalette((index << 2) | 0, temp[0], temp[1], temp[2]);
 		temp = curColors[(value >> 2) & 3];
-		imageRenderer.updatePaletteColors((index << 2) | 1, temp[0], temp[1], temp[2]);
+		imageRenderer.updatePalette((index << 2) | 1, temp[0], temp[1], temp[2]);
 		temp = curColors[(value >> 4) & 3];
-		imageRenderer.updatePaletteColors((index << 2) | 2, temp[0], temp[1], temp[2]);
+		imageRenderer.updatePalette((index << 2) | 2, temp[0], temp[1], temp[2]);
 		temp = curColors[(value >> 6) & 3];
-		imageRenderer.updatePaletteColors((index << 2) | 3, temp[0], temp[1], temp[2]);
+		imageRenderer.updatePalette((index << 2) | 3, temp[0], temp[1], temp[2]);
 	}
 
 	public void setBGColData(int value) {
@@ -236,7 +232,7 @@ public final class VideoController {
 		if (value != null) {
 			paletteColorIndex |= value.intValue();
 		}
-		imageRenderer.updatePaletteColors(paletteColorIndex, r, g, b);
+		imageRenderer.updatePalette(paletteColorIndex, r, g, b);
 	}
 
 	public int getOBColData() {
@@ -271,7 +267,7 @@ public final class VideoController {
 				STAT &= 0xFC;
 				if ((STAT & (1 << 3)) != 0)
 					cpu.triggerInterrupt(1);
-				if (LY < VideoScreen.SCREEN_HEIGHT)
+				if (LY < ImageRenderer.SCREEN_HEIGHT)
 					cpu.elapseTime(cpu.hblank_dma());
 				++STAT_statemachine_state;
 				break;
@@ -282,7 +278,7 @@ public final class VideoController {
 				++STAT_statemachine_state;
 				break;
 			case 3:
-				if (LY < VideoScreen.SCREEN_HEIGHT) {
+				if (LY < ImageRenderer.SCREEN_HEIGHT) {
 					LCDCcntdwn += 80;
 					STAT = (STAT & 0xFC) | 2;
 					if (LY == LYC) {
@@ -303,7 +299,13 @@ public final class VideoController {
 					if ((STAT & (1 << 4)) != 0) {
 						cpu.triggerInterrupt(1);
 					}
-					imageRenderer.blitImage(this);
+
+					cfskip--;
+					if (cfskip < 0) {
+						cfskip += fskip;
+						imageRenderer.render();
+					}
+					curWNDY = 0;
 				}
 				break;
 			case 4:
@@ -349,20 +351,20 @@ public final class VideoController {
 
 	int pixpos = 0;
 	int cyclepos = 0;
-	int[] zbuffer = new int[VideoScreen.SCREEN_WIDTH];
+	int[] zbuffer = new int[ImageRenderer.SCREEN_WIDTH];
 	int curSprite = 0;
 
 	private void renderScanLinePart() {
 		if ((STAT_statemachine_state != 1))
 			return;
 		if (!lcdOperationEnabled()) {
-			for (int i = pixpos; i < VideoScreen.SCREEN_WIDTH; ++i) {
+			for (int i = pixpos; i < ImageRenderer.SCREEN_WIDTH; ++i) {
 				int x = pixpos + i;
-				if ((x >= 0) && (x < VideoScreen.SCREEN_WIDTH)) {
-					imageRenderer.updateBLITFromPaletteColors(this, 32 | 0, x);
+				if ((x >= 0) && (x < ImageRenderer.SCREEN_WIDTH)) {
+					imageRenderer.updateBLIT(LY, 32 | 0, x);
 				}
 			}
-			pixpos = VideoScreen.SCREEN_WIDTH;
+			pixpos = ImageRenderer.SCREEN_WIDTH;
 			return;
 		}
 
@@ -379,8 +381,8 @@ public final class VideoController {
 			} else if ((!isCGB) && !checkLCDCBitEnabled(1)) {
 				for (int i = 0; i < 8; ++i) {
 					int x = pixpos + i;
-					if ((x >= 0) && (x < VideoScreen.SCREEN_WIDTH)) {
-						imageRenderer.updateBLITFromPaletteColors(this, 0 | 0, x);
+					if ((x >= 0) && (x < ImageRenderer.SCREEN_WIDTH)) {
+						imageRenderer.updateBLIT(LY, 0 | 0, x);
 						zbuffer[x] = 0;
 					}
 				}
@@ -395,9 +397,9 @@ public final class VideoController {
 				}
 				for (int i = 0; i < 8; ++i) {
 					int x = pixpos + i;
-					if ((x >= 0) && (x < VideoScreen.SCREEN_WIDTH)) {
+					if ((x >= 0) && (x < ImageRenderer.SCREEN_WIDTH)) {
 						int color = patterns.get(bgtile, bgline & 7, i);
-						imageRenderer.updateBLITFromPaletteColors(this, bgpal | color, x);
+						imageRenderer.updateBLIT(LY, bgpal | color, x);
 						zbuffer[x] = color;
 					}
 				}
@@ -432,8 +434,8 @@ public final class VideoController {
 					for (int i = 0; i < 8; ++i) {
 						int color = patterns.get(tile, line, i);
 
-						if ((xpos >= 0) && (xpos < VideoScreen.SCREEN_WIDTH) && (color != 0) && ((zbuffer[xpos] == 0) || priority)) {
-							imageRenderer.updateBLITFromPaletteColors(this, pallette | color, xpos);
+						if ((xpos >= 0) && (xpos < ImageRenderer.SCREEN_WIDTH) && (color != 0) && ((zbuffer[xpos] == 0) || priority)) {
+							imageRenderer.updateBLIT(LY, pallette | color, xpos);
 						}
 						++xpos;
 					}
@@ -730,12 +732,12 @@ public final class VideoController {
 		int tilebufBG[] = new int[0x200];
 		if (cfskip == 0 && lcdOperationEnabled()) {
 			patterns.updatePatternPixels(VRAM);
-			int windX = VideoScreen.SCREEN_WIDTH;
-			if (windowDisplayEnabled() && (WX >= 0) && (WX < 167) && (WY >= 0) && (WY < VideoScreen.SCREEN_HEIGHT) && (LY >= WY)) {
+			int windX = ImageRenderer.SCREEN_WIDTH;
+			if (windowDisplayEnabled() && (WX >= 0) && (WX < 167) && (WY >= 0) && (WY < ImageRenderer.SCREEN_HEIGHT) && (LY >= WY)) {
 				windX = (WX - 7);
 			}
 			renderScanlineBG(windX, tilebufBG);
-			if (windX < VideoScreen.SCREEN_WIDTH) {
+			if (windX < ImageRenderer.SCREEN_WIDTH) {
 				renderScanlineWindow(windX, tilebufBG);
 			}
 			if (checkLCDCBitEnabled(1)) {
@@ -789,7 +791,7 @@ public final class VideoController {
 			int ii = tilebufBG[bufMap++];
 			int tilePal = tilebufBG[bufMap++];
 			for (int t = bgOffsX; t < 8; ++t, --cnt) {
-				imageRenderer.updateBLITFromPaletteColors(this, tilePal | patterns.get(ii, bgOffsY, t), curX++);
+				imageRenderer.updateBLIT(LY, tilePal | patterns.get(ii, bgOffsY, t), curX++);
 			}
 		}
 
@@ -801,7 +803,7 @@ public final class VideoController {
 				int ii = tilebufBG[bufMap++];
 				int tilePal = tilebufBG[bufMap++];
 				for (int t = 0; t < 8; ++t) {
-					imageRenderer.updateBLITFromPaletteColors(this, tilePal | patterns.get(ii, bgOffsY, t), curX++);
+					imageRenderer.updateBLIT(LY, tilePal | patterns.get(ii, bgOffsY, t), curX++);
 				}
 			}
 			cnt -= 8;
@@ -810,7 +812,7 @@ public final class VideoController {
 			int ii = tilebufBG[bufMap++];
 			int tilePal = tilebufBG[bufMap++];
 			for (int t = 0; cnt > 0; --cnt, ++t) {
-				imageRenderer.updateBLITFromPaletteColors(this, tilePal | patterns.get(ii, bgOffsY, t), curX++);
+				imageRenderer.updateBLIT(LY, tilePal | patterns.get(ii, bgOffsY, t), curX++);
 			}
 		}
 	}
@@ -819,7 +821,7 @@ public final class VideoController {
 		int tileMap = getWindowTileMapAddress() + (bgTileY * 32);
 		int attrMap = tileMap + 0x2000;
 		int bufMap = 0;
-		int cnt = ((VideoScreen.SCREEN_WIDTH - (windX + 7)) >> 3) + 2;
+		int cnt = ((ImageRenderer.SCREEN_WIDTH - (windX + 7)) >> 3) + 2;
 
 		for (int i = 0; i < cnt; ++i) {
 			int tile = VRAM[tileMap++];
@@ -841,7 +843,7 @@ public final class VideoController {
 	private void renderScanlineWindow(int windX, int tilebufBG[]) {
 		int bufMap = 0;
 		int curX = ((windX) < (0) ? (0) : (windX));
-		int cnt = VideoScreen.SCREEN_WIDTH - curX;
+		int cnt = ImageRenderer.SCREEN_WIDTH - curX;
 		if (cnt == 0)
 			return;
 		int bgY = curWNDY++;
@@ -856,7 +858,7 @@ public final class VideoController {
 			int ii = tilebufBG[bufMap++];
 			int TilePal = tilebufBG[bufMap++];
 			for (int t = bgOffsX; (t < 8) && (cnt > 0); ++t, --cnt) {
-				imageRenderer.updateBLITFromPaletteColors(this, TilePal | patterns.get(ii, bgOffsY, t), curX++);
+				imageRenderer.updateBLIT(LY, TilePal | patterns.get(ii, bgOffsY, t), curX++);
 			}
 		}
 		while (cnt >= 8) {
@@ -864,7 +866,7 @@ public final class VideoController {
 				int ii = tilebufBG[bufMap++];
 				int TilePal = tilebufBG[bufMap++];
 				for (int t = 0; t < 8; ++t) {
-					imageRenderer.updateBLITFromPaletteColors(this, TilePal | patterns.get(ii, bgOffsY, t), curX++);
+					imageRenderer.updateBLIT(LY, TilePal | patterns.get(ii, bgOffsY, t), curX++);
 				}
 			}
 			cnt -= 8;
@@ -873,7 +875,7 @@ public final class VideoController {
 			int ii = tilebufBG[bufMap++];
 			int TilePal = tilebufBG[bufMap++];
 			for (int t = 0; cnt > 0; --cnt, ++t) {
-				imageRenderer.updateBLITFromPaletteColors(this, TilePal | patterns.get(ii, bgOffsY, t), curX++);
+				imageRenderer.updateBLIT(LY, TilePal | patterns.get(ii, bgOffsY, t), curX++);
 			}
 		}
 	}
@@ -927,7 +929,7 @@ public final class VideoController {
 
 			int offsetY = LY - spritePositionY + 16;
 
-			if ((offsetY >= 0) && (offsetY < spriteType.height) && (spritePositionX > 0) && (spritePositionX < (VideoScreen.SCREEN_WIDTH + spriteType.width))) {
+			if ((offsetY >= 0) && (offsetY < spriteType.height) && (spritePositionX > 0) && (spritePositionX < (ImageRenderer.SCREEN_WIDTH + spriteType.width))) {
 				if ((spriteAttribute & (1 << 6)) != 0) {
 					offsetY = spriteType.height - offsetY - 1;
 				}
@@ -952,8 +954,8 @@ public final class VideoController {
 				for (int offsetX = 0; offsetX < 8; ++offsetX) {
 					int columnIndex = spritePositionX - 8 + offsetX;
 					int color = patterns.get(spriteNumber, offsetY, offsetX);
-					if (color != 0 && columnIndex >= 0 && columnIndex < VideoScreen.SCREEN_WIDTH) {
-						imageRenderer.updateBLITFromPaletteColors(this, (paletteNumber << 2) | color, columnIndex);
+					if (color != 0 && columnIndex >= 0 && columnIndex < ImageRenderer.SCREEN_WIDTH) {
+						imageRenderer.updateBLIT(LY, (paletteNumber << 2) | color, columnIndex);
 					}
 				}
 			}

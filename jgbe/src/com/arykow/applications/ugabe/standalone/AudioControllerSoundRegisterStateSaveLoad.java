@@ -19,7 +19,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-
 import com.arykow.applications.ugabe.client.AudioControllerSoundRegister;
 
 class AudioControllerSoundRegisterStateSaveLoad implements StateSaveLoad<AudioControllerSoundRegister> {

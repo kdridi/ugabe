@@ -16,11 +16,10 @@
 package com.arykow.applications.ugabe.client;
 
 public interface ImageRenderer {
+	public final static int SCREEN_WIDTH = 160;
+	public final static int SCREEN_HEIGHT = 144;
 
-	public abstract void updateBLITFromPaletteColors(VideoController videoController, int srcPos, int dstPos);
-
-	public abstract void updatePaletteColors(int index, int r, int g, int b);
-
-	public abstract void blitImage(VideoController videoController);
-
+	public abstract void updateBLIT(int index, int srcPos, int dstPos);
+	public abstract void updatePalette(int index, int r, int g, int b);
+	public abstract void render();
 }
