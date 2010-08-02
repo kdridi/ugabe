@@ -13,6 +13,7 @@ import com.arykow.applications.ugabe.client.CPUServer;
 import com.arykow.applications.ugabe.client.Cartridge;
 import com.arykow.applications.ugabe.client.CartridgeController;
 import com.arykow.applications.ugabe.client.CartridgeCreateHandler;
+import com.arykow.applications.ugabe.client.ImageRendererGUI;
 import com.arykow.applications.ugabe.client.UGABEService;
 import com.arykow.applications.ugabe.client.UGABEServiceAsync;
 import com.arykow.applications.ugabe.client.VideoScreen;
@@ -36,7 +37,7 @@ public class Application {
 		cartridgeController.createCartridge("/home/kdridi/sml.gb", new CartridgeCreateHandler() {
 			public void onCreateCartridge(Cartridge cartridge) {
 				CPUServer server = null;
-				final CPU cpu = new CPU(server, new VideoScreen() {
+				final CPU cpu = new CPU(server, new ImageRendererGUI(new VideoScreen() {
 					private int size = 0;
 					private int index = 0;
 					private BufferedImage[] images = new BufferedImage[2];
@@ -62,7 +63,7 @@ public class Application {
 					public int[] getPixels() {
 						return DataBufferInt.class.cast(images[index].getRaster().getDataBuffer()).getData();
 					}
-				});
+				}));
 				cpu.loadCartridge(cartridge);
 
 				CPURunner cpuRunner = new CPURunner() {

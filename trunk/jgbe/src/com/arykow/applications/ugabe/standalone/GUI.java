@@ -102,6 +102,7 @@ import com.arykow.applications.ugabe.client.CPUServer;
 import com.arykow.applications.ugabe.client.Cartridge;
 import com.arykow.applications.ugabe.client.CartridgeController;
 import com.arykow.applications.ugabe.client.CartridgeCreateHandler;
+import com.arykow.applications.ugabe.client.ImageRendererGUI;
 import com.arykow.applications.ugabe.client.IntVector;
 import com.arykow.applications.ugabe.client.UGABEService;
 import com.arykow.applications.ugabe.client.UGABEServiceAsync;
@@ -123,7 +124,7 @@ public final class GUI extends JApplet implements ActionListener, ItemListener, 
 	private int mousehidden = 0;
 	protected VideoController VC;
 	protected transient CPUServer server = new CPUServerImpl();
-	protected CPU cpu = new CPU(server, grfx);
+	protected CPU cpu = new CPU(server, new ImageRendererGUI(grfx));
 	protected AudioDriver audioDriver;
 	private int fps;
 	private boolean isApplet;

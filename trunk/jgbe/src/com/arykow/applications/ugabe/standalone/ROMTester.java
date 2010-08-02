@@ -24,6 +24,7 @@ import com.arykow.applications.ugabe.client.CPU;
 import com.arykow.applications.ugabe.client.Cartridge;
 import com.arykow.applications.ugabe.client.CartridgeController;
 import com.arykow.applications.ugabe.client.CartridgeCreateHandler;
+import com.arykow.applications.ugabe.client.ImageRendererGUI;
 import com.arykow.applications.ugabe.client.UGABEService;
 import com.arykow.applications.ugabe.client.UGABEServiceAsync;
 import com.arykow.applications.ugabe.client.VideoScreen;
@@ -62,7 +63,7 @@ public class ROMTester {
 		CartridgeController cartridgeController = new CartridgeController(service);
 		cartridgeController.createCartridge(romfile, new CartridgeCreateHandler() {
 			public void onCreateCartridge(Cartridge cartridge) {
-				CPU cpu = new CPU(new CPUServerImpl(), new VideoScreen() {
+				CPU cpu = new CPU(new CPUServerImpl(), new ImageRendererGUI(new VideoScreen() {
 					public void swapImage() {
 					}
 
@@ -72,7 +73,7 @@ public class ROMTester {
 					public int[] getPixels() {
 						return null;
 					}
-				});
+				}));
 				Writer logwriter = null;
 				try {
 					if (!logfile.equals("")) {
