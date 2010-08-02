@@ -18,22 +18,18 @@ package com.arykow.applications.ugabe.client;
 public final class VideoController {
 
 	/**
-	 * LCD Control Register
-	 * Bits 0000 0000 ABCD EFGH
+	 * LCD Control Register Bits 0000 0000 ABCD EFGH
 	 * 
-	 * A : LCD Display						=> Enabled / Disabled
-	 * B : Window Tile Map Address			=> 9C00-9FFF / 9800-9BFF
-	 * C : Display Window					=> Yes / No
-	 * D : BG & Window Tile Data Address	=> 8000-8FFF / 8800-97FF
-	 * E : BG Tile Map Display Address		=> 9800-9BFF / 9C00-9FFF
-	 * F : Sprite Size						=> 8x16 / 8x8
-	 * G : Display Sprites					=> Yes / No
-	 * H : Display Background				=> Yes / No
+	 * A : LCD Display => Enabled / Disabled B : Window Tile Map Address =>
+	 * 9C00-9FFF / 9800-9BFF C : Display Window => Yes / No D : BG & Window Tile
+	 * Data Address => 8000-8FFF / 8800-97FF E : BG Tile Map Display Address =>
+	 * 9800-9BFF / 9C00-9FFF F : Sprite Size => 8x16 / 8x8 G : Display Sprites
+	 * => Yes / No H : Display Background => Yes / No
 	 */
 	public int LCDC = 0;
 	public int currentVRAMBank = 0;
 	public int VRAM[] = new int[0x4000];
-	public int objectAttributeMemory[] = new int[40 * 4];
+	public int OAM[] = new int[40 * 4];
 	public int LY = 0;
 	public int LYC = 0;
 	public int SCX = 0;
@@ -49,12 +45,35 @@ public final class VideoController {
 	public int OBPI = 0;
 	public int OBPD[] = new int[8 * 4 * 2];
 	public int curWNDY;
-	public boolean patdirty[] = new boolean[1024];
-	public boolean anydirty = true;
 
-	public static enum RGB { RED, GREEN, BLUE; }
-	public static enum ColorIndex { FIRST, SECOND, THIRD, FOURTH }
-	public static enum ColorType { BACKGROUND, SPRITE1, SPRITE2 }
+	public boolean dirtyPatternPixel[] = new boolean[1024];
+	public boolean dirtyPatternPixels = true;
+	public void setDirtyPatternPixels(boolean dirty, boolean propagation) {
+		dirtyPatternPixels = dirty;
+		if (propagation) {
+			for (int i = 0; i < 1024; ++i) {
+				dirtyPatternPixel[i] = dirty;
+			}
+		}
+	}
+	private void setDirtyPatternPixel(int index, boolean dirty) {
+		dirtyPatternPixel[index] = dirty;
+		if(dirty) {
+			setDirtyPatternPixels(dirty, false);
+		}
+	}
+
+	public static enum RGB {
+		RED, GREEN, BLUE;
+	}
+
+	public static enum ColorIndex {
+		FIRST, SECOND, THIRD, FOURTH
+	}
+
+	public static enum ColorType {
+		BACKGROUND, SPRITE1, SPRITE2
+	}
 
 	public int nscale = 3;
 	public boolean allow_writes_in_mode_2_3 = true;
@@ -62,7 +81,6 @@ public final class VideoController {
 	public boolean mixFrames;
 	protected boolean isCGB;
 
-	
 	private final static boolean useSubscanlineRendering = false;
 	private final static int GRAYSHADES[][] = { { 0xa0, 0xe0, 0x20 }, { 0x70, 0xb0, 0x40 }, { 0x40, 0x70, 0x32 }, { 0x10, 0x50, 0x26 } };
 
@@ -77,9 +95,6 @@ public final class VideoController {
 	private int scale = 3;
 	private int cfskip = 0;
 
-	
-	
-	
 	private static final int ARRAY_SIZE = 1;
 
 	private final void updateBLITFromPaletteColors(int srcPos, int dstPos) {
@@ -93,7 +108,6 @@ public final class VideoController {
 		// paletteColors[4 * index + 2] = b & 0x0FF;
 		// paletteColors[4 * index + 3] = 0x0FF;
 	}
-
 
 	public void setGrayShade(int i, int j, int[] colors) {
 		System.arraycopy(colors, 0, grayColors[i][j], 0, RGB.values().length);
@@ -158,10 +172,8 @@ public final class VideoController {
 
 		BGPI = 0;
 		OBPI = 0;
-		anydirty = true;
-		for (int i = 0; i < 1024; ++i) {
-			patdirty[i] = true;
-		}
+
+		setDirtyPatternPixels(true, true);
 		updatePatternPixels();
 
 		for (int i = 0; i < 0x20; ++i) {
@@ -176,7 +188,7 @@ public final class VideoController {
 		updateMonoColData(2);
 
 		for (int i = 0; i < 0xa0; ++i)
-			objectAttributeMemory[i] = 0;
+			OAM[i] = 0;
 		for (int i = 0; i < 0x4000; ++i)
 			VRAM[i] = 0;
 	}
@@ -429,41 +441,40 @@ public final class VideoController {
 	}
 
 	private void updatePatternPixels() {
-		if (!anydirty)
-			return;
-
-		for (int i = 0; i < 1024; ++i) {
-			if (i == 384) {
-				i = 512;
-			}
-			if (i == 896) {
-				break;
-			}
-			if (!patdirty[i]) {
-				continue;
-			}
-			if (patternPixels[i] == null) {
-				patternPixels[i] = new int[8][8];
-				patternPixels[i + 1024] = new int[8][8];
-				patternPixels[i + 2048] = new int[8][8];
-				patternPixels[i + 3072] = new int[8][8];
-			}
-			patdirty[i] = false;
-			for (int y = 0; y < 8; ++y) {
-				int lineofs = (i * 16) + (y * 2);
-				for (int x = 0; x < 8; ++x) {
-					int col = (VRAM[lineofs] >> x) & 1;
-					col |= ((VRAM[lineofs + 1] >> x) & 1) << 1;
-					patternPixels[i][y][7 - x] = col;
-					patternPixels[i + 1024][y][x] = col;
-					patternPixels[i + 2048][7 - y][7 - x] = col;
-					patternPixels[i + 3072][7 - y][x] = col;
+		if (dirtyPatternPixels) {
+			for (int i = 0; i < 1024; ++i) {
+				if (i == 384) {
+					i = 512;
 				}
+				if (i == 896) {
+					break;
+				}
+				if (dirtyPatternPixel[i]) {
+					if (patternPixels[i] == null) {
+						patternPixels[i + 0 * 1024] = new int[8][8];
+						patternPixels[i + 1 * 1024] = new int[8][8];
+						patternPixels[i + 2 * 1024] = new int[8][8];
+						patternPixels[i + 3 * 1024] = new int[8][8];
+					}
+					for (int y = 0; y < 8; ++y) {
+						int offset = (i * 16) + (y * 2);
+						for (int x = 0; x < 8; ++x) {
+							int color = 0;
+							for (int index = 0; index < 2; index++) {
+								color |= ((VRAM[offset + index] >> x) & 1) << index;
+							}
+							patternPixels[i + 0 * 1024][y - 0][7 - x] = color;
+							patternPixels[i + 1 * 1024][y - 0][x - 0] = color;
+							patternPixels[i + 2 * 1024][7 - y][7 - x] = color;
+							patternPixels[i + 3 * 1024][7 - y][x - 0] = color;
+						}
+					}
+				}
+				setDirtyPatternPixel(i, false);
 			}
+			dirtyPatternPixels = false;
 		}
-		anydirty = false;
 	}
-
 
 	public int render(int cycles) {
 		LCDCcntdwn -= cycles;
@@ -591,7 +602,7 @@ public final class VideoController {
 		cyclepos += cyclesToRender;
 
 		while (cyclesToRender > 0) {
-			int sprXPos = objectAttributeMemory[spritesOnScanline[curSprite] | 1] - 8 - pixpos;
+			int sprXPos = OAM[spritesOnScanline[curSprite] | 1] - 8 - pixpos;
 			if ((sprXPos >= 0) && (sprXPos < 8) && (curSprite < spriteCountOnScanline - 1)) {
 				cyclesToRender -= 2;
 				++curSprite;
@@ -633,10 +644,10 @@ public final class VideoController {
 
 				if (!isCGB) {
 
-					int line = LY - (objectAttributeMemory[spritesOnScanline[curSprite]] - 16);
-					int xpos = objectAttributeMemory[spritesOnScanline[curSprite] | 1] - 8;
-					int tile = objectAttributeMemory[spritesOnScanline[curSprite] | 2];
-					int attr = objectAttributeMemory[spritesOnScanline[curSprite] | 3];
+					int line = LY - (OAM[spritesOnScanline[curSprite]] - 16);
+					int xpos = OAM[spritesOnScanline[curSprite] | 1] - 8;
+					int tile = OAM[spritesOnScanline[curSprite] | 2];
+					int attr = OAM[spritesOnScanline[curSprite] | 3];
 					if (checkLCDCBitEnabled(2)) {
 
 						tile &= ~1;
@@ -674,7 +685,7 @@ public final class VideoController {
 		int sprYSize = checkLCDCBitEnabled(2) ? 16 : 8;
 		int count = 0;
 		for (int spr = 0; (spr < 40 * 4); spr += 4) {
-			int sprPos = LY - (objectAttributeMemory[spr] - 16);
+			int sprPos = LY - (OAM[spr] - 16);
 
 			if ((sprPos >= 0) && (sprPos < sprYSize)) {
 				spritesOnScanline[count] = spr;
@@ -685,7 +696,7 @@ public final class VideoController {
 		for (int i = count - 1; i >= 0; --i) {
 			for (int j = i - 1; j >= 0; --j) {
 				int k = spritesOnScanline[i];
-				if (objectAttributeMemory[spritesOnScanline[j] | 1] > objectAttributeMemory[k | 1]) {
+				if (OAM[spritesOnScanline[j] | 1] > OAM[k | 1]) {
 					spritesOnScanline[i] = spritesOnScanline[j];
 					spritesOnScanline[j] = k;
 				}
@@ -707,7 +718,7 @@ public final class VideoController {
 		}
 		if ((index > 0xfdff) && (index < 0xfea0)) {
 			if (allow_writes_in_mode_2_3 || !lcdOperationEnabled() || ((STAT & 2) == 0)) {
-				return objectAttributeMemory[index - 0xfe00];
+				return OAM[index - 0xfe00];
 			}
 			CPULogger.printf("WARNING: Read from OAM[0x%04x] denied during mode " + (STAT & 3) + ", PC=0x%04x\n", index, cpu.getPC());
 			return 0xff;
@@ -783,8 +794,7 @@ public final class VideoController {
 		if (index < 0xa000) {
 			if (allow_writes_in_mode_2_3 || !lcdOperationEnabled() || ((STAT & 3) != 3)) {
 				VRAM[index - 0x8000 + currentVRAMBank] = value;
-				patdirty[(currentVRAMBank >> 4) + ((index - 0x8000) >> 4)] = true;
-				anydirty = true;
+				setDirtyPatternPixel((currentVRAMBank >> 4) + ((index - 0x8000) >> 4), true);
 				return;
 			}
 			CPULogger.printf("WARNING: Write to VRAM[0x%04x] denied during mode " + (STAT & 3) + ", PC=0x%04x\n", index, cpu.getPC());
@@ -792,7 +802,7 @@ public final class VideoController {
 		}
 		if ((index > 0xfdff) && (index < 0xfea0)) {
 			if (allow_writes_in_mode_2_3 || !lcdOperationEnabled() || ((STAT & 2) == 0)) {
-				objectAttributeMemory[index - 0xfe00] = value;
+				OAM[index - 0xfe00] = value;
 				return;
 			}
 			CPULogger.printf("WARNING: Write to OAM[0x%04x] denied during mode " + (STAT & 3) + ", PC=0x%04x", index, cpu.getPC());
@@ -1111,35 +1121,31 @@ public final class VideoController {
 	/**
 	 * http://fms.komkon.org/GameBoy/Tech/Software.html
 	 * 
-	 * Sprites
-	 * GameBoy video controller can display up to 40 sprites either in 8x8 or in 8x16 mode.
-	 * Sprite patterns have the same format as tiles, but they are taken from the Sprite Pattern Table located at 8000-8FFF and therefore have unsigned numbers.
-	 * Sprite attributes reside in the Sprite Attribute Table (aka OAM) at FE00-FE9F.
-	 * OAM (Object Attribute Memory) is divided into 40 4-byte blocks each of which corresponds to a sprite.
+	 * Sprites GameBoy video controller can display up to 40 sprites either in
+	 * 8x8 or in 8x16 mode. Sprite patterns have the same format as tiles, but
+	 * they are taken from the Sprite Pattern Table located at 8000-8FFF and
+	 * therefore have unsigned numbers. Sprite attributes reside in the Sprite
+	 * Attribute Table (aka OAM) at FE00-FE9F. OAM (Object Attribute Memory) is
+	 * divided into 40 4-byte blocks each of which corresponds to a sprite.
 	 * 
-	 * Blocks have the following format:
-	 *   Byte0  Y position on the screen
-	 *   Byte1  X position on the screen
-	 *   Byte2  Pattern number 0-255 [notice that unlike tile numbers, sprite pattern numbers are unsigned] 
-	 *   Byte3  Flags:
-	 *          Bit7  Priority
-	 *                Sprite is displayed in front of the window if this bit is set to 1.
-	 *                Otherwise, sprite is shown behind the window but in front of the background.
-	 *          Bit6  Y flip
-	 *                Sprite pattern is flipped vertically if this bit is set to 1.
-	 *          Bit5  X flip
-	 *                Sprite pattern is flipped horizontally if this bit is set to 1.
-	 *          Bit4  Palette number
-	 *                Sprite colors are taken from OBJ1PAL if this bit is set to 1 and from OBJ0PAL otherwise.
+	 * Blocks have the following format: Byte0 Y position on the screen Byte1 X
+	 * position on the screen Byte2 Pattern number 0-255 [notice that unlike
+	 * tile numbers, sprite pattern numbers are unsigned] Byte3 Flags: Bit7
+	 * Priority Sprite is displayed in front of the window if this bit is set to
+	 * 1. Otherwise, sprite is shown behind the window but in front of the
+	 * background. Bit6 Y flip Sprite pattern is flipped vertically if this bit
+	 * is set to 1. Bit5 X flip Sprite pattern is flipped horizontally if this
+	 * bit is set to 1. Bit4 Palette number Sprite colors are taken from OBJ1PAL
+	 * if this bit is set to 1 and from OBJ0PAL otherwise.
 	 */
 	private void renderScanlineSprites() {
 		SpriteType spriteType = SpriteType.createSpriteType(checkLCDCBitEnabled(2));
 
 		for (int spriteIndex = 0; spriteIndex < 40; ++spriteIndex) {
-			int spritePositionY = objectAttributeMemory[(spriteIndex * 4) + 0];
-			int spritePositionX = objectAttributeMemory[(spriteIndex * 4) + 1];
-			int spriteNumber = objectAttributeMemory[(spriteIndex * 4) + 2];
-			int spriteAttribute = objectAttributeMemory[(spriteIndex * 4) + 3];
+			int spritePositionY = OAM[(spriteIndex * 4) + 0];
+			int spritePositionX = OAM[(spriteIndex * 4) + 1];
+			int spriteNumber = OAM[(spriteIndex * 4) + 2];
+			int spriteAttribute = OAM[(spriteIndex * 4) + 3];
 
 			int offsetY = LY - spritePositionY + 16;
 
