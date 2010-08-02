@@ -66,6 +66,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Scanner;
 import java.util.zip.DeflaterOutputStream;
@@ -429,7 +430,6 @@ public final class GUI extends JApplet implements ActionListener, ItemListener, 
 		JMenu menuFrameSkip;
 		JMenu menuState;
 		JMenu menuSound;
-		JMenu menuColor;
 		mainMenuBar = new JMenuBar();
 
 		menuFile = new JMenu("File");
@@ -779,7 +779,9 @@ public final class GUI extends JApplet implements ActionListener, ItemListener, 
 
 					if (DataFlavor.javaFileListFlavor.equals(flavor)) {
 						files = new ArrayList<File>();
-						files.addAll((java.util.Collection) t.getTransferData(flavor));
+						for(Object object : Collection.class.cast(t.getTransferData(flavor))) {
+							files.add(File.class.cast(object));
+						}
 
 					} else if (URI_LIST.equals(flavor.getSubType()) && obj instanceof String) {
 						String urilist = (String) obj;
