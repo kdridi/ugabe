@@ -48,25 +48,7 @@ public final class VideoController {
 	public int OBPI = 0;
 	public int OBPD[] = new int[8 * 4 * 2];
 	public int curWNDY;
-
-	public boolean dirtyPatternPixel[] = new boolean[1024];
-	public boolean dirtyPatternPixels = true;
-
-	public void setDirtyPatternPixels(boolean dirty, boolean propagation) {
-		dirtyPatternPixels = dirty;
-		if (propagation) {
-			for (int i = 0; i < 1024; ++i) {
-				dirtyPatternPixel[i] = dirty;
-			}
-		}
-	}
-
-	private void setDirtyPatternPixel(int index, boolean dirty) {
-		dirtyPatternPixel[index] = dirty;
-		if (dirty) {
-			setDirtyPatternPixels(dirty, false);
-		}
-	}
+	public PixelPatterns patterns = new PixelPatterns();
 
 	public static enum RGB {
 		RED, GREEN, BLUE;
@@ -96,7 +78,6 @@ public final class VideoController {
 	private int blitImg[][] = new int[VideoScreen.SCREEN_HEIGHT][VideoScreen.SCREEN_WIDTH];
 	private int blitImg_prev[][] = new int[VideoScreen.SCREEN_HEIGHT][VideoScreen.SCREEN_WIDTH];
 	private int paletteColors[] = new int[8 * 4 * 2 * ARRAY_SIZE];
-	private int patternPixels[][][] = new int[4096][][];
 	private int scale = 3;
 	private int cfskip = 0;
 
@@ -178,8 +159,8 @@ public final class VideoController {
 		BGPI = 0;
 		OBPI = 0;
 
-		setDirtyPatternPixels(true, true);
-		updatePatternPixels();
+		patterns.setDirtyPatternEnabled(true, true);
+		patterns.updatePatternPixels(VRAM);
 
 		for (int i = 0; i < 0x20; ++i) {
 			OBPD[i * 2] = OBPD[i * 2 + 1] = 0;
@@ -445,42 +426,6 @@ public final class VideoController {
 		return OBPD[OBPI & 0x3f];
 	}
 
-	private void updatePatternPixels() {
-		if (dirtyPatternPixels) {
-			for (int i = 0; i < 1024; ++i) {
-				if (i == 384) {
-					i = 512;
-				}
-				if (i == 896) {
-					break;
-				}
-				if (dirtyPatternPixel[i]) {
-					if (patternPixels[i] == null) {
-						patternPixels[i + 0 * 1024] = new int[8][8];
-						patternPixels[i + 1 * 1024] = new int[8][8];
-						patternPixels[i + 2 * 1024] = new int[8][8];
-						patternPixels[i + 3 * 1024] = new int[8][8];
-					}
-					for (int y = 0; y < 8; ++y) {
-						int offset = (i * 16) + (y * 2);
-						for (int x = 0; x < 8; ++x) {
-							int color = 0;
-							for (int index = 0; index < 2; index++) {
-								color |= ((VRAM[offset + index] >> x) & 1) << index;
-							}
-							patternPixels[i + 0 * 1024][y - 0][7 - x] = color;
-							patternPixels[i + 1 * 1024][y - 0][x - 0] = color;
-							patternPixels[i + 2 * 1024][7 - y][7 - x] = color;
-							patternPixels[i + 3 * 1024][7 - y][x - 0] = color;
-						}
-					}
-				}
-				setDirtyPatternPixel(i, false);
-			}
-			dirtyPatternPixels = false;
-		}
-	}
-
 	public int render(int cycles) {
 		LCDCcntdwn -= cycles;
 		while (LCDCcntdwn <= 0) {
@@ -492,7 +437,7 @@ public final class VideoController {
 				STAT = (STAT & 0xFC) | 3;
 				++STAT_statemachine_state;
 
-				updatePatternPixels();
+				patterns.updatePatternPixels(VRAM);
 
 				pixpos = -(SCX & 7);
 				cyclepos = 0;
@@ -629,12 +574,12 @@ public final class VideoController {
 					bgtile ^= 0x80;
 					bgtile += 0x80;
 				}
-				int[] patLine = patternPixels[bgtile][bgline & 7];
 				for (int i = 0; i < 8; ++i) {
 					int x = pixpos + i;
 					if ((x >= 0) && (x < VideoScreen.SCREEN_WIDTH)) {
-						updateBLITFromPaletteColors(bgpal | patLine[i], x);
-						zbuffer[x] = patLine[i];
+						int color = patterns.get(bgtile, bgline & 7, i);
+						updateBLITFromPaletteColors(bgpal | color, x);
+						zbuffer[x] = color;
 					}
 				}
 			}
@@ -665,9 +610,8 @@ public final class VideoController {
 					if ((attr & (1 << 5)) != 0)
 						tile |= (1 << 10);
 					int pallette = ((attr >> 4) & 1) << 2;
-					int[] patLine = patternPixels[tile][line];
 					for (int i = 0; i < 8; ++i) {
-						int color = patLine[i];
+						int color = patterns.get(tile, line, i);
 
 						if ((xpos >= 0) && (xpos < VideoScreen.SCREEN_WIDTH) && (color != 0) && ((zbuffer[xpos] == 0) || priority)) {
 							updateBLITFromPaletteColors(pallette | color, xpos);
@@ -799,7 +743,7 @@ public final class VideoController {
 		if (index < 0xa000) {
 			if (allow_writes_in_mode_2_3 || !lcdOperationEnabled() || ((STAT & 3) != 3)) {
 				VRAM[index - 0x8000 + currentVRAMBank] = value;
-				setDirtyPatternPixel((currentVRAMBank >> 4) + ((index - 0x8000) >> 4), true);
+				patterns.setDirtyPatternEnabled((currentVRAMBank >> 4) + ((index - 0x8000) >> 4), true);
 				return;
 			}
 			CPULogger.printf("WARNING: Write to VRAM[0x%04x] denied during mode " + (STAT & 3) + ", PC=0x%04x\n", index, cpu.getPC());
@@ -966,7 +910,7 @@ public final class VideoController {
 	public void renderScanLine() {
 		int tilebufBG[] = new int[0x200];
 		if (cfskip == 0 && lcdOperationEnabled()) {
-			updatePatternPixels();
+			patterns.updatePatternPixels(VRAM);
 			int windX = VideoScreen.SCREEN_WIDTH;
 			if (windowDisplayEnabled() && (WX >= 0) && (WX < 167) && (WY >= 0) && (WY < VideoScreen.SCREEN_HEIGHT) && (LY >= WY)) {
 				windX = (WX - 7);
@@ -1020,31 +964,36 @@ public final class VideoController {
 
 		calcBGTileBuf(bgTileX, bgTileY, windX, tilebufBG);
 
-		int patternLine[] = patternPixels[tilebufBG[bufMap++]][bgOffsY];
-		int tilePal = tilebufBG[bufMap++];
 		int curX = 0;
 
-		for (int t = bgOffsX; t < 8; ++t, --cnt) {
-			updateBLITFromPaletteColors(tilePal | patternLine[t], curX++);
+		{
+			int ii = tilebufBG[bufMap++];
+			int tilePal = tilebufBG[bufMap++];
+			for (int t = bgOffsX; t < 8; ++t, --cnt) {
+				updateBLITFromPaletteColors(tilePal | patterns.get(ii, bgOffsY, t), curX++);
+			}
 		}
 
 		if (cnt == 0)
 			return;
 
 		while (cnt >= 8) {
-			patternLine = patternPixels[tilebufBG[bufMap++]][bgOffsY];
-			tilePal = tilebufBG[bufMap++];
-			for (int t = 0; t < 8; ++t) {
-				updateBLITFromPaletteColors(tilePal | patternLine[t], curX++);
+			{
+				int ii = tilebufBG[bufMap++];
+				int tilePal = tilebufBG[bufMap++];
+				for (int t = 0; t < 8; ++t) {
+					updateBLITFromPaletteColors(tilePal | patterns.get(ii, bgOffsY, t), curX++);
+				}
 			}
 			cnt -= 8;
 		}
-		patternLine = patternPixels[tilebufBG[bufMap++]][bgOffsY];
-		tilePal = tilebufBG[bufMap++];
-		for (int t = 0; cnt > 0; --cnt, ++t) {
-			updateBLITFromPaletteColors(tilePal | patternLine[t], curX++);
+		{
+			int ii = tilebufBG[bufMap++];
+			int tilePal = tilebufBG[bufMap++];
+			for (int t = 0; cnt > 0; --cnt, ++t) {
+				updateBLITFromPaletteColors(tilePal | patterns.get(ii, bgOffsY, t), curX++);
+			}
 		}
-		;
 	}
 
 	private void calcWindTileBuf(int bgTileY, int windX, int tilebufBG[]) {
@@ -1084,24 +1033,29 @@ public final class VideoController {
 
 		calcWindTileBuf(bgTileY, windX, tilebufBG);
 
-		int PatLine[] = patternPixels[tilebufBG[bufMap++]][bgOffsY];
-		int TilePal = tilebufBG[bufMap++];
-
-		for (int t = bgOffsX; (t < 8) && (cnt > 0); ++t, --cnt) {
-			updateBLITFromPaletteColors(TilePal | PatLine[t], curX++);
+		{
+			int ii = tilebufBG[bufMap++];
+			int TilePal = tilebufBG[bufMap++];
+			for (int t = bgOffsX; (t < 8) && (cnt > 0); ++t, --cnt) {
+				updateBLITFromPaletteColors(TilePal | patterns.get(ii, bgOffsY, t), curX++);
+			}
 		}
 		while (cnt >= 8) {
-			PatLine = patternPixels[tilebufBG[bufMap++]][bgOffsY];
-			TilePal = tilebufBG[bufMap++];
-			for (int t = 0; t < 8; ++t) {
-				updateBLITFromPaletteColors(TilePal | PatLine[t], curX++);
+			{
+				int ii = tilebufBG[bufMap++];
+				int TilePal = tilebufBG[bufMap++];
+				for (int t = 0; t < 8; ++t) {
+					updateBLITFromPaletteColors(TilePal | patterns.get(ii, bgOffsY, t), curX++);
+				}
 			}
 			cnt -= 8;
 		}
-		PatLine = patternPixels[tilebufBG[bufMap++]][bgOffsY];
-		TilePal = tilebufBG[bufMap++];
-		for (int t = 0; cnt > 0; --cnt, ++t) {
-			updateBLITFromPaletteColors(TilePal | PatLine[t], curX++);
+		{
+			int ii = tilebufBG[bufMap++];
+			int TilePal = tilebufBG[bufMap++];
+			for (int t = 0; cnt > 0; --cnt, ++t) {
+				updateBLITFromPaletteColors(TilePal | patterns.get(ii, bgOffsY, t), curX++);
+			}
 		}
 	}
 
@@ -1180,11 +1134,10 @@ public final class VideoController {
 					paletteNumber = spriteAttribute & 7;
 				}
 
-				int[] patternLine = patternPixels[spriteNumber][offsetY];
 
 				for (int offsetX = 0; offsetX < 8; ++offsetX) {
 					int columnIndex = spritePositionX - 8 + offsetX;
-					int color = patternLine[offsetX];
+					int color = patterns.get(spriteNumber, offsetY, offsetX);
 					if (color != 0 && columnIndex >= 0 && columnIndex < VideoScreen.SCREEN_WIDTH) {
 						updateBLITFromPaletteColors((paletteNumber << 2) | color, columnIndex);
 					}
