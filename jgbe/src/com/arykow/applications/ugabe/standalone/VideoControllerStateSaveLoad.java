@@ -42,9 +42,9 @@ class VideoControllerStateSaveLoad implements StateSaveLoad<VideoController> {
 		{
 			for (int index = 0; index < (0xa0); ++index) {
 				if ((save))
-					dostream.writeByte((videoController.objectAttributeMemory[index]) & 0xff);
+					dostream.writeByte((videoController.OAM[index]) & 0xff);
 				else
-					videoController.objectAttributeMemory[index] = distream.readUnsignedByte();
+					videoController.OAM[index] = distream.readUnsignedByte();
 			}
 		}
 		{
@@ -182,10 +182,7 @@ class VideoControllerStateSaveLoad implements StateSaveLoad<VideoController> {
 				videoController.curWNDY = distream.readUnsignedByte();
 		}
 		if ((!save)) {
-			for (int i = 0; i < 1024; ++i) {
-				videoController.patdirty[i] = true;
-			}
-			videoController.anydirty = true;
+			videoController.setDirtyPatternPixels(true, true);
 			for (int i = 0; i < 0x20; ++i) {
 				videoController.updateBGColData(i);
 				videoController.updateOBColData(i);
