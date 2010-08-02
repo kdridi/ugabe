@@ -8,7 +8,7 @@
  * of this license document, but changing it is not allowed.
  * 
  * $LastChangeDate$
- * $$
+ * $Rev$
  * $LastChangedBy$
  * $URL$
  * $Id$
