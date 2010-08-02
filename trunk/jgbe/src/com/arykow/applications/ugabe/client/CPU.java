@@ -76,7 +76,7 @@ public final class CPU {
 
 	public CPU(CPUServer server, ImageRenderer imageController) {
 		this.server = server;
-		this.videoController = new VideoController(this, VideoScreen.SCREEN_WIDTH, VideoScreen.SCREEN_HEIGHT, imageController);
+		this.videoController = new VideoController(this, imageController);
 		this.audioController = new AudioController(this);
 	}
 

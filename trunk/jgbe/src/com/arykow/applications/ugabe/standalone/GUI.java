@@ -20,15 +20,11 @@ import java.awt.Color;
 import java.awt.ComponentOrientation;
 import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.RenderingHints;
 import java.awt.Robot;
 import java.awt.Toolkit;
 import java.awt.datatransfer.DataFlavor;
@@ -48,8 +44,6 @@ import java.awt.event.MouseMotionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferInt;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
@@ -102,13 +96,12 @@ import com.arykow.applications.ugabe.client.CPUServer;
 import com.arykow.applications.ugabe.client.Cartridge;
 import com.arykow.applications.ugabe.client.CartridgeController;
 import com.arykow.applications.ugabe.client.CartridgeCreateHandler;
-import com.arykow.applications.ugabe.client.ImageRendererGUI;
+import com.arykow.applications.ugabe.client.ImageRenderer;
 import com.arykow.applications.ugabe.client.IntVector;
 import com.arykow.applications.ugabe.client.UGABEService;
 import com.arykow.applications.ugabe.client.UGABEServiceAsync;
 import com.arykow.applications.ugabe.client.Version;
 import com.arykow.applications.ugabe.client.VideoController;
-import com.arykow.applications.ugabe.client.VideoScreen;
 import com.arykow.applications.ugabe.server.UGABEServiceController;
 import com.arykow.applications.ugabe.standalone.Debugger.DebugRunner;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -117,16 +110,16 @@ public final class GUI extends JApplet implements ActionListener, ItemListener, 
 	private static final long serialVersionUID = -5280334034698204592L;
 
 	private IntVector saveStateOrder = new IntVector();
-	private DrawingArea grfx = new DrawingArea();
 	private int lastmousex;
-	private int lastmousey;
-	private int lastmousecnt;
-	private int mousehidden = 0;
+	int lastmousey;
+	int lastmousecnt;
+	int mousehidden = 0;
 	protected VideoController VC;
 	protected transient CPUServer server = new CPUServerImpl();
-	protected CPU cpu = new CPU(server, new ImageRendererGUI(grfx));
+	ImageRendererGUI imageRenderer = new ImageRendererGUI(this);
+	protected CPU cpu = new CPU(server, imageRenderer);
 	protected AudioDriver audioDriver;
-	private int fps;
+	int fps;
 	private boolean isApplet;
 	private int selectedState = 0;
 	private int[] keyStates = new int[KeyConfigurationDialog.KEY_STATES_LENGTH];
@@ -274,143 +267,6 @@ public final class GUI extends JApplet implements ActionListener, ItemListener, 
 		}
 	}
 
-	public class DrawingArea extends JPanel implements VideoScreen {
-		private static final long serialVersionUID = 1L;
-
-		private int curDrawImg = 0;
-		private BufferedImage drawImg[] = new BufferedImage[2];
-
-		public void scaleImage(int scale) {
-			int width = scale * SCREEN_WIDTH;
-			int height = scale * SCREEN_HEIGHT;
-			drawImg[0] = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-			drawImg[1] = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-		}
-
-		public Image getImage() {
-			return drawImg[curDrawImg];
-		}
-
-		public int[] getPixels() {
-			return DataBufferInt.class.cast(drawImg[curDrawImg ^ 1].getRaster().getDataBuffer()).getData();
-		}
-
-		public int interpolation;
-
-		Color ColorTextShadow = new Color(128, 128, 128);
-		Color ColorTextLight = new Color(255, 255, 255);
-		int DrawingAreaFontSize = 10;
-		Font DrawingAreaFont = new Font("SansSerif", Font.BOLD, DrawingAreaFontSize);
-
-		public void swapImage() {
-			curDrawImg ^= 1;
-			updateVideoImage(getImage());
-		}
-
-		public void updateVideoImage(Image img) {
-			repaint();
-			if (speedRunPlayWithOutputVideoStream != null) {
-				BufferedImage bimg = (BufferedImage) img;
-				int[] data = (int[]) bimg.getRaster().getDataElements(0, 0, bimg.getWidth(), bimg.getHeight(), null);
-
-				for (int i = 0; i < data.length; ++i) {
-					int j = data[i];
-					int ar = (j >> 16) & 0xff;
-					int ag = (j >> 8) & 0xff;
-					int ab = (j >> 0) & 0xff;
-					try {
-						speedRunPlayWithOutputVideoStream.writeByte(ar);
-						speedRunPlayWithOutputVideoStream.writeByte(ag);
-						speedRunPlayWithOutputVideoStream.writeByte(ab);
-					} catch (IOException ee) {
-						speedRunPlayWithOutputVideoStream = null;
-						JOptionPane.showMessageDialog(frame, "Error while writing to file, aborting recording:\n" + ee.getMessage(), "Error!", JOptionPane.ERROR_MESSAGE);
-					}
-				}
-			}
-		}
-
-		transient Image menuimage = null;
-		Image scaledLogo = null;
-
-		public void paintComponent(Graphics g) {
-			super.paintComponent(g);
-
-			if ((logo != null)) {
-				if ((scaledLogo == null) || ((scaledLogo != null) && !((scaledLogo.getHeight(null) == getHeight()) || (scaledLogo.getWidth(null) == getWidth())))) {
-					double imgaspect = (((double) logo.getWidth(null)) / ((double) logo.getHeight(null)));
-					double wndaspect = (((double) getWidth()) / ((double) getHeight()));
-					if (imgaspect > wndaspect) {
-						scaledLogo = logo.getScaledInstance(getWidth(), (int) (getWidth() / imgaspect), Image.SCALE_AREA_AVERAGING);
-					} else if (imgaspect < wndaspect) {
-						scaledLogo = logo.getScaledInstance((int) (getHeight() * imgaspect), getHeight(), Image.SCALE_AREA_AVERAGING);
-					} else
-						scaledLogo = logo.getScaledInstance(getWidth(), getHeight(), Image.SCALE_AREA_AVERAGING);
-				}
-				if (scaledLogo != null) {
-					while ((scaledLogo.getWidth(null) == -1) || (scaledLogo.getHeight(null) == -1)) {
-						try {
-							Thread.sleep(100);
-						} catch (Exception e) {
-						}
-					}
-					;
-					Dimension size = new Dimension(scaledLogo.getWidth(null), scaledLogo.getHeight(null));
-					int x = (getWidth() - size.width) / 2;
-					int y = (getHeight() - size.height) / 2;
-					g.drawImage(scaledLogo, x, y, this);
-					return;
-				}
-			} else
-				scaledLogo = null;
-
-			if (interpolation == 0) {
-				g.drawImage(getImage(), 0, 0, this);
-			} else {
-				((Graphics2D) g).setRenderingHint(RenderingHints.KEY_INTERPOLATION, (interpolation == 1) ? RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR : (interpolation == 2) ? RenderingHints.VALUE_INTERPOLATION_BILINEAR : (interpolation == 3) ? RenderingHints.VALUE_INTERPOLATION_BICUBIC : null);
-
-				g.drawImage(getImage(), 0, 0, getWidth(), getHeight(), this);
-			}
-			if (osdLines.size() > 0) {
-				while (osdLines.size() > 3 * VC.nscale)
-					osdLines.remove(0);
-				g.setColor(new Color(255, 255, 255));
-				for (int i = 0; i < osdLines.size(); ++i) {
-
-					String s = (String) osdLines.get(i);
-
-					g.setColor(ColorTextShadow);
-					g.drawString(s, 11, (DrawingAreaFontSize + 1) + DrawingAreaFontSize * i);
-					g.drawString(s, 11, (DrawingAreaFontSize + 1) + DrawingAreaFontSize * i);
-					g.setColor(ColorTextLight);
-					g.drawString(s, 10, DrawingAreaFontSize + DrawingAreaFontSize * i);
-				}
-			}
-			++fps;
-			if (fulls) {
-				int mheight = mainMenuBar.getHeight();
-				if (lastmousey <= mheight) {
-					int mwidth = mainMenuBar.getWidth();
-					Rectangle bounds = getBounds();
-					if (mwidth > bounds.x && mheight > bounds.y) {
-
-						if (menuimage == null)
-							menuimage = new BufferedImage(mainMenuBar.getWidth(), mainMenuBar.getHeight(), BufferedImage.TYPE_INT_RGB);
-						mainMenuBar.paint(menuimage.getGraphics());
-						g.drawImage(menuimage, 0, 0, mwidth - bounds.x, mheight - bounds.y, bounds.x, bounds.y, mwidth, mheight, this);
-					}
-				} else if (--lastmousecnt == 0) {
-					try {
-						addOSDLine("Hiding mouse");
-						new Robot().mouseMove(fsframe.getWidth(), fsframe.getHeight());
-						mousehidden = 1;
-					} catch (AWTException e) {
-					}
-				}
-			}
-		}
-	}
-
 	public static void addOSDLine(String line) {
 		osdLines.add(line);
 		osdTimer = 4 * 2;
@@ -422,7 +278,7 @@ public final class GUI extends JApplet implements ActionListener, ItemListener, 
 
 	private JMenu menuFile;
 
-	private JMenuBar mainMenuBar;
+	JMenuBar mainMenuBar;
 
 	private JMenuBar createJMenuBar() {
 		JMenuBar mainMenuBar;
@@ -688,15 +544,15 @@ public final class GUI extends JApplet implements ActionListener, ItemListener, 
 	}
 
 	public void addComponentsToPane(Container contentPane) {
-		grfx.setFocusable(true);
+		imageRenderer.setFocusable(true);
 
 		if (System.getProperty("os.name").equals("Linux"))
-			grfx.addKeyListener(new TimedKeyListener(this));
+			imageRenderer.addKeyListener(new TimedKeyListener(this));
 		else
-			grfx.addKeyListener(this);
+			imageRenderer.addKeyListener(this);
 
-		grfx.setDoubleBuffered(false);
-		contentPane.add(grfx);
+		imageRenderer.setDoubleBuffered(false);
+		contentPane.add(imageRenderer);
 	}
 
 	static JFrame frame;
@@ -737,7 +593,7 @@ public final class GUI extends JApplet implements ActionListener, ItemListener, 
 		frame.addWindowListener(this);
 		fsframe.addWindowListener(this);
 		mainMenuBar.addMouseMotionListener(this);
-		grfx.addFocusListener(this);
+		imageRenderer.addFocusListener(this);
 		fsframe.addMouseMotionListener(this);
 		for (int i = 0; i < mainMenuBar.getMenuCount(); ++i)
 			mainMenuBar.getMenu(i).addMouseMotionListener(this);
@@ -746,7 +602,7 @@ public final class GUI extends JApplet implements ActionListener, ItemListener, 
 		frame.pack();
 
 		JavaCrossplatformnessIsAMyth transferhandler = new JavaCrossplatformnessIsAMyth();
-		grfx.setTransferHandler(transferhandler);
+		imageRenderer.setTransferHandler(transferhandler);
 	}
 
 	public void showGUI() {
@@ -941,14 +797,14 @@ public final class GUI extends JApplet implements ActionListener, ItemListener, 
 
 				fsframe.setJMenuBar(null);
 				fsframe.getContentPane().add(mainMenuBar);
-				fsframe.getContentPane().add(grfx);
+				fsframe.getContentPane().add(imageRenderer);
 
 				gd.setFullScreenWindow(fsframe);
 			} else {
 				gd.setFullScreenWindow(null);
 				fsframe.setVisible(false);
-				frame.setResizable(grfx.interpolation != 0);
-				frame.getContentPane().add(grfx);
+				frame.setResizable(imageRenderer.interpolation != 0);
+				frame.getContentPane().add(imageRenderer);
 				frame.setJMenuBar(mainMenuBar);
 				frame.setVisible(true);
 			}
@@ -958,8 +814,8 @@ public final class GUI extends JApplet implements ActionListener, ItemListener, 
 		Dimension psize;
 		Dimension csize;
 		csize = (fulls ? fsframe : frame.getContentPane()).getSize();
-		if (grfx.interpolation == 0) {
-			psize = new Dimension(VC.nscale * VideoScreen.SCREEN_WIDTH, VC.nscale * VideoScreen.SCREEN_HEIGHT);
+		if (imageRenderer.interpolation == 0) {
+			psize = new Dimension(imageRenderer.nscale * ImageRenderer.SCREEN_WIDTH, imageRenderer.nscale * ImageRenderer.SCREEN_HEIGHT);
 			if (!fulls) {
 				Dimension fsize = frame.getSize();
 				Dimension bsize = new Dimension();
@@ -972,7 +828,7 @@ public final class GUI extends JApplet implements ActionListener, ItemListener, 
 			psize = new Dimension(csize);
 			if (keepAspectRatio.getState()) {
 				double ratio = psize.getWidth() / psize.getHeight();
-				double target = ((double) VideoScreen.SCREEN_WIDTH) / ((double) VideoScreen.SCREEN_HEIGHT);
+				double target = ((double) ImageRenderer.SCREEN_WIDTH) / ((double) ImageRenderer.SCREEN_HEIGHT);
 				if (ratio < target)
 					psize.height = (int) Math.round(psize.getWidth() / target);
 				else
@@ -984,10 +840,10 @@ public final class GUI extends JApplet implements ActionListener, ItemListener, 
 			trect.translate((csize.width - psize.width) / 2, 0);
 		if (psize.height < csize.height)
 			trect.translate(0, (csize.height - psize.height) / 2);
-		grfx.setBounds(trect);
+		imageRenderer.setBounds(trect);
 		if (fulls)
 			mainMenuBar.setBounds(new Rectangle(mainMenuBar.getPreferredSize()));
-		grfx.repaint();
+		imageRenderer.repaint();
 		saveConfig();
 	}
 
@@ -1017,15 +873,15 @@ public final class GUI extends JApplet implements ActionListener, ItemListener, 
 			windowClosed(null);
 		} else if (scaleRadioGroup.contains(e.getSource())) {
 			int idx = scaleRadioGroup.getSelectedIndex();
-			VC.nscale = idx + 1;
-			addOSDLine("Set scaling: Scale" + VC.nscale + "x");
+			imageRenderer.nscale = idx + 1;
+			addOSDLine("Set scaling: Scale" + imageRenderer.nscale + "x");
 			componentResized(null);
 			configStateChanged = true;
 		} else if (interpolationRadioGroup.contains(e.getSource())) {
 			int idx = interpolationRadioGroup.getSelectedIndex();
 			frame.setResizable(idx != 0);
 			keepAspectRatio.setEnabled(idx != 0);
-			grfx.interpolation = idx;
+			imageRenderer.interpolation = idx;
 			componentResized(null);
 			configStateChanged = true;
 		} else if (e.getSource().equals(keepAspectRatio)) {
@@ -1285,8 +1141,8 @@ public final class GUI extends JApplet implements ActionListener, ItemListener, 
 			cpu.audioController.setSpeed(1.0);
 			addOSDLine("EmuSpeed: 100%");
 		} else if (e.getSource().equals(menuitemMixFrame)) {
-			cpu.videoController.mixFrames = !cpu.videoController.mixFrames;
-			addOSDLine((cpu.videoController.mixFrames ? "Enabled" : "Disabled") + " Mix Frame mode");
+			imageRenderer.mixFrames = !imageRenderer.mixFrames;
+			addOSDLine((imageRenderer.mixFrames ? "Enabled" : "Disabled") + " Mix Frame mode");
 			configStateChanged = true;
 		}
 
@@ -1579,7 +1435,7 @@ public final class GUI extends JApplet implements ActionListener, ItemListener, 
 		boolean usecheats = true;
 		int colorType = 0;
 		biosfilename = "";
-		VC.nscale = 2;
+		imageRenderer.nscale = 2;
 		int adChannels = 2;
 		String adName = "None";
 		String adVendor = "None";
@@ -1597,8 +1453,8 @@ public final class GUI extends JApplet implements ActionListener, ItemListener, 
 		Dimension fsize = frame.getSize();
 		int fsizewidth = fsize.width;
 		int fsizeheight = fsize.height;
-		grfx.setPreferredSize(new Dimension(VideoScreen.SCREEN_WIDTH * cpu.videoController.nscale, VideoScreen.SCREEN_HEIGHT * cpu.videoController.nscale));
-		grfx.setSize(new Dimension(VideoScreen.SCREEN_WIDTH * cpu.videoController.nscale, VideoScreen.SCREEN_HEIGHT * cpu.videoController.nscale));
+		imageRenderer.setPreferredSize(new Dimension(ImageRenderer.SCREEN_WIDTH * imageRenderer.nscale, ImageRenderer.SCREEN_HEIGHT * imageRenderer.nscale));
+		imageRenderer.setSize(new Dimension(ImageRenderer.SCREEN_WIDTH * imageRenderer.nscale, ImageRenderer.SCREEN_HEIGHT * imageRenderer.nscale));
 		menuitemIgnoreSTAT.setState(cpu.videoController.allow_writes_in_mode_2_3);
 		frame.pack();
 		menuitemUseBIOS.setState(runbiosonreset);
@@ -1608,7 +1464,7 @@ public final class GUI extends JApplet implements ActionListener, ItemListener, 
 			((JCheckBoxMenuItem) soundChannelGroup.get(i)).setState(soundchannelactive[i]);
 		}
 		actionPerformed(new ActionEvent(menuitemColorSchemes[colorType], 0, ""));
-		scaleRadioGroup.setSelectedIndex(VC.nscale - 1);
+		scaleRadioGroup.setSelectedIndex(imageRenderer.nscale - 1);
 		if (cheatcodes == null)
 			cheatcodes = new CheatCodeEditor(frame, curcartname);
 		cheatcodes.useCheats(usecheats);
@@ -1628,7 +1484,7 @@ public final class GUI extends JApplet implements ActionListener, ItemListener, 
 		enableFullScreen.setEnabled(enableFullScreensetEnabled);
 		enableFullScreen.setState(enableFullScreensetState);
 		menuitemMixFrame.setState(menuitemMixFramesetState);
-		cpu.videoController.mixFrames = menuitemMixFramesetState;
+		imageRenderer.mixFrames = menuitemMixFramesetState;
 		fsize = new Dimension(fsizewidth, fsizeheight);
 		frame.setPreferredSize(fsize);
 		frame.pack();
@@ -1676,9 +1532,9 @@ public final class GUI extends JApplet implements ActionListener, ItemListener, 
 		;
 		{
 			if ((save))
-				dostream.writeInt((int) VC.nscale);
+				dostream.writeInt((int) imageRenderer.nscale);
 			else
-				VC.nscale = distream.readInt();
+				imageRenderer.nscale = distream.readInt();
 		}
 		;
 		{
@@ -1852,7 +1708,7 @@ public final class GUI extends JApplet implements ActionListener, ItemListener, 
 			}
 		}
 		;
-		cpu.videoController.mixFrames = menuitemMixFrame.getState();
+		imageRenderer.mixFrames = menuitemMixFrame.getState();
 
 		{
 			int[][][] gs = VC.getGrayShades();
