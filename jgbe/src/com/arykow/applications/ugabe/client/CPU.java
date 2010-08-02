@@ -71,14 +71,12 @@ public final class CPU {
 	public int decoderMaxCruise = 0;
 	private CPUServer server;
 
-	public final VideoScreen videoScreen;
 	public final VideoController videoController;
 	public final AudioController audioController;
 
-	public CPU(CPUServer server, VideoScreen videoScreen) {
+	public CPU(CPUServer server, ImageRenderer imageController) {
 		this.server = server;
-		this.videoScreen = videoScreen;
-		this.videoController = new VideoController(this, VideoScreen.SCREEN_WIDTH, VideoScreen.SCREEN_HEIGHT, videoScreen);
+		this.videoController = new VideoController(this, VideoScreen.SCREEN_WIDTH, VideoScreen.SCREEN_HEIGHT, imageController);
 		this.audioController = new AudioController(this);
 	}
 

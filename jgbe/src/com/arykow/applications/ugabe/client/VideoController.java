@@ -17,17 +17,13 @@ package com.arykow.applications.ugabe.client;
 
 public final class VideoController {
 	/**
-	 * LCD Control Register
-	 * Bits 0000 0000 ABCD EFGH
+	 * LCD Control Register Bits 0000 0000 ABCD EFGH
 	 * 
-	 * A : LCD Display						=> Enabled / Disabled
-	 * B : Window Tile Map Address			=> 9C00-9FFF / 9800-9BFF
-	 * C : Display Window					=> Yes / No
-	 * D : BG & Window Tile Data Address	=> 8000-8FFF / 8800-97FF
-	 * E : BG Tile Map Display Address		=> 9800-9BFF / 9C00-9FFF
-	 * F : Sprite Size						=> 8x16 / 8x8
-	 * G : Display Sprites					=> Yes / No
-	 * H : Display Background				=> Yes / No
+	 * A : LCD Display => Enabled / Disabled B : Window Tile Map Address =>
+	 * 9C00-9FFF / 9800-9BFF C : Display Window => Yes / No D : BG & Window Tile
+	 * Data Address => 8000-8FFF / 8800-97FF E : BG Tile Map Display Address =>
+	 * 9800-9BFF / 9C00-9FFF F : Sprite Size => 8x16 / 8x8 G : Display Sprites
+	 * => Yes / No H : Display Background => Yes / No
 	 */
 	public int LCDC = 0;
 	public int currentVRAMBank = 0;
@@ -71,30 +67,14 @@ public final class VideoController {
 	private final static boolean useSubscanlineRendering = false;
 	private final static int GRAYSHADES[][] = { { 0xa0, 0xe0, 0x20 }, { 0x70, 0xb0, 0x40 }, { 0x40, 0x70, 0x32 }, { 0x10, 0x50, 0x26 } };
 
-	private VideoScreen screen;
 	private CPU cpu;
+	private ImageRenderer imageRenderer;
 
 	private int grayColors[][][] = { GRAYSHADES, GRAYSHADES, GRAYSHADES };
-	private int blitImg[][] = new int[VideoScreen.SCREEN_HEIGHT][VideoScreen.SCREEN_WIDTH];
-	private int blitImg_prev[][] = new int[VideoScreen.SCREEN_HEIGHT][VideoScreen.SCREEN_WIDTH];
-	private int paletteColors[] = new int[8 * 4 * 2 * ARRAY_SIZE];
-	private int scale = 3;
-	private int cfskip = 0;
+	int scale = 3;
+	int cfskip = 0;
 
-	private static final int ARRAY_SIZE = 1;
-
-	private final void updateBLITFromPaletteColors(int srcPos, int dstPos) {
-		System.arraycopy(paletteColors, srcPos, blitImg[LY], dstPos, ARRAY_SIZE);
-	}
-
-	private void updatePaletteColors(int index, int r, int g, int b) {
-		paletteColors[index] = ((r << 16) | (g << 8) | (b << 0));
-		// paletteColors[4 * index + 0] = r & 0x0FF;
-		// paletteColors[4 * index + 1] = g & 0x0FF;
-		// paletteColors[4 * index + 2] = b & 0x0FF;
-		// paletteColors[4 * index + 3] = 0x0FF;
-	}
-
+	
 	public void setGrayShade(int i, int j, int[] colors) {
 		System.arraycopy(colors, 0, grayColors[i][j], 0, RGB.values().length);
 		updateMonoColDatas();
@@ -179,174 +159,11 @@ public final class VideoController {
 			VRAM[i] = 0;
 	}
 
-	public VideoController(CPU cpu, int image_width, int image_height, VideoScreen screen) {
+	public VideoController(CPU cpu, int image_width, int image_height, ImageRenderer imageController) {
 		this.cpu = cpu;
-		this.screen = screen;
-		screen.scaleImage(scale = nscale);
+		this.imageRenderer = imageController;
+//		screen.scaleImage(scale = nscale);
 		reset();
-	}
-
-	private void blitImage() {
-		cfskip--;
-		if (cfskip < 0) {
-			cfskip += fskip;
-			if (scale != nscale) {
-				screen.scaleImage(scale = nscale);
-			}
-
-			int pixels[] = screen.getPixels();
-
-			if (mixFrames) {
-				for (int y = 0; y < VideoScreen.SCREEN_HEIGHT; ++y) {
-					for (int x = 0; x < VideoScreen.SCREEN_WIDTH; ++x) {
-						blitImg[y][x] = (((((blitImg[y][x]) ^ (blitImg_prev[y][x])) & 0xfffefefe) >> 1) + ((blitImg[y][x]) & (blitImg_prev[y][x])));
-						blitImg_prev[y][x] = blitImg[y][x];
-					}
-				}
-			}
-			if (scale == 1) {
-				for (int y = 0; y < VideoScreen.SCREEN_HEIGHT; ++y) {
-					int[] blitLine = blitImg[y];
-					System.arraycopy(blitLine, 0, pixels, y * VideoScreen.SCREEN_WIDTH, VideoScreen.SCREEN_WIDTH);
-				}
-			} else if (scale == 2) {
-				int ti1 = -1, ti2 = -1;
-				ti2 += VideoScreen.SCREEN_WIDTH * 2;
-				for (int y = 0; y < VideoScreen.SCREEN_HEIGHT; ++y) {
-					int yn = (y == 0) ? 0 : y - 1;
-					int yp = (y == 143) ? 143 : y + 1;
-					int[] blitLine2 = blitImg[y];
-					int[] blitLine1 = blitImg[yn];
-					int[] blitLine3 = blitImg[yp];
-					for (int x = 0; x < VideoScreen.SCREEN_WIDTH; ++x) {
-						int xn = (x == 0) ? 0 : x - 1;
-						int xp = (x == 159) ? 159 : x + 1;
-						if (!((blitLine2[xn]) == (blitLine2[xp])) && !((blitLine1[x]) == (blitLine3[x]))) {
-							pixels[++ti1] = ((blitLine1[x]) == (blitLine2[xn])) ? blitLine2[xn] : blitLine2[x];
-							pixels[++ti1] = ((blitLine1[x]) == (blitLine2[xp])) ? blitLine2[xp] : blitLine2[x];
-							pixels[++ti2] = ((blitLine3[x]) == (blitLine2[xn])) ? blitLine2[xn] : blitLine2[x];
-							pixels[++ti2] = ((blitLine3[x]) == (blitLine2[xp])) ? blitLine2[xp] : blitLine2[x];
-						} else {
-							int col = blitLine2[x];
-							pixels[++ti1] = col;
-							pixels[++ti1] = col;
-							pixels[++ti2] = col;
-							pixels[++ti2] = col;
-						}
-					}
-					ti1 += VideoScreen.SCREEN_WIDTH * 2;
-					ti2 += VideoScreen.SCREEN_WIDTH * 2;
-				}
-			} else if (scale == 3) {
-
-				int ti1 = -1, ti2 = -1, ti3 = -1;
-				ti2 += VideoScreen.SCREEN_WIDTH * 3;
-				ti3 += VideoScreen.SCREEN_WIDTH * 3 * 2;
-				for (int y = 0; y < VideoScreen.SCREEN_HEIGHT; ++y) {
-					int yn = (y == 0) ? 0 : y - 1;
-					int yp = (y == 143) ? 143 : y + 1;
-					int[] blitLine2 = blitImg[y];
-					int[] blitLine1 = blitImg[yn];
-					int[] blitLine3 = blitImg[yp];
-					for (int x = 0; x < VideoScreen.SCREEN_WIDTH; ++x) {
-						int xn = (x == 0) ? 0 : x - 1;
-						int xp = (x == 159) ? 159 : x + 1;
-						if (!((blitLine1[x]) == (blitLine3[x])) && !((blitLine2[xn]) == (blitLine2[xp]))) {
-							pixels[++ti1] = ((blitLine2[xn]) == (blitLine1[x])) ? blitLine2[xn] : blitLine2[x];
-							pixels[++ti1] = (((blitLine2[xn]) == (blitLine1[x])) && !((blitLine2[x]) == (blitLine1[xp]))) || (((blitLine1[x]) == (blitLine2[xp])) && !((blitLine2[x]) == (blitLine1[xn]))) ? blitLine1[x] : blitLine2[x];
-							pixels[++ti1] = ((blitLine1[x]) == (blitLine2[xp])) ? blitLine2[xp] : blitLine2[x];
-							pixels[++ti2] = (((blitLine2[xn]) == (blitLine1[x])) && !((blitLine2[x]) == (blitLine3[xn]))) || (((blitLine2[xn]) == (blitLine3[x])) && !((blitLine2[x]) == (blitLine1[xn]))) ? blitLine2[xn] : blitLine2[x];
-							pixels[++ti2] = blitLine2[x];
-							pixels[++ti2] = (((blitLine1[x]) == (blitLine2[xp])) && !((blitLine2[x]) == (blitLine3[xp]))) || (((blitLine3[x]) == (blitLine2[xp])) && !((blitLine2[x]) == (blitLine1[xp]))) ? blitLine2[xp] : blitLine2[x];
-							pixels[++ti3] = ((blitLine2[xn]) == (blitLine3[x])) ? blitLine2[xn] : blitLine2[x];
-							pixels[++ti3] = (((blitLine2[xn]) == (blitLine3[x])) && !((blitLine2[x]) == (blitLine3[xp]))) || (((blitLine3[x]) == (blitLine2[xp])) && !((blitLine2[x]) == (blitLine3[xn]))) ? blitLine3[x] : blitLine2[x];
-							pixels[++ti3] = ((blitLine3[x]) == (blitLine2[xp])) ? blitLine2[xp] : blitLine2[x];
-						} else {
-							int col = blitLine2[x];
-							pixels[++ti1] = col;
-							pixels[++ti1] = col;
-							pixels[++ti1] = col;
-							pixels[++ti2] = col;
-							pixels[++ti2] = col;
-							pixels[++ti2] = col;
-							pixels[++ti3] = col;
-							pixels[++ti3] = col;
-							pixels[++ti3] = col;
-						}
-					}
-					ti1 += VideoScreen.SCREEN_WIDTH * 3 * 2;
-					ti2 += VideoScreen.SCREEN_WIDTH * 3 * 2;
-					ti3 += VideoScreen.SCREEN_WIDTH * 3 * 2;
-				}
-			} else if (scale == 4) {
-
-				int ti1 = -1, ti2 = -1, ti3 = -1, ti4 = -1;
-				ti2 += VideoScreen.SCREEN_WIDTH * 4;
-				ti3 += VideoScreen.SCREEN_WIDTH * 4 * 2;
-				ti4 += VideoScreen.SCREEN_WIDTH * 4 * 3;
-				for (int y = 0; y < VideoScreen.SCREEN_HEIGHT; ++y) {
-					int yn = (y == 0) ? 0 : y - 1;
-					int yp = (y == 143) ? 143 : y + 1;
-					int[] blitLine2 = blitImg[y];
-					int[] blitLine1 = blitImg[yn];
-					int[] blitLine3 = blitImg[yp];
-					for (int x = 0; x < VideoScreen.SCREEN_WIDTH; ++x) {
-						int xn = (x == 0) ? 0 : x - 1;
-						int xp = (x == 159) ? 159 : x + 1;
-
-						if (((blitLine1[x]) == (blitLine2[xn]))) {
-							pixels[++ti1] = blitLine1[x];
-							pixels[++ti1] = blitLine1[x];
-							pixels[++ti2] = blitLine1[x];
-						} else {
-							pixels[++ti1] = blitLine2[x];
-							pixels[++ti1] = blitLine2[x];
-							pixels[++ti2] = blitLine2[x];
-						}
-						pixels[++ti2] = blitLine2[x];
-						pixels[++ti2] = blitLine2[x];
-						if (((blitLine1[x]) == (blitLine2[xp]))) {
-							pixels[++ti1] = blitLine1[x];
-							pixels[++ti1] = blitLine1[x];
-							pixels[++ti2] = blitLine1[x];
-						} else {
-							pixels[++ti1] = blitLine2[x];
-							pixels[++ti1] = blitLine2[x];
-							pixels[++ti2] = blitLine2[x];
-						}
-						if (((blitLine3[x]) == (blitLine2[xn]))) {
-							pixels[++ti3] = blitLine3[x];
-							pixels[++ti4] = blitLine3[x];
-							pixels[++ti4] = blitLine3[x];
-						} else {
-							pixels[++ti3] = blitLine2[x];
-							pixels[++ti4] = blitLine2[x];
-							pixels[++ti4] = blitLine2[x];
-						}
-						pixels[++ti3] = blitLine2[x];
-						pixels[++ti3] = blitLine2[x];
-						if (((blitLine3[x]) == (blitLine2[xp]))) {
-							pixels[++ti3] = blitLine3[x];
-							pixels[++ti4] = blitLine3[x];
-							pixels[++ti4] = blitLine3[x];
-						} else {
-							pixels[++ti3] = blitLine2[x];
-							pixels[++ti4] = blitLine2[x];
-							pixels[++ti4] = blitLine2[x];
-						}
-					}
-					ti1 += VideoScreen.SCREEN_WIDTH * 4 * 3;
-					ti2 += VideoScreen.SCREEN_WIDTH * 4 * 3;
-					ti3 += VideoScreen.SCREEN_WIDTH * 4 * 3;
-					ti4 += VideoScreen.SCREEN_WIDTH * 4 * 3;
-				}
-			}
-			if (screen != null) {
-				screen.swapImage();
-			}
-		}
-		curWNDY = 0;
-
 	}
 
 	public void updateMonoColData(int index) {
@@ -361,13 +178,13 @@ public final class VideoController {
 			--index;
 		int temp[] = null;
 		temp = curColors[(value >> 0) & 3];
-		updatePaletteColors((index << 2) | 0, temp[0], temp[1], temp[2]);
+		imageRenderer.updatePaletteColors((index << 2) | 0, temp[0], temp[1], temp[2]);
 		temp = curColors[(value >> 2) & 3];
-		updatePaletteColors((index << 2) | 1, temp[0], temp[1], temp[2]);
+		imageRenderer.updatePaletteColors((index << 2) | 1, temp[0], temp[1], temp[2]);
 		temp = curColors[(value >> 4) & 3];
-		updatePaletteColors((index << 2) | 2, temp[0], temp[1], temp[2]);
+		imageRenderer.updatePaletteColors((index << 2) | 2, temp[0], temp[1], temp[2]);
 		temp = curColors[(value >> 6) & 3];
-		updatePaletteColors((index << 2) | 3, temp[0], temp[1], temp[2]);
+		imageRenderer.updatePaletteColors((index << 2) | 3, temp[0], temp[1], temp[2]);
 	}
 
 	public void setBGColData(int value) {
@@ -419,7 +236,7 @@ public final class VideoController {
 		if (value != null) {
 			paletteColorIndex |= value.intValue();
 		}
-		updatePaletteColors(paletteColorIndex, r, g, b);
+		imageRenderer.updatePaletteColors(paletteColorIndex, r, g, b);
 	}
 
 	public int getOBColData() {
@@ -480,11 +297,13 @@ public final class VideoController {
 				} else {
 					STAT = (STAT & 0xFC) | 1;
 					++STAT_statemachine_state;
-					if (lcdOperationEnabled())
+					if (lcdOperationEnabled()) {
 						cpu.triggerInterrupt(0);
-					if ((STAT & (1 << 4)) != 0)
+					}
+					if ((STAT & (1 << 4)) != 0) {
 						cpu.triggerInterrupt(1);
-					blitImage();
+					}
+					imageRenderer.blitImage(this);
 				}
 				break;
 			case 4:
@@ -540,7 +359,7 @@ public final class VideoController {
 			for (int i = pixpos; i < VideoScreen.SCREEN_WIDTH; ++i) {
 				int x = pixpos + i;
 				if ((x >= 0) && (x < VideoScreen.SCREEN_WIDTH)) {
-					updateBLITFromPaletteColors(32 | 0, x);
+					imageRenderer.updateBLITFromPaletteColors(this, 32 | 0, x);
 				}
 			}
 			pixpos = VideoScreen.SCREEN_WIDTH;
@@ -561,7 +380,7 @@ public final class VideoController {
 				for (int i = 0; i < 8; ++i) {
 					int x = pixpos + i;
 					if ((x >= 0) && (x < VideoScreen.SCREEN_WIDTH)) {
-						updateBLITFromPaletteColors(0 | 0, x);
+						imageRenderer.updateBLITFromPaletteColors(this, 0 | 0, x);
 						zbuffer[x] = 0;
 					}
 				}
@@ -578,7 +397,7 @@ public final class VideoController {
 					int x = pixpos + i;
 					if ((x >= 0) && (x < VideoScreen.SCREEN_WIDTH)) {
 						int color = patterns.get(bgtile, bgline & 7, i);
-						updateBLITFromPaletteColors(bgpal | color, x);
+						imageRenderer.updateBLITFromPaletteColors(this, bgpal | color, x);
 						zbuffer[x] = color;
 					}
 				}
@@ -614,7 +433,7 @@ public final class VideoController {
 						int color = patterns.get(tile, line, i);
 
 						if ((xpos >= 0) && (xpos < VideoScreen.SCREEN_WIDTH) && (color != 0) && ((zbuffer[xpos] == 0) || priority)) {
-							updateBLITFromPaletteColors(pallette | color, xpos);
+							imageRenderer.updateBLITFromPaletteColors(this, pallette | color, xpos);
 						}
 						++xpos;
 					}
@@ -970,7 +789,7 @@ public final class VideoController {
 			int ii = tilebufBG[bufMap++];
 			int tilePal = tilebufBG[bufMap++];
 			for (int t = bgOffsX; t < 8; ++t, --cnt) {
-				updateBLITFromPaletteColors(tilePal | patterns.get(ii, bgOffsY, t), curX++);
+				imageRenderer.updateBLITFromPaletteColors(this, tilePal | patterns.get(ii, bgOffsY, t), curX++);
 			}
 		}
 
@@ -982,7 +801,7 @@ public final class VideoController {
 				int ii = tilebufBG[bufMap++];
 				int tilePal = tilebufBG[bufMap++];
 				for (int t = 0; t < 8; ++t) {
-					updateBLITFromPaletteColors(tilePal | patterns.get(ii, bgOffsY, t), curX++);
+					imageRenderer.updateBLITFromPaletteColors(this, tilePal | patterns.get(ii, bgOffsY, t), curX++);
 				}
 			}
 			cnt -= 8;
@@ -991,7 +810,7 @@ public final class VideoController {
 			int ii = tilebufBG[bufMap++];
 			int tilePal = tilebufBG[bufMap++];
 			for (int t = 0; cnt > 0; --cnt, ++t) {
-				updateBLITFromPaletteColors(tilePal | patterns.get(ii, bgOffsY, t), curX++);
+				imageRenderer.updateBLITFromPaletteColors(this, tilePal | patterns.get(ii, bgOffsY, t), curX++);
 			}
 		}
 	}
@@ -1037,7 +856,7 @@ public final class VideoController {
 			int ii = tilebufBG[bufMap++];
 			int TilePal = tilebufBG[bufMap++];
 			for (int t = bgOffsX; (t < 8) && (cnt > 0); ++t, --cnt) {
-				updateBLITFromPaletteColors(TilePal | patterns.get(ii, bgOffsY, t), curX++);
+				imageRenderer.updateBLITFromPaletteColors(this, TilePal | patterns.get(ii, bgOffsY, t), curX++);
 			}
 		}
 		while (cnt >= 8) {
@@ -1045,7 +864,7 @@ public final class VideoController {
 				int ii = tilebufBG[bufMap++];
 				int TilePal = tilebufBG[bufMap++];
 				for (int t = 0; t < 8; ++t) {
-					updateBLITFromPaletteColors(TilePal | patterns.get(ii, bgOffsY, t), curX++);
+					imageRenderer.updateBLITFromPaletteColors(this, TilePal | patterns.get(ii, bgOffsY, t), curX++);
 				}
 			}
 			cnt -= 8;
@@ -1054,7 +873,7 @@ public final class VideoController {
 			int ii = tilebufBG[bufMap++];
 			int TilePal = tilebufBG[bufMap++];
 			for (int t = 0; cnt > 0; --cnt, ++t) {
-				updateBLITFromPaletteColors(TilePal | patterns.get(ii, bgOffsY, t), curX++);
+				imageRenderer.updateBLITFromPaletteColors(this, TilePal | patterns.get(ii, bgOffsY, t), curX++);
 			}
 		}
 	}
@@ -1080,26 +899,22 @@ public final class VideoController {
 	/**
 	 * http://fms.komkon.org/GameBoy/Tech/Software.html
 	 * 
-	 * Sprites
-	 * GameBoy video controller can display up to 40 sprites either in 8x8 or in 8x16 mode.
-	 * Sprite patterns have the same format as tiles, but they are taken from the Sprite Pattern Table located at 8000-8FFF and therefore have unsigned numbers.
-	 * Sprite attributes reside in the Sprite Attribute Table (aka OAM) at FE00-FE9F.
-	 * OAM (Object Attribute Memory) is divided into 40 4-byte blocks each of which corresponds to a sprite.
+	 * Sprites GameBoy video controller can display up to 40 sprites either in
+	 * 8x8 or in 8x16 mode. Sprite patterns have the same format as tiles, but
+	 * they are taken from the Sprite Pattern Table located at 8000-8FFF and
+	 * therefore have unsigned numbers. Sprite attributes reside in the Sprite
+	 * Attribute Table (aka OAM) at FE00-FE9F. OAM (Object Attribute Memory) is
+	 * divided into 40 4-byte blocks each of which corresponds to a sprite.
 	 * 
-	 * Blocks have the following format:
-	 *   Byte0  Y position on the screen
-	 *   Byte1  X position on the screen
-	 *   Byte2  Pattern number 0-255 [notice that unlike tile numbers, sprite pattern numbers are unsigned] 
-	 *   Byte3  Flags:
-	 *          Bit7  Priority
-	 *                Sprite is displayed in front of the window if this bit is set to 1.
-	 *                Otherwise, sprite is shown behind the window but in front of the background.
-	 *          Bit6  Y flip
-	 *                Sprite pattern is flipped vertically if this bit is set to 1.
-	 *          Bit5  X flip
-	 *                Sprite pattern is flipped horizontally if this bit is set to 1.
-	 *          Bit4  Palette number
-	 *                Sprite colors are taken from OBJ1PAL if this bit is set to 1 and from OBJ0PAL otherwise.
+	 * Blocks have the following format: Byte0 Y position on the screen Byte1 X
+	 * position on the screen Byte2 Pattern number 0-255 [notice that unlike
+	 * tile numbers, sprite pattern numbers are unsigned] Byte3 Flags: Bit7
+	 * Priority Sprite is displayed in front of the window if this bit is set to
+	 * 1. Otherwise, sprite is shown behind the window but in front of the
+	 * background. Bit6 Y flip Sprite pattern is flipped vertically if this bit
+	 * is set to 1. Bit5 X flip Sprite pattern is flipped horizontally if this
+	 * bit is set to 1. Bit4 Palette number Sprite colors are taken from OBJ1PAL
+	 * if this bit is set to 1 and from OBJ0PAL otherwise.
 	 */
 	private void renderScanlineSprites() {
 		SpriteType spriteType = SpriteType.createSpriteType(checkLCDCBitEnabled(2));
@@ -1134,12 +949,11 @@ public final class VideoController {
 					paletteNumber = spriteAttribute & 7;
 				}
 
-
 				for (int offsetX = 0; offsetX < 8; ++offsetX) {
 					int columnIndex = spritePositionX - 8 + offsetX;
 					int color = patterns.get(spriteNumber, offsetY, offsetX);
 					if (color != 0 && columnIndex >= 0 && columnIndex < VideoScreen.SCREEN_WIDTH) {
-						updateBLITFromPaletteColors((paletteNumber << 2) | color, columnIndex);
+						imageRenderer.updateBLITFromPaletteColors(this, (paletteNumber << 2) | color, columnIndex);
 					}
 				}
 			}
