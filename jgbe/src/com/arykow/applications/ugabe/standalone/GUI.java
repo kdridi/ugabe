@@ -112,6 +112,8 @@ import com.arykow.applications.ugabe.standalone.Debugger.DebugRunner;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public final class GUI extends JApplet implements ActionListener, ItemListener, KeyListener, ComponentListener, WindowListener, MouseMotionListener, FocusListener {
+	private static final long serialVersionUID = -5280334034698204592L;
+
 	private IntVector saveStateOrder = new IntVector();
 	private DrawingArea grfx = new DrawingArea();
 	private int lastmousex;
@@ -281,22 +283,14 @@ public final class GUI extends JApplet implements ActionListener, ItemListener, 
 			int height = scale * SCREEN_HEIGHT;
 			drawImg[0] = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 			drawImg[1] = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-			pixels = new int[width * height * VideoController.ARRAY_SIZE];
 		}
 
 		public Image getImage() {
-			BufferedImage result = drawImg[curDrawImg];
-			int[] data = DataBufferInt.class.cast(result.getRaster().getDataBuffer()).getData();
-			for (int index = 0; index < data.length; index++) {
-				data[index] = ((pixels[4 * index + 0] << 16) | (pixels[4 * index + 1] << 8) | (pixels[4 * index + 2] << 0));
-			}
-			return result;
+			return drawImg[curDrawImg];
 		}
 
-		private int[] pixels;
-
 		public int[] getPixels() {
-			return pixels;
+			return DataBufferInt.class.cast(drawImg[curDrawImg ^ 1].getRaster().getDataBuffer()).getData();
 		}
 
 		public int interpolation;
@@ -757,7 +751,7 @@ public final class GUI extends JApplet implements ActionListener, ItemListener, 
 	public void showGUI() {
 		Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
 		Point p = new Point();
-		p.setLocation((((double) d.getWidth()) / 2) - (((double) frame.getWidth()) / 2), (((double) d.getHeight()) / 2) - (((double) frame.getHeight()) / 2));
+		p.setLocation((((double)d.getWidth()) / 2) - (((double)frame.getWidth()) / 2), (((double)d.getHeight()) / 2) - (((double)frame.getHeight()) / 2));
 		frame.setLocation(p);
 		frame.setVisible(true);
 	}
