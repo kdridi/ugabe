@@ -239,6 +239,7 @@ public class ImageRendererGUI extends JPanel implements ImageRenderer {
 
 	public ImageRendererGUI(GUI gui) {
 		this.gui = gui;
+		scaleImage(scale = nscale);
 	}
 
 
