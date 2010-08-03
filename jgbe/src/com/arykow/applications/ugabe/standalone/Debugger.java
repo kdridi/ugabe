@@ -362,14 +362,14 @@ public class Debugger implements ActionListener, ItemListener, KeyListener, Mous
 					s = "<HTML><PRE>";
 					s += " " + String.format(((regs2 == table) ? "%dd  %04xh " : "%dd  %02xh ") + brep + "b", i, i) + "<BR>";
 					s += " ----------------------------------------- <BR>";
-					s += " LCD Display                   : " + ((gui.cpu.videoController.checkLCDCBitEnabled(7)) ? "Enabled" : "Disabled") + " <BR>";
-					s += " Window Tile Map Address       : " + ((gui.cpu.videoController.checkLCDCBitEnabled(6)) ? "9C00-9FFF" : "9800-9BFF") + " <BR>";
-					s += " Display Window                : " + ((gui.cpu.videoController.checkLCDCBitEnabled(5)) ? "Yes" : "No") + " <BR>";
-					s += " BG & Window Tile Data Address : " + ((gui.cpu.videoController.checkLCDCBitEnabled(4)) ? "8000-8FFF" : "8800-97FF") + " <BR>";
-					s += " BG Tile Map Display Address   : " + ((gui.cpu.videoController.checkLCDCBitEnabled(3)) ? "9800-9BFF" : "9C00-9FFF") + " <BR>";
-					s += " Sprite Size                   : " + ((gui.cpu.videoController.checkLCDCBitEnabled(2)) ? "8x16" : "8x8") + " <BR>";
-					s += " Display Sprites               : " + ((gui.cpu.videoController.checkLCDCBitEnabled(1)) ? "Yes" : "No") + " <BR>";
-					s += " Display Background            : " + ((gui.cpu.videoController.checkLCDCBitEnabled(0)) ? "Yes" : "No") + " <BR>";
+					s += " LCD Display                   : " + ((gui.cpu.videoController.lcdController.operationEnabled) ? "Enabled" : "Disabled") + " <BR>";
+					s += " Window Tile Map Address       : " + ((gui.cpu.videoController.lcdController.windowTileMapAddress == 0x1C00) ? "9C00-9FFF" : "9800-9BFF") + " <BR>";
+					s += " Display Window                : " + ((gui.cpu.videoController.lcdController.windowDisplayEnabled) ? "Yes" : "No") + " <BR>";
+					s += " BG & Window Tile Data Address : " + ((gui.cpu.videoController.lcdController.tileMapAddressLow) ? "8000-8FFF" : "8800-97FF") + " <BR>";
+					s += " BG Tile Map Display Address   : " + ((gui.cpu.videoController.lcdController.backgroundTileMapAddress == 0x1800) ? "9800-9BFF" : "9C00-9FFF") + " <BR>";
+					s += " Sprite Size                   : " + ((gui.cpu.videoController.lcdController.spriteHeight == 16) ? "8x16" : "8x8") + " <BR>";
+					s += " Display Sprites               : " + ((gui.cpu.videoController.lcdController.spriteDisplayEnabled) ? "Yes" : "No") + " <BR>";
+					s += " Display Background            : " + ((gui.cpu.videoController.lcdController.backgroundDisplayEnabled) ? "Yes" : "No") + " <BR>";
 					s += "</PRE></HTML>";
 				} else if (table == hwregs && row == 0 && column == 1) {
 					int j = gui.cpu.videoController.STAT;
