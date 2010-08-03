@@ -43,7 +43,7 @@ public final class VideoController {
 
 	private RenderScanLine renderScanLine = new RenderScanLine();
 	private RenderScanLinePart renderScanLinePart = new RenderScanLinePart();
-	private final static boolean useSubscanlineRendering = true;
+	private final static boolean useSubscanlineRendering = false;
 	
 	public LCDController lcdController = new LCDController();
 	
