@@ -16,16 +16,55 @@
 package com.arykow.applications.ugabe.client;
 
 public final class VideoController {
+
 	/**
-	 * LCD Control Register Bits 0000 0000 ABCD EFGH
+	 * LCD Control Register
+	 * Bits 0000 0000 ABCD EFGH
 	 * 
-	 * A : LCD Display => Enabled / Disabled B : Window Tile Map Address =>
-	 * 9C00-9FFF / 9800-9BFF C : Display Window => Yes / No D : BG & Window Tile
-	 * Data Address => 8000-8FFF / 8800-97FF E : BG Tile Map Display Address =>
-	 * 9800-9BFF / 9C00-9FFF F : Sprite Size => 8x16 / 8x8 G : Display Sprites
-	 * => Yes / No H : Display Background => Yes / No
+	 * 7 A : LCD Display						=> Enabled / Disabled
+	 * 6 B : Window Tile Map Address			=> 9C00-9FFF / 9800-9BFF
+	 * 5 C : Display Window					=> Yes / No
+	 * 4 D : BG & Window Tile Data Address	=> 8000-8FFF / 8800-97FF
+	 * 3 E : BG Tile Map Display Address		=> 9800-9BFF / 9C00-9FFF
+	 * 2 F : Sprite Size						=> 8x16 / 8x8
+	 * 1 G : Display Sprites					=> Yes / No
+	 * 0 H : Display Background				=> Yes / No
 	 */
-	public int LCDC = 0;
+	
+	public static class LCDC {
+		public int value;
+		public int windowTileMapAddress;
+		public boolean windowDisplayEnabled;
+		public boolean operationEnabled;
+		public int backgroundTileMapAddress;
+		public boolean spriteDisplayEnabled;
+		public boolean backgroundDisplayEnabled;
+		public boolean tileMapAddressLow;
+		public int spriteWidth = 8;
+		public int spriteHeight = 8;
+
+		public LCDC() {
+			setValue(0);
+		}
+
+		public int getValue() {
+			return value;
+		}
+		public void setValue(int value) {
+			this.value = value;
+			this.operationEnabled			= (value & (1 << 7)) != 0;
+			this.windowTileMapAddress		= (value & (1 << 6)) != 0 ? 0x1C00 : 0x1800;
+			this.windowDisplayEnabled		= (value & (1 << 5)) != 0;
+			this.tileMapAddressLow			= (value & (1 << 4)) != 0;
+			this.backgroundTileMapAddress	= (value & (1 << 3)) != 0 ? 0x1C00 : 0x1800;
+			this.spriteHeight				= (value & (1 << 2)) != 0 ? 16 : 8;
+			this.spriteDisplayEnabled		= (value & (1 << 1)) != 0;
+			this.backgroundDisplayEnabled	= (value & (1 << 0)) != 0;
+		}
+	}
+	public LCDC lcdController = new LCDC();
+	
+	
 	public int currentVRAMBank = 0;
 	public int VRAM[] = new int[0x4000];
 	public int OAM[] = new int[40 * 4];
@@ -128,7 +167,7 @@ public final class VideoController {
 		SCY = 0;
 		WX = 0;
 		WY = 0;
-		LCDC = cpu.BIOS_enabled ? 0x00 : 0x91;
+		lcdController.setValue(cpu.BIOS_enabled ? 0x00 : 0x91);
 		STAT = 0x85;
 		STAT_statemachine_state = 0;
 		LCDCcntdwn = 80;
@@ -293,7 +332,7 @@ public final class VideoController {
 				} else {
 					STAT = (STAT & 0xFC) | 1;
 					++STAT_statemachine_state;
-					if (lcdOperationEnabled()) {
+					if (lcdController.operationEnabled) {
 						cpu.triggerInterrupt(0);
 					}
 					if ((STAT & (1 << 4)) != 0) {
@@ -357,7 +396,7 @@ public final class VideoController {
 	private void renderScanLinePart() {
 		if ((STAT_statemachine_state != 1))
 			return;
-		if (!lcdOperationEnabled()) {
+		if (!lcdController.operationEnabled) {
 			for (int i = pixpos; i < ImageRenderer.SCREEN_WIDTH; ++i) {
 				int x = pixpos + i;
 				if ((x >= 0) && (x < ImageRenderer.SCREEN_WIDTH)) {
@@ -378,7 +417,7 @@ public final class VideoController {
 				cyclesToRender -= 2;
 				++curSprite;
 				pixpos -= 8;
-			} else if ((!isCGB) && !checkLCDCBitEnabled(1)) {
+			} else if ((!isCGB) && !lcdController.spriteDisplayEnabled) {
 				for (int i = 0; i < 8; ++i) {
 					int x = pixpos + i;
 					if ((x >= 0) && (x < ImageRenderer.SCREEN_WIDTH)) {
@@ -389,9 +428,9 @@ public final class VideoController {
 			} else {
 				int bgline = SCY + LY;
 				int bgtilemapindex = (((SCX + pixpos) & 0xff) >> 3) + ((bgline & 0xf8) << 2);
-				int bgtile = VRAM[getBackgroundTileMapAddress() + bgtilemapindex];
+				int bgtile = VRAM[lcdController.backgroundTileMapAddress + bgtilemapindex];
 				int bgpal = 0x08 << 2;
-				if (!checkLCDCBitEnabled(4)) {
+				if (!lcdController.tileMapAddressLow) {
 					bgtile ^= 0x80;
 					bgtile += 0x80;
 				}
@@ -419,8 +458,7 @@ public final class VideoController {
 					int xpos = OAM[spritesOnScanline[curSprite] | 1] - 8;
 					int tile = OAM[spritesOnScanline[curSprite] | 2];
 					int attr = OAM[spritesOnScanline[curSprite] | 3];
-					if (checkLCDCBitEnabled(2)) {
-
+					if (lcdController.spriteHeight == 16) {
 						tile &= ~1;
 						tile |= (line >= 8) ? 1 : 0;
 						line &= 7;
@@ -452,12 +490,11 @@ public final class VideoController {
 	int[] spritesOnScanline = new int[40];
 
 	private int setSpritesOnScanline() {
-		int sprYSize = checkLCDCBitEnabled(2) ? 16 : 8;
 		int count = 0;
 		for (int spr = 0; (spr < 40 * 4); spr += 4) {
 			int sprPos = LY - (OAM[spr] - 16);
 
-			if ((sprPos >= 0) && (sprPos < sprYSize)) {
+			if ((sprPos >= 0) && (sprPos < lcdController.spriteHeight)) {
 				spritesOnScanline[count] = spr;
 				++count;
 			}
@@ -480,14 +517,14 @@ public final class VideoController {
 
 	public int read(int index) {
 		if (index < 0xa000) {
-			if (allow_writes_in_mode_2_3 || !lcdOperationEnabled() || ((STAT & 3) != 3)) {
+			if (allow_writes_in_mode_2_3 || !lcdController.operationEnabled || ((STAT & 3) != 3)) {
 				return VRAM[index - 0x8000 + currentVRAMBank];
 			}
 			CPULogger.printf("WARNING: Read from VRAM[0x%04x] denied during mode " + (STAT & 3) + ", PC=0x%04x\n", index, cpu.getPC());
 			return 0xff;
 		}
 		if ((index > 0xfdff) && (index < 0xfea0)) {
-			if (allow_writes_in_mode_2_3 || !lcdOperationEnabled() || ((STAT & 2) == 0)) {
+			if (allow_writes_in_mode_2_3 || !lcdController.operationEnabled || ((STAT & 2) == 0)) {
 				return OAM[index - 0xfe00];
 			}
 			CPULogger.printf("WARNING: Read from OAM[0x%04x] denied during mode " + (STAT & 3) + ", PC=0x%04x\n", index, cpu.getPC());
@@ -496,10 +533,10 @@ public final class VideoController {
 		int b = 0xff;
 		switch (index & 0x3f) {
 		case 0x00:
-			b = LCDC;
+			b = lcdController.getValue();
 			break;
 		case 0x01:
-			b = lcdOperationEnabled() ? STAT : (STAT & 0x7c) | 0x00;
+			b = lcdController.operationEnabled ? STAT : (STAT & 0x7c) | 0x00;
 			b = STAT;
 			break;
 		case 0x02:
@@ -509,7 +546,7 @@ public final class VideoController {
 			b = SCX;
 			break;
 		case 0x04:
-			b = lcdOperationEnabled() ? LY : 0;
+			b = lcdController.operationEnabled ? LY : 0;
 			break;
 		case 0x05:
 			b = LYC;
@@ -562,7 +599,7 @@ public final class VideoController {
 
 	public void write(int index, int value) {
 		if (index < 0xa000) {
-			if (allow_writes_in_mode_2_3 || !lcdOperationEnabled() || ((STAT & 3) != 3)) {
+			if (allow_writes_in_mode_2_3 || !lcdController.operationEnabled || ((STAT & 3) != 3)) {
 				VRAM[index - 0x8000 + currentVRAMBank] = value;
 				patterns.setDirtyPatternEnabled((currentVRAMBank >> 4) + ((index - 0x8000) >> 4), true);
 				return;
@@ -571,7 +608,7 @@ public final class VideoController {
 			return;
 		}
 		if ((index > 0xfdff) && (index < 0xfea0)) {
-			if (allow_writes_in_mode_2_3 || !lcdOperationEnabled() || ((STAT & 2) == 0)) {
+			if (allow_writes_in_mode_2_3 || !lcdController.operationEnabled || ((STAT & 2) == 0)) {
 				OAM[index - 0xfe00] = value;
 				return;
 			}
@@ -580,14 +617,14 @@ public final class VideoController {
 		}
 		switch (index & 0x3f) {
 		case 0x00:
-			if (((value & 0x80) != 0) && !lcdOperationEnabled()) {
+			if (((value & 0x80) != 0) && !lcdController.operationEnabled) {
 				restart();
 			}
-			LCDC = value;
+			lcdController.setValue(value);
 			break;
 		case 0x01:
 			STAT = (STAT & 0x87) | (value & 0x78);
-			if (!isCGB && ((STAT & 2) == 0) && lcdOperationEnabled()) {
+			if (!isCGB && ((STAT & 2) == 0) && lcdController.operationEnabled) {
 				cpu.triggerInterrupt(1);
 			}
 			break;
@@ -704,43 +741,19 @@ public final class VideoController {
 		return currentVRAMBank / 0x2000;
 	}
 
-	public boolean checkLCDCBitEnabled(int index) {
-		return (LCDC & (1 << index)) != 0;
-	}
-
-	private int getWindowTileMapAddress() {
-		return checkLCDCBitEnabled(6) ? 0x1C00 : 0x1800;
-	}
-
-	private int getTileMapAddress() {
-		return checkLCDCBitEnabled(4) ? 0x0000 : 0x0800;
-	}
-
-	private int getBackgroundTileMapAddress() {
-		return checkLCDCBitEnabled(3) ? 0x1C00 : 0x1800;
-	}
-
-	private boolean lcdOperationEnabled() {
-		return checkLCDCBitEnabled(7);
-	}
-
-	private boolean windowDisplayEnabled() {
-		return checkLCDCBitEnabled(5);
-	}
-
 	public void renderScanLine() {
 		int tilebufBG[] = new int[0x200];
-		if (cfskip == 0 && lcdOperationEnabled()) {
+		if (cfskip == 0 && lcdController.operationEnabled) {
 			patterns.updatePatternPixels(VRAM);
 			int windX = ImageRenderer.SCREEN_WIDTH;
-			if (windowDisplayEnabled() && (WX >= 0) && (WX < 167) && (WY >= 0) && (WY < ImageRenderer.SCREEN_HEIGHT) && (LY >= WY)) {
+			if (lcdController.windowDisplayEnabled && (WX >= 0) && (WX < 167) && (WY >= 0) && (WY < ImageRenderer.SCREEN_HEIGHT) && (LY >= WY)) {
 				windX = (WX - 7);
 			}
 			renderScanlineBG(windX, tilebufBG);
 			if (windX < ImageRenderer.SCREEN_WIDTH) {
 				renderScanlineWindow(windX, tilebufBG);
 			}
-			if (checkLCDCBitEnabled(1)) {
+			if (lcdController.spriteDisplayEnabled) {
 				renderScanlineSprites();
 			}
 		}
@@ -748,7 +761,7 @@ public final class VideoController {
 
 	private void calcBGTileBuf(int bgTileX, int bgTileY, int windX, int tilebufBG[]) {
 
-		int tileMap = getBackgroundTileMapAddress() + bgTileX + (bgTileY * 32);
+		int tileMap = lcdController.backgroundTileMapAddress + bgTileX + (bgTileY * 32);
 		int attrMap = tileMap + 0x2000;
 		int bufMap = 0;
 		int cnt = ((windX + 7) >> 3) + 1;
@@ -756,7 +769,7 @@ public final class VideoController {
 		for (int i = 0; i < cnt; ++i) {
 			int tile = VRAM[tileMap++];
 			int attr = VRAM[attrMap++];
-			if (getTileMapAddress() == 0x0800) {
+			if (!lcdController.tileMapAddressLow) {
 				tile ^= 0x80;
 				tile += 0x80;
 			}
@@ -818,7 +831,7 @@ public final class VideoController {
 	}
 
 	private void calcWindTileBuf(int bgTileY, int windX, int tilebufBG[]) {
-		int tileMap = getWindowTileMapAddress() + (bgTileY * 32);
+		int tileMap = lcdController.windowTileMapAddress + (bgTileY * 32);
 		int attrMap = tileMap + 0x2000;
 		int bufMap = 0;
 		int cnt = ((ImageRenderer.SCREEN_WIDTH - (windX + 7)) >> 3) + 2;
@@ -827,7 +840,7 @@ public final class VideoController {
 			int tile = VRAM[tileMap++];
 
 			int attr = VRAM[attrMap++];
-			if (getTileMapAddress() == 0x0800) {
+			if (!lcdController.tileMapAddressLow) {
 				tile ^= 0x80;
 				tile += 0x80;
 			}
@@ -880,24 +893,6 @@ public final class VideoController {
 		}
 	}
 
-	public static enum SpriteType {
-		SMALL(8, 8, false), BIG(8, 16, true);
-
-		public final int width;
-		public final int height;
-		public final boolean big;
-
-		private SpriteType(int width, int height, boolean big) {
-			this.width = width;
-			this.height = height;
-			this.big = big;
-		}
-
-		public static SpriteType createSpriteType(boolean big) {
-			return big ? BIG : SMALL;
-		}
-	}
-
 	/**
 	 * http://fms.komkon.org/GameBoy/Tech/Software.html
 	 * 
@@ -919,8 +914,6 @@ public final class VideoController {
 	 * if this bit is set to 1 and from OBJ0PAL otherwise.
 	 */
 	private void renderScanlineSprites() {
-		SpriteType spriteType = SpriteType.createSpriteType(checkLCDCBitEnabled(2));
-
 		for (int spriteIndex = 0; spriteIndex < 40; ++spriteIndex) {
 			int spritePositionY = OAM[(spriteIndex * 4) + 0];
 			int spritePositionX = OAM[(spriteIndex * 4) + 1];
@@ -929,11 +922,11 @@ public final class VideoController {
 
 			int offsetY = LY - spritePositionY + 16;
 
-			if ((offsetY >= 0) && (offsetY < spriteType.height) && (spritePositionX > 0) && (spritePositionX < (ImageRenderer.SCREEN_WIDTH + spriteType.width))) {
+			if ((offsetY >= 0) && (offsetY < lcdController.spriteHeight) && (spritePositionX > 0) && (spritePositionX < (ImageRenderer.SCREEN_WIDTH + lcdController.spriteWidth))) {
 				if ((spriteAttribute & (1 << 6)) != 0) {
-					offsetY = spriteType.height - offsetY - 1;
+					offsetY = lcdController.spriteHeight - offsetY - 1;
 				}
-				if (spriteType.big) {
+				if (lcdController.spriteHeight == 16) {
 					spriteNumber &= ~1;
 					spriteNumber |= (offsetY >= 8) ? 1 : 0;
 					offsetY &= 7;

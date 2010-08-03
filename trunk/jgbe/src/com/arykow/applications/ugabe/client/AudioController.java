@@ -125,7 +125,7 @@ public final class AudioController {
 		if (S3.on != 0)
 			for (i = 0; i < 0xf; i++)
 				IO[i + 0x20] = 0x13 ^ IO[i + 0x21];
-		IO[0x2f] = 0x13 ^ cpu.videoController.LCDC;
+		IO[0x2f] = 0x13 ^ cpu.videoController.lcdController.getValue();
 	}
 
 	void s4_init() {

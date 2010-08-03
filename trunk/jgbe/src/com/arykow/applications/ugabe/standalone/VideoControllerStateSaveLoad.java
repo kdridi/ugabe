@@ -91,9 +91,9 @@ class VideoControllerStateSaveLoad implements StateSaveLoad<VideoController> {
 		;
 		{
 			if ((save))
-				dostream.writeByte((videoController.LCDC) & 0xff);
+				dostream.writeByte((videoController.lcdController.getValue()) & 0xff);
 			else
-				videoController.LCDC = distream.readUnsignedByte();
+				videoController.lcdController.setValue(distream.readUnsignedByte());
 		}
 		;
 		if (15 <= version) {
