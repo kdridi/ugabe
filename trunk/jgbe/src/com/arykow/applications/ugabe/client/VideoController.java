@@ -26,20 +26,6 @@ public final class VideoController {
 		obpTable.updateColors(imageRenderer, i);
 		
 	}
-	
-	/**
-	 * LCD Control Register
-	 * Bits 0000 0000 ABCD EFGH
-	 * 
-	 * 7 A : LCD Display						=> Enabled / Disabled
-	 * 6 B : Window Tile Map Address			=> 9C00-9FFF / 9800-9BFF
-	 * 5 C : Display Window					=> Yes / No
-	 * 4 D : BG & Window Tile Data Address	=> 8000-8FFF / 8800-97FF
-	 * 3 E : BG Tile Map Display Address		=> 9800-9BFF / 9C00-9FFF
-	 * 2 F : Sprite Size						=> 8x16 / 8x8
-	 * 1 G : Display Sprites					=> Yes / No
-	 * 0 H : Display Background				=> Yes / No
-	 */
 
 	private RenderScanLine renderScanLine = new RenderScanLine();
 	private RenderScanLinePart renderScanLinePart = new RenderScanLinePart();
@@ -532,14 +518,12 @@ public final class VideoController {
 			break;
 		case 0x28:
 			bgpTable.setIndex(value);
-			;
 			break;
 		case 0x29:
 			bgpTable.setColor(imageRenderer, value);
 			break;
 		case 0x2a:
 			obpTable.setIndex(value);
-			;
 			break;
 		case 0x2b:
 			obpTable.setColor(imageRenderer, value);
@@ -563,14 +547,4 @@ public final class VideoController {
 	public int getcurVRAMBank() {
 		return currentVRAMBank / 0x2000;
 	}
-
-
-
-
-
-
-
-
-
-
 }
