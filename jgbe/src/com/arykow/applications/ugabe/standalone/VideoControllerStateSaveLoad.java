@@ -149,30 +149,30 @@ class VideoControllerStateSaveLoad implements StateSaveLoad<VideoController> {
 
 		{
 			if ((save))
-				dostream.writeByte((videoController.BGPI) & 0xff);
+				dostream.writeByte((videoController.bgpTable.getIndex()) & 0xff);
 			else
-				videoController.BGPI = distream.readUnsignedByte();
+				videoController.bgpTable.setIndex(distream.readUnsignedByte());
 		}
 		{
 			for (int sl_i = 0; sl_i < (8 * 4 * 2); ++sl_i) {
 				if ((save))
-					dostream.writeByte((videoController.BGPD[sl_i]) & 0xff);
+					dostream.writeByte((videoController.bgpTable.getValue(sl_i)) & 0xff);
 				else
-					videoController.BGPD[sl_i] = distream.readUnsignedByte();
+					videoController.bgpTable.setValue(sl_i, distream.readUnsignedByte());
 			}
 		}
 		{
 			if ((save))
-				dostream.writeByte((videoController.OBPI) & 0xff);
+				dostream.writeByte((videoController.obpTable.getIndex()) & 0xff);
 			else
-				videoController.OBPI = distream.readUnsignedByte();
+				videoController.obpTable.setIndex(distream.readUnsignedByte());
 		}
 		{
 			for (int sl_i = 0; sl_i < (8 * 4 * 2); ++sl_i) {
 				if ((save))
-					dostream.writeByte((videoController.OBPD[sl_i]) & 0xff);
+					dostream.writeByte((videoController.obpTable.getValue(sl_i)) & 0xff);
 				else
-					videoController.OBPD[sl_i] = distream.readUnsignedByte();
+					videoController.obpTable.setValue(sl_i, distream.readUnsignedByte());
 			}
 		}
 		if (8 <= version) {
