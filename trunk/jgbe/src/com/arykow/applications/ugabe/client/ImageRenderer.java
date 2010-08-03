@@ -16,6 +16,7 @@
 package com.arykow.applications.ugabe.client;
 
 public interface ImageRenderer {
+	public final static int PALETTE_SIZE = 8 * 4 * 2;
 	public final static int SCREEN_WIDTH = 160;
 	public final static int SCREEN_HEIGHT = 144;
 

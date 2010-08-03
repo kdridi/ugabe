@@ -42,7 +42,7 @@ public class ImageRendererGUI extends JPanel implements ImageRenderer {
 	public boolean mixFrames;
 	private int blitImg[][] = new int[SCREEN_HEIGHT][SCREEN_WIDTH];
 	private int blitImg_prev[][] = new int[SCREEN_HEIGHT][SCREEN_WIDTH];
-	private int paletteColors[] = new int[8 * 4 * 2];
+	private int paletteColors[] = new int[PALETTE_SIZE];
 
 	public void updateBLIT(int index, int srcPos, int dstPos) {
 		System.arraycopy(paletteColors, srcPos, blitImg[index], dstPos, 1);
@@ -50,10 +50,6 @@ public class ImageRendererGUI extends JPanel implements ImageRenderer {
 
 	public void updatePalette(int index, int r, int g, int b) {
 		paletteColors[index] = ((r << 16) | (g << 8) | (b << 0));
-		// paletteColors[4 * index + 0] = r & 0x0FF;
-		// paletteColors[4 * index + 1] = g & 0x0FF;
-		// paletteColors[4 * index + 2] = b & 0x0FF;
-		// paletteColors[4 * index + 3] = 0x0FF;
 	}
 
 	public void render() {
