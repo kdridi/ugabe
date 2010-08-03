@@ -164,11 +164,6 @@ class KeyConfigurationDialog extends JDialog {
 		setLocationRelativeTo(null);
 		setResizable(true);
 		pack();
-		// addWindowListener(new WindowAdapter() {
-		// public void windowOpened(WindowEvent e) {
-		// (JTextField.class.cast(textFields.get(0))).requestFocus();
-		// }
-		// });
 		addComponentListener(new ComponentListener() {
 			public void componentShown(ComponentEvent e) {
 			}
