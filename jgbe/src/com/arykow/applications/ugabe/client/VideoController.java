@@ -15,25 +15,49 @@
  * ========================================================================== */
 package com.arykow.applications.ugabe.client;
 
+// =============================================================================
+// http://fms.komkon.org/GameBoy/Tech/Software.html
+// 
+// Sprites
+// GameBoy video controller can display up to 40 sprites either in 8x8 or in 8x16 mode.
+// Sprite patterns have the same format as tiles, but they are taken from the Sprite Pattern Table located at 8000-8FFF and therefore have unsigned numbers.
+// Sprite attributes reside in the Sprite Attribute Table (aka OAM) at FE00-FE9F.
+// OAM (Object Attribute Memory) is divided into 40 4-byte blocks each of which corresponds to a sprite.
+// 
+// Blocks have the following format:
+//   Byte0  Y position on the screen
+//   Byte1  X position on the screen
+//   Byte2  Pattern number 0-255 [notice that unlike tile numbers, sprite pattern numbers are unsigned] 
+//   Byte3  Flags:
+//          Bit7  Priority
+//                Sprite is displayed in front of the window if this bit is set to 1.
+//                Otherwise, sprite is shown behind the window but in front of the background.
+//          Bit6  Y flip
+//                Sprite pattern is flipped vertically if this bit is set to 1.
+//          Bit5  X flip
+//                Sprite pattern is flipped horizontally if this bit is set to 1.
+//          Bit4  Palette number
+//                Sprite colors are taken from OBJ1PAL if this bit is set to 1 and from OBJ0PAL otherwise.
+//=============================================================================
 public final class VideoController {
 	public ColorsTable bgpTable = new ColorsTable(0x20);
 	public ColorsTable obpTable = new ColorsTable(0x00);
+
 	public void updateBGColData(int i) {
 		bgpTable.updateColors(imageRenderer, i);
 	}
 
 	public void updateOBColData(int i) {
 		obpTable.updateColors(imageRenderer, i);
-		
+
 	}
 
 	private RenderScanLine renderScanLine = new RenderScanLine();
 	private RenderScanLinePart renderScanLinePart = new RenderScanLinePart();
 	private final static boolean useSubscanlineRendering = false;
-	
+
 	public LCDController lcdController = new LCDController();
-	
-	
+
 	public int currentVRAMBank = 0;
 	public int VRAM[] = new int[0x4000];
 	public int OAM[] = new int[40 * 4];
@@ -74,7 +98,6 @@ public final class VideoController {
 	public int fskip = 1;
 	int cfskip = 0;
 
-	
 	public final void setGrayShade(int i, int j, int[] colors) {
 		System.arraycopy(colors, 0, grayColors[i][j], 0, RGB.values().length);
 		updateMonoColDatas();
@@ -135,7 +158,6 @@ public final class VideoController {
 		STAT = 0x85;
 		STAT_statemachine_state = 0;
 		LCDCcntdwn = 80;
-
 
 		patterns.setDirtyPatternEnabled(true, true);
 		patterns.updatePatternPixels(VRAM);
@@ -200,7 +222,7 @@ public final class VideoController {
 			case 1:
 				if (useSubscanlineRendering) {
 					renderScanLinePart.execute(this);
-				} else if(cfskip == 0 && lcdController.operationEnabled) {
+				} else if (cfskip == 0 && lcdController.operationEnabled) {
 					renderScanLine.execute(this);
 				}
 
