@@ -182,7 +182,7 @@ class VideoControllerStateSaveLoad implements StateSaveLoad<VideoController> {
 				videoController.curWNDY = distream.readUnsignedByte();
 		}
 		if ((!save)) {
-			videoController.patterns.setDirtyPatternEnabled(true, true);
+			videoController.setDirtyPatternEnabled(true, true);
 			for (int i = 0; i < 0x20; ++i) {
 				videoController.updateBGColData(i);
 				videoController.updateOBColData(i);

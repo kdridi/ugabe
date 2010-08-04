@@ -85,15 +85,10 @@ public final class Cartridge implements Serializable {
 			CPULogger.printf("Warning: Reading from bogus address: $%04x\n", index);
 			return 0xff;
 		case 3:
-
 			CPULogger.printf("Error: not using memmap, or reading from cartridge with a noncartridge address $%04x\n", index);
 			CPULogger.printf("CurRombank: %d CurrentRAMBank: %d\n", currentROMBank, currentRAMBank);
-
-			int x[] = new int[] {};
-			x[0] = 0;
 			return 0xff;
 		case 5:
-
 			CPULogger.log("Error: not using memmap, or reading from cartridge with a non cartridge address!");
 			return 0xff;
 		default:

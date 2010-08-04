@@ -43,6 +43,72 @@ public final class VideoController {
 	public ColorsTable bgpTable = new ColorsTable(0x20);
 	public ColorsTable obpTable = new ColorsTable(0x00);
 
+
+	private static final int SIZE = 1024;
+	private static final int INDEX1 = 0 * SIZE;
+	private static final int INDEX2 = 1 * SIZE;
+	private static final int INDEX3 = 2 * SIZE;
+	private static final int INDEX4 = 3 * SIZE;
+
+	public int patterns[][][] = new int[SIZE << 2][][];
+	public boolean dirtyPatterns[] = new boolean[SIZE];
+	public boolean dirtyPattern = true;
+	
+	public void setDirtyPatternEnabled(boolean enable, boolean propagation) {
+		dirtyPattern = enable;
+		if (propagation) {
+			for (int i = 0; i < SIZE; ++i) {
+				dirtyPatterns[i] = enable;
+			}
+		}
+	}
+	
+	public void setDirtyPatternEnabled(int index, boolean enable) {
+		dirtyPatterns[index] = enable;
+		if (enable) {
+			setDirtyPatternEnabled(enable, false);
+		}
+	}
+
+	public void updatePatternPixels() {
+		if (dirtyPattern) {
+			for (int i = 0; i < SIZE; ++i) {
+				if (i == 384) {
+					i = 512;
+				}
+				if (i == 896) {
+					break;
+				}
+				if (dirtyPatterns[i]) {
+					if (patterns[i] == null) {
+						patterns[i + INDEX1] = new int[8][8];
+						patterns[i + INDEX2] = new int[8][8];
+						patterns[i + INDEX3] = new int[8][8];
+						patterns[i + INDEX4] = new int[8][8];
+					}
+					for (int y = 0; y < 8; ++y) {
+						int offset = (i * 16) + (y * 2);
+						for (int x = 0; x < 8; ++x) {
+							int color = 0;
+							for (int index = 0; index < 2; index++) {
+								color |= ((VRAM[offset + index] >> x) & 1) << index;
+							}
+							patterns[i + INDEX1][y - 0][7 - x] = color;
+							patterns[i + INDEX2][y - 0][x - 0] = color;
+							patterns[i + INDEX3][7 - y][7 - x] = color;
+							patterns[i + INDEX4][7 - y][x - 0] = color;
+						}
+					}
+				}
+				setDirtyPatternEnabled(i, false);
+			}
+			dirtyPattern = false;
+		}
+	}
+
+
+	
+	
 	public void updateBGColData(int i) {
 		bgpTable.updateColors(imageRenderer, i);
 	}
@@ -72,7 +138,6 @@ public final class VideoController {
 	public int STAT_statemachine_state = 0;
 	public int STAT = 0;
 	public int curWNDY;
-	public PixelPatterns patterns = new PixelPatterns();
 
 	public static enum RGB {
 		RED, GREEN, BLUE;
@@ -159,8 +224,8 @@ public final class VideoController {
 		STAT_statemachine_state = 0;
 		LCDCcntdwn = 80;
 
-		patterns.setDirtyPatternEnabled(true, true);
-		patterns.updatePatternPixels(VRAM);
+		setDirtyPatternEnabled(true, true);
+		updatePatternPixels();
 
 		bgpTable.reset(imageRenderer);
 		obpTable.reset(imageRenderer);
@@ -213,7 +278,7 @@ public final class VideoController {
 				STAT = (STAT & 0xFC) | 3;
 				++STAT_statemachine_state;
 
-				patterns.updatePatternPixels(VRAM);
+				updatePatternPixels();
 
 				pixpos = -(SCX & 7);
 				cyclepos = 0;
@@ -348,104 +413,112 @@ public final class VideoController {
 
 	public int read(int index) {
 		if (index < 0xa000) {
-			if (allow_writes_in_mode_2_3 || !lcdController.operationEnabled || ((STAT & 3) != 3)) {
-				return VRAM[index - 0x8000 + currentVRAMBank];
-			}
-			CPULogger.printf("WARNING: Read from VRAM[0x%04x] denied during mode " + (STAT & 3) + ", PC=0x%04x\n", index, cpu.getPC());
-			return 0xff;
+			return read1(index);
 		}
 		if ((index > 0xFDFF) && (index < 0xFEA0)) {
-			if (allow_writes_in_mode_2_3 || !lcdController.operationEnabled || ((STAT & 2) == 0)) {
-				return OAM[index - 0xFE00];
-			}
-			CPULogger.printf("WARNING: Read from OAM[0x%04x] denied during mode " + (STAT & 3) + ", PC=0x%04x\n", index, cpu.getPC());
-			return 0xff;
+			return read2(index);
 		}
-		int b = 0xff;
+		return read3(index);
+	}
+
+	public int read3(int index) {
+		int result = 0xff;
 		switch (index & 0x3f) {
 		case 0x00:
-			b = lcdController.getValue();
+			result = lcdController.getValue();
 			break;
 		case 0x01:
-			b = lcdController.operationEnabled ? STAT : (STAT & 0x7c) | 0x00;
-			b = STAT;
+			result = STAT;
 			break;
 		case 0x02:
-			b = SCY;
+			result = SCY;
 			break;
 		case 0x03:
-			b = SCX;
+			result = SCX;
 			break;
 		case 0x04:
-			b = lcdController.operationEnabled ? LY : 0;
+			result = lcdController.operationEnabled ? LY : 0;
 			break;
 		case 0x05:
-			b = LYC;
+			result = LYC;
 			break;
 		case 0x07:
 		case 0x08:
 		case 0x09:
-			b = cpu.IOP[index - 0xff00];
+			result = cpu.IOP[index - 0xff00];
 			break;
 		case 0x0a:
-			b = WY;
+			result = WY;
 			break;
 		case 0x0b:
-			b = WX;
+			result = WX;
 			break;
 		case 0x0d:
-			b = cpu.doublespeed ? (1 << 7) : 0;
+			result = cpu.doublespeed ? (1 << 7) : 0;
 			break;
 		case 0x0f:
-			b = getcurVRAMBank();
+			result = getcurVRAMBank();
 			break;
 		case 0x11:
 		case 0x12:
 		case 0x13:
 		case 0x14:
 		case 0x15:
-			b = cpu.IOP[index - 0xff00];
+			result = cpu.IOP[index - 0xff00];
 			break;
 		case 0x28:
-			b = bgpTable.getIndex();
+			result = bgpTable.getIndex();
 			break;
 		case 0x29:
-			b = bgpTable.getColor();
+			result = bgpTable.getColor();
 			break;
 		case 0x2a:
-			b = obpTable.getIndex();
+			result = obpTable.getIndex();
 			break;
 		case 0x2b:
-			b = obpTable.getColor();
+			result = obpTable.getColor();
 			break;
 		case 0x2c:
 			CPULogger.printf("WARNING: VC.read(): Read from *undocumented* IO port $%04x\n", index);
-			b = cpu.IOP[index - 0xff00] | 0xfe;
+			result = cpu.IOP[index - 0xff00] | 0xfe;
 			break;
 		default:
 			CPULogger.printf("TODO: VC.read(): Read from IO port $%04x\n", index);
 		}
-		return b;
+		return result;
+	}
+
+	public int read2(int index) {
+		int result = 0xff;
+		if (allow_writes_in_mode_2_3 || !lcdController.operationEnabled || ((STAT & 2) == 0)) {
+			result = OAM[index - 0xFE00];
+		} else {
+			CPULogger.printf("WARNING: Read from OAM[0x%04x] denied during mode " + (STAT & 3) + ", PC=0x%04x\n", index, cpu.getPC());
+		}
+		return result;
+	}
+
+	public int read1(int index) {
+		int result = 0xff;
+		if (allow_writes_in_mode_2_3 || !lcdController.operationEnabled || ((STAT & 3) != 3)) {
+			result = VRAM[index - 0x8000 + currentVRAMBank];
+		} else {
+			CPULogger.printf("WARNING: Read from VRAM[0x%04x] denied during mode " + (STAT & 3) + ", PC=0x%04x\n", index, cpu.getPC());
+		}
+		return result;
 	}
 
 	public final void write(int index, int value) {
 		if (index < 0xa000) {
-			if (allow_writes_in_mode_2_3 || !lcdController.operationEnabled || ((STAT & 3) != 3)) {
-				VRAM[index - 0x8000 + currentVRAMBank] = value;
-				patterns.setDirtyPatternEnabled((currentVRAMBank >> 4) + ((index - 0x8000) >> 4), true);
-				return;
-			}
-			CPULogger.printf("WARNING: Write to VRAM[0x%04x] denied during mode " + (STAT & 3) + ", PC=0x%04x\n", index, cpu.getPC());
-			return;
+			write1(index, value);
+		} else if ((index > 0xfdff) && (index < 0xfea0)) {
+			write2(index, value);
+		} else {
+			write3(index, value);
 		}
-		if ((index > 0xfdff) && (index < 0xfea0)) {
-			if (allow_writes_in_mode_2_3 || !lcdController.operationEnabled || ((STAT & 2) == 0)) {
-				OAM[index - 0xfe00] = value;
-				return;
-			}
-			CPULogger.printf("WARNING: Write to OAM[0x%04x] denied during mode " + (STAT & 3) + ", PC=0x%04x", index, cpu.getPC());
-			return;
-		}
+	}
+
+	public void write3(int index, int value) {
 		switch (index & 0x3f) {
 		case 0x00:
 			if (((value & 0x80) != 0) && !lcdController.operationEnabled) {
@@ -558,6 +631,25 @@ public final class VideoController {
 			CPULogger.printf("TODO: VC.write(): Write %02x to IO port $%04x\n", value, index);
 			break;
 		}
+	}
+
+	public void write2(int index, int value) {
+		if (allow_writes_in_mode_2_3 || !lcdController.operationEnabled || ((STAT & 2) == 0)) {
+			OAM[index - 0xfe00] = value;
+			return;
+		}
+		CPULogger.printf("WARNING: Write to OAM[0x%04x] denied during mode " + (STAT & 3) + ", PC=0x%04x", index, cpu.getPC());
+		return;
+	}
+
+	public void write1(int index, int value) {
+		if (allow_writes_in_mode_2_3 || !lcdController.operationEnabled || ((STAT & 3) != 3)) {
+			VRAM[index - 0x8000 + currentVRAMBank] = value;
+			setDirtyPatternEnabled((currentVRAMBank >> 4) + ((index - 0x8000) >> 4), true);
+			return;
+		}
+		CPULogger.printf("WARNING: Write to VRAM[0x%04x] denied during mode " + (STAT & 3) + ", PC=0x%04x\n", index, cpu.getPC());
+		return;
 	}
 
 	public final void selectVRAMBank(int i) {
