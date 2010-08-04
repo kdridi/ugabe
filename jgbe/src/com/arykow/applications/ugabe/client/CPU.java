@@ -17,7 +17,6 @@ package com.arykow.applications.ugabe.client;
 
 import java.io.IOException;
 
-
 public final class CPU {
 	public final static int ZF_Shift = 7;
 	public final static int NF_Shift = ZF_Shift - 1;
@@ -272,7 +271,6 @@ public final class CPU {
 	}
 
 	public int read(int index) {
-
 		int mm[] = rMemMap[index >> 12];
 		if (mm != null)
 			return (mm[index & 0x0FFF]);
@@ -280,120 +278,114 @@ public final class CPU {
 	}
 
 	public int read_slow(int index) {
-
-		int b;
-
-		if (!(index >= 0 && index <= 0xffff))
+		int result;
+		if (!(index >= 0 && index <= 0xffff)) {
 			throw new Error("Assertion failed: " + "index>=0 && index <=0xffff");
+		}
 
-		if (index < 0x4000) {
+		if ((index > 0xff3f) && (index < 0xff70)) {
+			result = videoController.read3(index);
+		} else if (index < 0x4000) {
 			if (index < 0x100) {
-
-				b = cartridge.BIOS_ROM[index];
-
+				result = cartridge.BIOS_ROM[index];
 			} else if (index == 0x100) {
-
 				BIOS_enabled = false;
-
 				refreshMemMap();
 				videoController.isCGB = BIOS_enabled ? false : isCGB();
 				A = videoController.isCGB ? 0x11 : 0x01;
-				b = read(index);
+				result = read(index);
 			} else {
-				b = cartridge.MM_ROM[0][index];
-
+				result = cartridge.MM_ROM[0][index];
 			}
 		} else if (index < 0x8000) {
-			b = cartridge.read(index);
+			result = cartridge.read(index);
 		} else if (index < 0xa000) {
-			b = videoController.read(index);
+			result = videoController.read1(index);
 		} else if (index < 0xc000) {
-			b = cartridge.read(index);
+			result = cartridge.read(index);
 		} else if (index < 0xd000) {
-			b = (WRAM[0][index - 0xc000]);
+			result = (WRAM[0][index - 0xc000]);
 		} else if (index < 0xe000) {
-			b = (WRAM[currentWRAMBank][index - 0xd000]);
+			result = (WRAM[currentWRAMBank][index - 0xd000]);
 		} else if (index < 0xfe00) {
-			b = read(index - 0x2000);
+			result = read(index - 0x2000);
 		} else if (index < 0xfea0) {
-			b = videoController.read(index);
+			result = videoController.read2(index);
 		} else if (index < 0xff00) {
 			CPULogger.log("WARNING: CPU.read(): Read from unusable memory (0xfea0-0xfeff)");
-			b = 0;
+			result = 0;
 		} else if ((index > 0xff0f) && (index < 0xff40)) {
-			b = audioController.read(index);
-		} else if ((index > 0xff3f) && (index < 0xff70)) {
-			b = videoController.read(index);
+			result = audioController.read(index);
 		} else if (index < 0xff80) {
 			switch (index) {
 			case 0xff00:
-				b = (IOP[index - 0xff00] & 0x30) | 0xc0;
-				if ((b & (1 << 4)) == 0) {
-					b |= (keyStatus & 0x0f);
+				result = (IOP[index - 0xff00] & 0x30) | 0xc0;
+				if ((result & (1 << 4)) == 0) {
+					result |= (keyStatus & 0x0f);
 				}
-				if ((b & (1 << 5)) == 0) {
-					b |= (keyStatus >> 4);
+				if ((result & (1 << 5)) == 0) {
+					result |= (keyStatus >> 4);
 				}
-				b ^= 0x0f;
+				result ^= 0x0f;
 				break;
 			case 0xff04:
 
 				return (int) ((((totalCycleCount + CYCLES_PER_DIV - 1 - divReset) / CYCLES_PER_DIV)) & 0xff);
 			case 0xff01:
 			case 0xff02:
-				b = IOP[index - 0xff00];
+				result = IOP[index - 0xff00];
 				break;
 			case 0xff05:
 				if (cyclesPerTIMA != 0) {
-					b = (int) (((totalCycleCount - TIMAEventCycleCount + (cyclesPerTIMA * 0x100)) / cyclesPerTIMA) & 0xff);
+					result = (int) (((totalCycleCount - TIMAEventCycleCount + (cyclesPerTIMA * 0x100)) / cyclesPerTIMA) & 0xff);
 				} else {
-					b = IOP[0x05];
+					result = IOP[0x05];
 				}
 				break;
 			case 0xff06:
 			case 0xff07:
-				b = IOP[index - 0xff00];
+				result = IOP[index - 0xff00];
 				break;
 			case 0xff0f:
-				b = IOP[0x0f];
+				result = IOP[0x0f];
 				break;
 
 			case 0xff70:
-				b = currentWRAMBank;
+				result = currentWRAMBank;
 				break;
 
 			case 0xff6c:
 				CPULogger.printf("WARNING: CPU.read(): Read from *undocumented* IO port $%04x\n", index);
-				b = IOP[index - 0xff00] | 0xfe;
+				result = IOP[index - 0xff00] | 0xfe;
 				break;
 			case 0xff72:
 			case 0xff73:
 			case 0xff74:
-				b = IOP[index - 0xff00];
+				result = IOP[index - 0xff00];
 				break;
 			case 0xff75:
 				CPULogger.printf("WARNING: CPU.read(): Read from *undocumented* IO port $%04x\n", index);
-				b = IOP[index - 0xff00] | 0x8f;
+				result = IOP[index - 0xff00] | 0x8f;
 				break;
 			case 0xff76:
 			case 0xff77:
 				CPULogger.printf("WARNING: CPU.read(): Read from *undocumented* IO port $%04x\n", index);
-				b = 0;
+				result = 0;
 				break;
 			default:
 				CPULogger.printf("TODO: CPU.read(): Read from IO port $%04x\n", index);
-				b = 0xff;
+				result = 0xff;
 				break;
 			}
 		} else if (index < 0xffff) {
-			b = (HRAM[index - 0xff80]);
+			result = (HRAM[index - 0xff80]);
 		} else if (index < 0x10000) {
-			b = IE;
+			result = IE;
 		} else {
 			CPULogger.log("ERROR: CPU.read(): Out of range memory access: $" + index);
-			b = 0;
+			result = 0;
 		}
-		return b;
+		return result;
 	}
 
 	public void write_fast1(int value, int index) {
@@ -417,19 +409,17 @@ public final class CPU {
 	}
 
 	public void write_slow(int index, int value) {
-
-		if (!(wMemMap[index >> 12] == null))
+		if ((index > 0xff3f) && (index < 0xff70)) {
+			videoController.write3(index, value);
+		} else if (!(wMemMap[index >> 12] == null)) {
 			throw new Error("Assertion failed: " + "wMemMap[index>>12] == null");
-
-		if (!(index >= 0 && index <= 0xffff))
+		} else if (!(index >= 0 && index <= 0xffff)) {
 			throw new Error("Assertion failed: " + "index>=0 && index <=0xffff");
-
-		if (index < 0x8000) {
+		} else if (index < 0x8000) {
 			cartridge.write(index, value);
-
 			refreshMemMap();
 		} else if (index < 0xa000) {
-			videoController.write(index, value);
+			videoController.write1(index, value);
 		} else if (index < 0xc000) {
 			cartridge.write(index, value);
 		} else if (index < 0xd000) {
@@ -439,13 +429,11 @@ public final class CPU {
 		} else if (index < 0xfe00) {
 			write(index - 0x2000, value);
 		} else if (index < 0xfea0) {
-			videoController.write(index, value);
+			videoController.write2(index, value);
 		} else if (index < 0xff00) {
 
 		} else if ((index > 0xff0f) && (index < 0xff40)) {
 			audioController.write(index, value);
-		} else if ((index > 0xff3f) && (index < 0xff70)) {
-			videoController.write(index, value);
 		} else if (index < 0xff80) {
 			switch (index) {
 			case 0xff00:
@@ -2205,7 +2193,7 @@ public final class CPU {
 			;
 			break;
 		case (0x40 + (0 << 3) + (0)): {
-//			B = B;
+			// B = B;
 		}
 			;
 			break;
@@ -2255,7 +2243,7 @@ public final class CPU {
 			;
 			break;
 		case (0x40 + (1 << 3) + (1)): {
-//			C = C;
+			// C = C;
 		}
 			;
 			break;
@@ -2305,7 +2293,7 @@ public final class CPU {
 			;
 			break;
 		case (0x40 + (2 << 3) + (2)): {
-//			D = D;
+			// D = D;
 		}
 			;
 			break;
@@ -2355,7 +2343,7 @@ public final class CPU {
 			;
 			break;
 		case (0x40 + (3 << 3) + (3)): {
-//			E = E;
+			// E = E;
 		}
 			;
 			break;
@@ -2405,7 +2393,7 @@ public final class CPU {
 			;
 			break;
 		case (0x40 + (4 << 3) + (4)): {
-//			H = H;
+			// H = H;
 		}
 			;
 			break;
@@ -2455,7 +2443,7 @@ public final class CPU {
 			;
 			break;
 		case (0x40 + (5 << 3) + (5)): {
-//			L = L;
+			// L = L;
 		}
 			;
 			break;
@@ -2505,7 +2493,7 @@ public final class CPU {
 			;
 			break;
 		case (0x40 + (7 << 3) + (7)): {
-//			A = A;
+			// A = A;
 		}
 			;
 			break;

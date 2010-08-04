@@ -60,7 +60,7 @@ public class RenderScanLinePart {
 				for (int i = 0; i < 8; ++i) {
 					int x = videoController.pixpos + i;
 					if ((x >= 0) && (x < ImageRenderer.SCREEN_WIDTH)) {
-						int color = videoController.patterns.get(bgtile, bgline & 7, i);
+						int color = videoController.patterns[bgtile][bgline & 7][i];
 						videoController.imageRenderer.updateBLIT(videoController.LY, bgpal | color, x);
 						videoController.zbuffer[x] = color;
 					}
@@ -93,7 +93,7 @@ public class RenderScanLinePart {
 						tile |= (1 << 10);
 					int pallette = ((attr >> 4) & 1) << 2;
 					for (int i = 0; i < 8; ++i) {
-						int color = videoController.patterns.get(tile, line, i);
+						int color = videoController.patterns[tile][line][i];
 						
 						if ((xpos >= 0) && (xpos < ImageRenderer.SCREEN_WIDTH) && (color != 0) && ((videoController.zbuffer[xpos] == 0) || priority)) {
 							videoController.imageRenderer.updateBLIT(videoController.LY, pallette | color, xpos);
